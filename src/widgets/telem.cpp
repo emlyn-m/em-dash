@@ -105,7 +105,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	// ping label
 	GtkWidget* ping_info = gtk_hbox_new(false, 0);
 	GtkWidget* ping_label = gtk_label_new("ping");
-	GtkWidget* ping_value = gtk_label_new("-");
+	GtkWidget* ping_value = gtk_label_new("");
 	data->ping_label = ping_value;
 	gtk_widget_modify_font(ping_label, font_desc_label);
 	gtk_widget_modify_font(ping_value, font_desc_label);
@@ -116,7 +116,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	// jitter label
 	GtkWidget* jitter_info = gtk_hbox_new(false, 0);
 	GtkWidget* jitter_label = gtk_label_new("jitter");
-	GtkWidget* jitter_value = gtk_label_new("-");
+	GtkWidget* jitter_value = gtk_label_new("");
 	data->jitter = 0;
 	data->jitter_label = jitter_value;
 	gtk_widget_modify_font(jitter_label, font_desc_label);
@@ -127,18 +127,17 @@ GtkWidget* telem_widget(double update_freq_ms) {
 
 	// ip label
 	GtkWidget* ip_info = gtk_hbox_new(false, 0);
-	GtkWidget* ip_label = gtk_label_new("ip");
-	GtkWidget* ip_value = gtk_label_new("-");
+	GtkWidget* ip_value = gtk_label_new("");
 	data->ip_label = ip_value;
-	gtk_widget_modify_font(ip_label, font_desc_label);
 	gtk_widget_modify_font(ip_value, font_desc_label);
-	gtk_box_pack_start(GTK_BOX(ip_info), ip_label, FALSE, FALSE, 5*SCALE);
-	gtk_box_pack_end(GTK_BOX(ip_info), ip_value, FALSE, FALSE, 5*SCALE);
-	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, FALSE, FALSE, 0);
+	gtk_misc_set_alignment(GTK_MISC(ip_value), 0.5, 0.0);
+	gtk_box_pack_start(GTK_BOX(ip_info), ip_value, TRUE, TRUE, 5*SCALE);
+	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, TRUE, TRUE, 0);
 	
 	g_timeout_add(update_freq_ms, (GSourceFunc) ip_update, data);
 
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_stats, FALSE, FALSE, 5);
-	pango_font_description_free(font_desc_label);	
+	pango_font_description_free(font_desc_label);
+	
 	return wrapper;
 }

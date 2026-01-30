@@ -61,6 +61,11 @@ gboolean update_weather_display(gpointer* weather_vp) {
     return TRUE;
 }
 
+void on_size_allocate(GtkWidget *widget, GdkEventConfigure *event, gpointer data_vp) {
+    weather_t* data = (weather_t*) data_vp;
+    data->icons_changed = true;
+}
+
 GtkWidget* weather_widget() {
 	
 	weather_t* weather = (weather_t*) malloc(sizeof(weather_t));
@@ -75,6 +80,7 @@ GtkWidget* weather_widget() {
 	
 	// wrapper
 	GtkWidget* wrapper = gtk_hbox_new(FALSE, 30*SCALE);
+	g_signal_connect(wrapper, "on_size_allocate", G_CALLBACK(on_size_allocate), weather);
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 5*SCALE);
 	PangoFontDescription* font_temp = pango_font_description_from_string(FONT_8);
 	PangoFontDescription* font_time = pango_font_description_from_string(FONT_BOLD_8);

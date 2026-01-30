@@ -16,6 +16,6 @@ icon_name=${icon_name%.*}
 echo "Converting <$img_path> into <$icon_name> (<$header_path>)"
 
 gdk-pixbuf-csource --raw --name=$icon_name $img_path > $header_path.tmp
-echo "#include <glib.h>\n" > $header_path
+echo "#include <glib.h>" > $header_path
 cat $header_path.tmp >> $header_path
 rm $header_path.tmp

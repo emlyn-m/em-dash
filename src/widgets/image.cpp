@@ -2,24 +2,29 @@
 #include "gdk-pixbuf/gdk-pixbuf.h"
 #include "gtk/gtk.h"
 
-GtkWidget* image_widget(const guint8* icon_dat, int target_width, int target_height) {
-        
-	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
-	GdkPixbuf* icon = gdk_pixbuf_new_from_inline(-1, icon_dat, FALSE, NULL);
+void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height) {
+   	GdkPixbuf* icon = gdk_pixbuf_new_from_inline(-1, icon_dat, FALSE, NULL);
 	
 	int width = gdk_pixbuf_get_width(icon);
 	int height = gdk_pixbuf_get_height(icon);
 	
-    double scale = MIN((double)target_width / width, 
-                      (double)target_height / height);
-    int new_width = width * scale;
-    int new_height = height * scale;
-    
-    GdkPixbuf* scaled = gdk_pixbuf_scale_simple(
-        icon, new_width, new_height, GDK_INTERP_BILINEAR
-    );
-    GtkWidget* image = gtk_image_new_from_pixbuf(scaled);
-	gtk_box_pack_start(GTK_BOX(wrapper), image, TRUE, TRUE, 15*SCALE);
-	
+       double scale = MIN((double)target_width / width, 
+                         (double)target_height / height);
+       int new_width = width * scale;
+       int new_height = height * scale;
+       
+       GdkPixbuf* scaled = gdk_pixbuf_scale_simple(
+           icon, new_width, new_height, GDK_INTERP_BILINEAR
+       );
+       gtk_image_set_from_pixbuf(image, scaled);
+
+}
+
+GtkWidget* image_widget(GtkWidget** image_ref) {
+        
+	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
+    GtkWidget* image = gtk_image_new();
+    gtk_box_pack_start(GTK_BOX(wrapper), image, TRUE, TRUE, 15*SCALE);
+    *image_ref = image;
 	return wrapper;
 }

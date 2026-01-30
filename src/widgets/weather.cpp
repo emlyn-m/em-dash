@@ -1,6 +1,6 @@
 #include "./widgets.hpp"
 #include "../net/net.hpp"
-#include "../icon_1.h"
+#include "../images/test_img.h"
 
 #include "gtk/gtk.h"
 #include <cstdlib>
@@ -15,14 +15,20 @@ void generate_time(time_t time_d, char* res) {
 gboolean update_weather_display(gpointer* weather_vp) {
     weather_t* weather_data = (weather_t*) weather_vp;
     
-    for (int event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) { 
+    for (uint32_t event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) { 
+        
+        weather_ev_t* event = weather_data->events[event_idx];
+        
         char temp_s[11];
-        snprintf(temp_s, 11, "%.1lf°C", weather_data->events[event_idx]->temp_c);
-        gtk_label_set_text(GTK_LABEL(weather_data->events[event_idx]->widget_temp), temp_s);
+        snprintf(temp_s, 11, "%.1lf°C", event->temp_c);
+        gtk_label_set_text(GTK_LABEL(event->widget_temp), temp_s);
     
         char time_s[10];
-        generate_time(weather_data->events[event_idx]->time, time_s);
-        gtk_label_set_text(GTK_LABEL(weather_data->events[event_idx]->widget_time), time_s);
+        generate_time(event->time, time_s);
+        gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
+        
+        // todo: set icon based on image value
+        // set_image_src(GTK_IMAGE(event->widget_icon), test_img, 50, 50);
     }
     
     return TRUE;
@@ -35,7 +41,7 @@ GtkWidget* weather_widget() {
 	weather->last_update = 0;
 	weather->update_freq = 30 * 60 * 1000; // ms
 	weather->events = (weather_ev_t**) malloc(weather->num_weather_events * sizeof(weather_ev_t*));
-	for (int i=0; i < weather->num_weather_events; i++) {
+	for (uint32_t i=0; i < weather->num_weather_events; i++) {
 	    weather->events[i] = (weather_ev_t*) malloc(sizeof(weather_ev_t));
 	}
 	
@@ -49,7 +55,7 @@ GtkWidget* weather_widget() {
 		GtkWidget* event_vbox = gtk_vbox_new(FALSE, 0);
 		GtkWidget* temp = gtk_label_new("");
 		GtkWidget* time = gtk_label_new("");
-		GtkWidget* icon = image_widget(icon_1, 50, 50);
+		GtkWidget* icon = image_widget(&(weather->events[i]->widget_icon));
 	
 		gtk_widget_modify_font(temp, font_temp);
 		gtk_widget_modify_font(time, font_time);
@@ -64,7 +70,6 @@ GtkWidget* weather_widget() {
 		
 		(weather->events[i])->widget_temp = temp;
 		(weather->events[i])->widget_time = time;
-		(weather->events[i])->widget_icon = icon;
 	}
 
 	pango_font_description_free(font_temp);

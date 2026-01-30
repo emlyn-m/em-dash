@@ -147,6 +147,7 @@ GtkWidget* calendar_widget();
 GtkWidget* alerts_widget();
 GtkWidget* tasks_widget();
 GtkWidget* label_widget(char* label_content);
-GtkWidget* image_widget(const guint8* icon_dat, int target_width, int target_height);
+GtkWidget* image_widget(GtkWidget** image_ref);
+void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
 KindleSlider* kindle_slider_new(void (*callback_change)(float), void (*callback_release)(float));
 GtkWidget* model_init();

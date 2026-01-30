@@ -64,6 +64,12 @@ gboolean update_weather(gpointer* data) {
     cJSON* temps = cJSON_GetObjectItem(hourly, "temperature_2m");
     cJSON* rain_probs = cJSON_GetObjectItem(hourly, "precipitation_probability");
     cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
+    
+    if (!(weather || hourly || temps || rain_probs || weather_times)) {
+        fprintf(stderr, "json parsing not working: <%s>\n", weather_buf);
+        fflush(stderr);
+        return TRUE;
+    }
         
     int time_offset = 0;
     

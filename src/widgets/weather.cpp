@@ -1,5 +1,6 @@
 #include "./widgets.hpp"
 #include "../net/net.hpp"
+#include "../icon_1.h"
 
 #include "gtk/gtk.h"
 #include <cstdlib>
@@ -48,12 +49,14 @@ GtkWidget* weather_widget() {
 		GtkWidget* event_vbox = gtk_vbox_new(FALSE, 0);
 		GtkWidget* temp = gtk_label_new("");
 		GtkWidget* time = gtk_label_new("");
+		GtkWidget* icon = image_widget(icon_1, 50, 50);
 	
 		gtk_widget_modify_font(temp, font_temp);
 		gtk_widget_modify_font(time, font_time);
 		gtk_misc_set_alignment(GTK_MISC(temp), 0.5, 0.0);
 		gtk_misc_set_alignment(GTK_MISC(time), 0.5, 1.0);
 		gtk_box_pack_start(GTK_BOX(event_vbox), temp, TRUE, TRUE, 10*SCALE);
+		gtk_box_pack_start(GTK_BOX(event_vbox), icon, TRUE, TRUE, 10*SCALE);
 		gtk_box_pack_end(GTK_BOX(event_vbox), time, TRUE, TRUE, 10*SCALE);
 	
 		gtk_container_set_border_width(GTK_CONTAINER(wrapper), 10);
@@ -61,6 +64,7 @@ GtkWidget* weather_widget() {
 		
 		(weather->events[i])->widget_temp = temp;
 		(weather->events[i])->widget_time = time;
+		(weather->events[i])->widget_icon = icon;
 	}
 
 	pango_font_description_free(font_temp);

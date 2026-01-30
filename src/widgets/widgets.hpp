@@ -97,6 +97,7 @@ typedef struct WeatherEvent {
 	
 	GtkWidget* widget_time;
 	GtkWidget* widget_temp;
+	GtkWidget* widget_icon;
 } weather_ev_t;
 typedef struct WeatherData {
 	uint32_t num_weather_events;
@@ -146,5 +147,6 @@ GtkWidget* calendar_widget();
 GtkWidget* alerts_widget();
 GtkWidget* tasks_widget();
 GtkWidget* label_widget(char* label_content);
+GtkWidget* image_widget(const guint8* icon_dat, int target_width, int target_height);
 KindleSlider* kindle_slider_new(void (*callback_change)(float), void (*callback_release)(float));
 GtkWidget* model_init();

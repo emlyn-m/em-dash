@@ -1,16 +1,25 @@
 #include "./widgets.hpp"
 #include "../net/net.hpp"
-#include "../images/test_img.h"
+#include "../images/cloud.h"
+#include "../images/rain.h"
+#include "../images/sun.h"
+#include "../images/thunder.h"
+
 
 #include "gtk/gtk.h"
 #include <cstdlib>
-#include <cstring>
 
 void generate_time(time_t time_d, char* res) {
     struct tm* time = localtime(&time_d);
     strftime(res, 10, (char*) "%-I %p", time);   
 }
 
+gboolean wmo_compare(int code, const int codes[], int n_codes) {
+    for (int i=0; i < n_codes; i++) {
+        if (code == codes[i]) { return true; }
+    }
+    return false;
+}
 
 gboolean update_weather_display(gpointer* weather_vp) {
     weather_t* weather_data = (weather_t*) weather_vp;
@@ -27,8 +36,22 @@ gboolean update_weather_display(gpointer* weather_vp) {
         generate_time(event->time, time_s);
         gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
         
-        // todo: set icon based on image value
-        // set_image_src(GTK_IMAGE(event->widget_icon), test_img, 50, 50);
+        const int WMO_SUNNY[1] = { 0 };
+        const int WMO_CLOUDY[3] = { 1, 2, 3 };
+        const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
+        const int WMO_THUNDER[3] = { 95, 96, 99 };
+        if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), sun, 50, 50);
+        } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), cloud, 50, 50);
+        } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), rain, 50, 50);
+        } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), thunder, 50, 50);
+        }
+        
+        
+        
     }
     
     return TRUE;

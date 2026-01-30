@@ -94,6 +94,7 @@ typedef struct WeatherEvent {
 	time_t time;
 	double rain_prob;
 	double temp_c;
+	int wmo_code;
 	
 	GtkWidget* widget_time;
 	GtkWidget* widget_temp;

@@ -8,7 +8,7 @@
 #include <cstring>
 #include <ctime>
 
-#define WEATHER_API_CMD "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=temperature_2m,precipitation_probability&start_date=%s&end_date=%s&timezone=%s'"
+#define WEATHER_API_CMD "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=temperature_2m,precipitation_probability,weather_code&start_date=%s&end_date=%s&timezone=%s'"
 
 time_t parse_time_offset(char* time_buf) {
     struct tm date = {0};
@@ -63,6 +63,7 @@ gboolean update_weather(gpointer* data) {
     cJSON* hourly = cJSON_GetObjectItem(weather, "hourly");
     cJSON* temps = cJSON_GetObjectItem(hourly, "temperature_2m");
     cJSON* rain_probs = cJSON_GetObjectItem(hourly, "precipitation_probability");
+    cJSON* wmo_codes = cJSON_GetObjectItem(hourly, "weather_code");
     cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
     
     if (!(weather || hourly || temps || rain_probs || weather_times)) {
@@ -82,8 +83,9 @@ gboolean update_weather(gpointer* data) {
         weather_data->events[event_idx]->time = parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset)->valuestring);
         weather_data->events[event_idx]->temp_c = cJSON_GetArrayItem(temps, time_offset)->valuedouble;
         weather_data->events[event_idx]->rain_prob = cJSON_GetArrayItem(rain_probs, time_offset)->valuedouble;
+        weather_data->events[event_idx]->wmo_code = cJSON_GetArrayItem(wmo_codes, time_offset)->valuedouble;
         
-        printf("ts=%s    t=%ld    T=%lf*C    P=%lf\n", cJSON_GetArrayItem(weather_times, time_offset)->valuestring, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0);
+        printf("ts=%s    t=%ld    T=%lf*C    P=%lf    wmo=%d\n", cJSON_GetArrayItem(weather_times, time_offset)->valuestring, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
         
         time_offset++;
         event_idx++;

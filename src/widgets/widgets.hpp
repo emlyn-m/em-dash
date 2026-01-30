@@ -44,10 +44,11 @@ typedef struct TelemetryData {
 	guint8 n_services;
 	device_t** devices;
 	service_t** services;
-	unsigned long ping;
-	unsigned long last_ping;
+	unsigned long* ping_logs;
+	int ping_offset;
+	unsigned int num_pings;
+	unsigned int max_pings;
 	double jitter;
-	unsigned long ping_count;
 	char* ip;
 	
 	GtkWidget** device_widgets;

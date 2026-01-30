@@ -95,7 +95,6 @@ gboolean update_weather(gpointer* data) {
     free(weather_buf);
     
     weather_data->last_update = ctime;
-    weather_data->icons_changed = true;
     printf("weather update complete\n");
     
     return TRUE;

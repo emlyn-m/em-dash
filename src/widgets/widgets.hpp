@@ -111,7 +111,6 @@ typedef struct WeatherData {
 	
 	time_t last_update;
 	time_t update_freq;
-	gboolean icons_changed;
 } weather_t;
 
 typedef struct AlertEvent {

@@ -39,38 +39,28 @@ gboolean update_weather_display(gpointer* weather_vp) {
         generate_time(event->time, time_s);
         gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
         
-        if (weather_data->icons_changed) {            
-            const int icon_width = 30;
-            const int icon_height = 30;
-            
-            if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
-                set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
-            } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
-                set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
-            } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
-                set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
-            } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
-                set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
-            }
-            
-        }
+        const int icon_width = 30;
+        const int icon_height = 30;
         
-    }
-    weather_data->icons_changed = false;
-    
+        if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
+        } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
+        } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
+        } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
+            set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
+        }
+            
+        
+    }    
     return TRUE;
-}
-
-void on_size_allocate(GtkWidget *widget, GdkEventConfigure *event, gpointer data_vp) {
-    weather_t* data = (weather_t*) data_vp;
-    data->icons_changed = true;
 }
 
 GtkWidget* weather_widget() {
 	
 	weather_t* weather = (weather_t*) malloc(sizeof(weather_t));
 	weather->num_weather_events = 10;
-	weather->icons_changed = false;
 	weather->last_update = 0;
 	weather->update_freq = 30 * 60 * 1000; // ms
 	weather->events = (weather_ev_t**) malloc(weather->num_weather_events * sizeof(weather_ev_t*));
@@ -80,8 +70,7 @@ GtkWidget* weather_widget() {
 	
 	// wrapper
 	GtkWidget* wrapper = gtk_hbox_new(FALSE, 30*SCALE);
-	g_signal_connect(wrapper, "on_size_allocate", G_CALLBACK(on_size_allocate), weather);
-	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 5*SCALE);
+	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 10);
 	PangoFontDescription* font_temp = pango_font_description_from_string(FONT_8);
 	PangoFontDescription* font_time = pango_font_description_from_string(FONT_BOLD_8);
 
@@ -95,11 +84,10 @@ GtkWidget* weather_widget() {
 		gtk_widget_modify_font(time, font_time);
 		gtk_misc_set_alignment(GTK_MISC(temp), 0.5, 0.0);
 		gtk_misc_set_alignment(GTK_MISC(time), 0.5, 1.0);
-		gtk_box_pack_start(GTK_BOX(event_vbox), temp, TRUE, TRUE, 0*SCALE);
-		gtk_box_pack_start(GTK_BOX(event_vbox), icon, TRUE, TRUE, 0*SCALE);
-		gtk_box_pack_end(GTK_BOX(event_vbox), time, TRUE, TRUE, 0*SCALE);
+		gtk_box_pack_start(GTK_BOX(event_vbox), temp, TRUE, TRUE, 0);
+		gtk_box_pack_start(GTK_BOX(event_vbox), icon, TRUE, TRUE, 0);
+		gtk_box_pack_end(GTK_BOX(event_vbox), time, TRUE, TRUE, 0);
 	
-		gtk_container_set_border_width(GTK_CONTAINER(wrapper), 10);
 		gtk_box_pack_start(GTK_BOX(wrapper), event_vbox, TRUE, TRUE, 0);
 		
 		(weather->events[i])->widget_temp = temp;

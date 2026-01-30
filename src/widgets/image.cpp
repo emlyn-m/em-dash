@@ -8,23 +8,36 @@ void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, in
 	int width = gdk_pixbuf_get_width(icon);
 	int height = gdk_pixbuf_get_height(icon);
 	
-       double scale = MIN((double)target_width / width, 
-                         (double)target_height / height);
-       int new_width = width * scale;
-       int new_height = height * scale;
-       
-       GdkPixbuf* scaled = gdk_pixbuf_scale_simple(
-           icon, new_width, new_height, GDK_INTERP_BILINEAR
-       );
-       gtk_image_set_from_pixbuf(image, scaled);
+	GtkWidget* fixed = gtk_widget_get_parent((GtkWidget*) image);
+	GtkAllocation fixed_alloc;
+	gtk_widget_get_allocation(fixed, &fixed_alloc);
+	
+	
+    double scale = MIN((double)target_width / width, 
+                        (double)target_height / height);
+    int new_width = width * scale;
+    int new_height = height * scale;
+	
+    double offset_x = (fixed_alloc.height - new_height) / 2;
+    double offset_y = (fixed_alloc.width - new_width) / 2;
+    
+    GdkPixbuf* scaled = gdk_pixbuf_scale_simple(
+        icon, new_width, new_height, GDK_INTERP_BILINEAR
+    );
+    gtk_fixed_move(GTK_FIXED(fixed), (GtkWidget*) image, offset_x, offset_y);
+    gtk_image_set_from_pixbuf(image, scaled);
 
 }
 
 GtkWidget* image_widget(GtkWidget** image_ref) {
         
 	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
+    GtkWidget* fixed = gtk_fixed_new();
     GtkWidget* image = gtk_image_new();
-    gtk_box_pack_start(GTK_BOX(wrapper), image, TRUE, TRUE, 15*SCALE);
+    
+    gtk_fixed_put(GTK_FIXED(fixed), image, 0, 0); // Set the desired offset
+    gtk_box_pack_start(GTK_BOX(wrapper), fixed, TRUE, TRUE, 15*SCALE);
     *image_ref = image;
+    
 	return wrapper;
 }

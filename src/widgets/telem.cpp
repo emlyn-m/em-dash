@@ -50,12 +50,23 @@ gboolean ip_update(gpointer* data_p) {
 gboolean battery_update(gpointer* data_p) {
     telem_t* data = (telem_t*) data_p;
     
-    FILE* read_battery_fp = popen(BATTERY_READ_CMD, "r");
+    FILE* read_battery_fp = popen("cat " STR(BATTERY_PATH), "r");
     if (!read_battery_fp) { return TRUE; }
     fscanf(read_battery_fp, "%d", &(data->battery));
     
-    char battery_value[5]; memset(battery_value, 0, 5);
-    snprintf(battery_value, 4, "%d%%", data->battery);
+    FILE* read_current_fp = popen("cat " STR(CURRENT_PATH), "r");
+    if (!read_current_fp) { return TRUE; }
+    int current_now;
+    fscanf(read_current_fp, "%d", &current_now);
+    data->charging = current_now > 0;
+    
+    char battery_value[8]; memset(battery_value, 0, 8);
+    char* battery_end = battery_value + snprintf(battery_value, 4, "%d", data->battery);
+    if (data->charging) { 
+        battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1; 
+    } else { 
+        battery_end[0] = '%'; 
+    }
     
     gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
     

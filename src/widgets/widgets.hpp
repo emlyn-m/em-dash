@@ -44,6 +44,7 @@ typedef struct TelemetryData {
 	guint8 n_services;
 	device_t** devices;
 	service_t** services;
+	gboolean charging;
 	unsigned int battery;
 	unsigned long* ping_logs;
 	int ping_offset;

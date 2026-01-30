@@ -1,5 +1,6 @@
 #include "./widgets.hpp"
 #include "../net/net.hpp"
+#include "../secrets.h"
 
 #include "gtk/gtk.h"
 #include <cstdio>
@@ -46,17 +47,33 @@ gboolean ip_update(gpointer* data_p) {
    	return TRUE;
 }
 
+gboolean battery_update(gpointer* data_p) {
+    telem_t* data = (telem_t*) data_p;
+    
+    FILE* read_battery_fp = popen(BATTERY_READ_CMD, "r");
+    if (!read_battery_fp) { return TRUE; }
+    fscanf(read_battery_fp, "%d", &(data->battery));
+    
+    char battery_value[5]; memset(battery_value, 0, 5);
+    snprintf(battery_value, 4, "%d%%", data->battery);
+    
+    gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
+    
+    return TRUE;
+}
+
 GtkWidget* telem_widget(double update_freq_ms) {
 	
 	// wrapper
 	telem_t* data = (telem_t*) malloc(sizeof(telem_t));
 	data->n_devices = 0;
-	data->device_widgets = (GtkWidget**) malloc(data->n_devices * sizeof(GtkWidget*));
 	data->devices = (device_t**) malloc(data->n_devices * sizeof(device_t*));
+	data->device_widgets = (GtkWidget**) malloc(data->n_devices * sizeof(GtkWidget*));
 	data->n_services = 0;
+	data->services = (service_t**) malloc(data->n_services * sizeof(service_t*));
 	data->service_name_widgets = (GtkWidget**) malloc(data->n_devices * sizeof(GtkWidget*));
 	data->service_status_widgets = (GtkWidget**) malloc(data->n_devices * sizeof(GtkWidget*));
-	data->services = (service_t**) malloc(data->n_services * sizeof(service_t*));
+	data->battery = 0;
 	data->max_pings = 20;
 	data->num_pings = 0;
 	data->ping_logs = (unsigned long*) malloc(data->max_pings * sizeof(unsigned long));
@@ -99,8 +116,19 @@ GtkWidget* telem_widget(double update_freq_ms) {
 
 	
 	// telem_stats
-	PangoFontDescription* font_desc_label = pango_font_description_from_string(FONT_10);
+	PangoFontDescription* font_desc_label = pango_font_description_from_string(FONT_8);
 	GtkWidget* telem_stats = gtk_vbox_new(FALSE, 0);
+	
+	// battery label
+	GtkWidget* battery_info = gtk_hbox_new(false, 0);
+	GtkWidget* battery_label = gtk_label_new("battery");
+	GtkWidget* battery_value = gtk_label_new("");
+	data->battery_label = battery_value;
+	gtk_widget_modify_font(battery_label, font_desc_label);
+	gtk_widget_modify_font(battery_value, font_desc_label);
+	gtk_box_pack_start(GTK_BOX(battery_info), battery_label, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_end(GTK_BOX(battery_info), battery_value, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_start(GTK_BOX(telem_stats), battery_info, FALSE, FALSE, 0);
 	
 	// ping label
 	GtkWidget* ping_info = gtk_hbox_new(false, 0);
@@ -135,6 +163,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, TRUE, TRUE, 0);
 	
 	g_timeout_add(update_freq_ms, (GSourceFunc) ip_update, data);
+	g_timeout_add(update_freq_ms, (GSourceFunc) battery_update, data);
 
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_stats, FALSE, FALSE, 5);
 	pango_font_description_free(font_desc_label);

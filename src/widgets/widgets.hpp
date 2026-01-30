@@ -44,6 +44,7 @@ typedef struct TelemetryData {
 	guint8 n_services;
 	device_t** devices;
 	service_t** services;
+	unsigned int battery;
 	unsigned long* ping_logs;
 	int ping_offset;
 	unsigned int num_pings;
@@ -54,6 +55,7 @@ typedef struct TelemetryData {
 	GtkWidget** device_widgets;
 	GtkWidget** service_name_widgets;
 	GtkWidget** service_status_widgets;
+	GtkWidget* battery_label;
 	GtkWidget* ping_label;
 	GtkWidget* jitter_label;
 	GtkWidget* ip_label;

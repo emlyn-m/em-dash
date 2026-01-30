@@ -7,7 +7,7 @@
 gboolean clock_update(void* data_p) {
 	
 	clock_data_t* data = (clock_data_t*) data_p;
-	const char* MONTHS[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+	const char* MONTHS[] = { ".jan", ".feb", ".mar", ".apr", ".may", ".jun", ".jul", ".aug", ".sep", ".oct", ".nov", ".dec" };
 	
     const auto now = std::chrono::system_clock::now();
     const std::time_t t = std::chrono::system_clock::to_time_t(now);
@@ -36,8 +36,8 @@ GtkWidget* time_widget() {
 	
 	// wrapper
 	PangoFontDescription* font_desc_month = pango_font_description_from_string(FONT_12);
-	PangoFontDescription* font_desc_day = pango_font_description_from_string(FONT_30);
-	PangoFontDescription* font_desc_time = pango_font_description_from_string(FONT_20);
+	PangoFontDescription* font_desc_day = pango_font_description_from_string(FONT_20);
+	PangoFontDescription* font_desc_time = pango_font_description_from_string(FONT_16);
 
 	GtkWidget* wrapper = gtk_hbox_new(FALSE, 0);
 	GtkWidget* date_align_top = gtk_alignment_new(0.5, 0, 0.0, 0.0);

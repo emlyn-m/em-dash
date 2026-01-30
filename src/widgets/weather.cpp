@@ -29,7 +29,7 @@ gboolean update_weather_display(gpointer* weather_vp) {
         weather_ev_t* event = weather_data->events[event_idx];
         
         char temp_s[11];
-        snprintf(temp_s, 11, "%.1lf°C", event->temp_c);
+        snprintf(temp_s, 11, "%.1lf°", event->temp_c);
         gtk_label_set_text(GTK_LABEL(event->widget_temp), temp_s);
     
         char time_s[10];
@@ -40,17 +40,19 @@ gboolean update_weather_display(gpointer* weather_vp) {
         const int WMO_CLOUDY[3] = { 1, 2, 3 };
         const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
         const int WMO_THUNDER[3] = { 95, 96, 99 };
+        
+        const int icon_width = 30;
+        const int icon_height = 30;
+        
         if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), sun, 50, 50);
+            set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
         } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), cloud, 50, 50);
+            set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
         } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), rain, 50, 50);
+            set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
         } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), thunder, 50, 50);
+            set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
         }
-        
-        
         
     }
     
@@ -84,9 +86,9 @@ GtkWidget* weather_widget() {
 		gtk_widget_modify_font(time, font_time);
 		gtk_misc_set_alignment(GTK_MISC(temp), 0.5, 0.0);
 		gtk_misc_set_alignment(GTK_MISC(time), 0.5, 1.0);
-		gtk_box_pack_start(GTK_BOX(event_vbox), temp, TRUE, TRUE, 10*SCALE);
-		gtk_box_pack_start(GTK_BOX(event_vbox), icon, TRUE, TRUE, 10*SCALE);
-		gtk_box_pack_end(GTK_BOX(event_vbox), time, TRUE, TRUE, 10*SCALE);
+		gtk_box_pack_start(GTK_BOX(event_vbox), temp, TRUE, TRUE, 0*SCALE);
+		gtk_box_pack_start(GTK_BOX(event_vbox), icon, TRUE, TRUE, 0*SCALE);
+		gtk_box_pack_end(GTK_BOX(event_vbox), time, TRUE, TRUE, 0*SCALE);
 	
 		gtk_container_set_border_width(GTK_CONTAINER(wrapper), 10);
 		gtk_box_pack_start(GTK_BOX(wrapper), event_vbox, TRUE, TRUE, 0);

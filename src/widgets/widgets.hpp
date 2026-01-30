@@ -8,22 +8,22 @@
 
 #define SCALE 1
 
-#define FONT_8  "Geist Mono, 8"
-#define FONT_10 "Geist Mono, 10"
-#define FONT_12 "Geist Mono, 12"
-#define FONT_14 "Geist Mono, 14"
-#define FONT_16 "Geist Mono, 16"
-#define FONT_18 "Geist Mono, 18"
-#define FONT_20 "Geist Mono, 20"
-#define FONT_30 "Geist Mono, 30"
-#define FONT_BOLD_8  "Geist Mono, Bold 8" 
-#define FONT_BOLD_10 "Geist Mono, Bold 10" 
-#define FONT_BOLD_12 "Geist Mono, Bold 12" 
-#define FONT_BOLD_14 "Geist Mono, Bold 14" 
-#define FONT_BOLD_16 "Geist Mono, Bold 16" 
-#define FONT_BOLD_18 "Geist Mono, Bold 18" 
-#define FONT_BOLD_20 "Geist Mono, Bold 20" 
-#define FONT_BOLD_30 "Geist Mono, Bold 30" 
+#define FONT_8  "Geist Mono, 4"
+#define FONT_10 "Geist Mono, 5"
+#define FONT_12 "Geist Mono, 6"
+#define FONT_14 "Geist Mono, 7"
+#define FONT_16 "Geist Mono, 8"
+#define FONT_18 "Geist Mono, 9"
+#define FONT_20 "Geist Mono, 10"
+#define FONT_30 "Geist Mono, 15"
+#define FONT_BOLD_8  "Geist Mono, Bold 4" 
+#define FONT_BOLD_10 "Geist Mono, Bold 5" 
+#define FONT_BOLD_12 "Geist Mono, Bold 6" 
+#define FONT_BOLD_14 "Geist Mono, Bold 7" 
+#define FONT_BOLD_16 "Geist Mono, Bold 8" 
+#define FONT_BOLD_18 "Geist Mono, Bold 9" 
+#define FONT_BOLD_20 "Geist Mono, Bold 10" 
+#define FONT_BOLD_30 "Geist Mono, Bold 15" 
 
 
 typedef struct ClockData {

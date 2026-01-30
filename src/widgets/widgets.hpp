@@ -30,6 +30,7 @@ typedef struct ClockData {
 	GtkWidget* month_widget;
 	GtkWidget* day_widget;
 	GtkWidget* time_widget;
+	GtkWidget* ampm_widget;
 } clock_data_t;
 typedef struct DeviceData {
 	char* name;

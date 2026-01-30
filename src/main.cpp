@@ -1,6 +1,5 @@
 #include <gtk-2.0/gtk/gtk.h>
 #include <gtk-2.0/gdk/gdk.h>
-// #include <fontconfig/fontconfig.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -15,9 +14,6 @@
 
 
 int main(int argc, char* argv[]) {
-	
-	// FcConfigAppFontAddFile(FcConfigGetCurrent(), (FcChar8*) "./src/include/GeistMono-Regular.ttf");
-	
 	GtkWidget *window;
 	gtk_init (&argc, &argv);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

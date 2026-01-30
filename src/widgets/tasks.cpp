@@ -7,7 +7,6 @@ gboolean tasks_update(void* data_p) {
 	task_t* data = (task_t*) data_p;
 	
 	for (uint32_t i=0; i < data->num_tasks; i++) {
-
 		gtk_label_set_text(GTK_LABEL(data->task_checkboxes[i]), data->tasks[i]->completed ? "▣" : "□");
 		gtk_label_set_text(GTK_LABEL(data->task_widgets[i]), data->tasks[i]->task);
 	}

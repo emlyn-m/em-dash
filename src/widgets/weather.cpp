@@ -22,10 +22,13 @@ gboolean wmo_compare(int code, const int codes[], int n_codes) {
 }
 
 gboolean update_weather_display(gpointer* weather_vp) {
+    const int WMO_SUNNY[1] = { 0 };
+    const int WMO_CLOUDY[3] = { 1, 2, 3 };
+    const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
+    const int WMO_THUNDER[3] = { 95, 96, 99 };
+
     weather_t* weather_data = (weather_t*) weather_vp;
-    
     for (uint32_t event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) { 
-        
         weather_ev_t* event = weather_data->events[event_idx];
         
         char temp_s[11];
@@ -36,25 +39,24 @@ gboolean update_weather_display(gpointer* weather_vp) {
         generate_time(event->time, time_s);
         gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
         
-        const int WMO_SUNNY[1] = { 0 };
-        const int WMO_CLOUDY[3] = { 1, 2, 3 };
-        const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
-        const int WMO_THUNDER[3] = { 95, 96, 99 };
-        
-        const int icon_width = 30;
-        const int icon_height = 30;
-        
-        if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
+        if (weather_data->icons_changed) {            
+            const int icon_width = 30;
+            const int icon_height = 30;
+            
+            if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
+                set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
+            } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
+                set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
+            } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
+                set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
+            } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
+                set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
+            }
+            
         }
         
     }
+    weather_data->icons_changed = false;
     
     return TRUE;
 }
@@ -63,6 +65,7 @@ GtkWidget* weather_widget() {
 	
 	weather_t* weather = (weather_t*) malloc(sizeof(weather_t));
 	weather->num_weather_events = 10;
+	weather->icons_changed = false;
 	weather->last_update = 0;
 	weather->update_freq = 30 * 60 * 1000; // ms
 	weather->events = (weather_ev_t**) malloc(weather->num_weather_events * sizeof(weather_ev_t*));

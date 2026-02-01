@@ -35,7 +35,8 @@ gboolean update_telem_net(gpointer* data_vp) {
 
 
     cJSON* devices = cJSON_Parse(device_buf);
-    telem->n_devices = cJSON_GetArraySize(devices);    
+    telem->n_devices = cJSON_GetArraySize(devices);
+    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m found %d devices\n", telem->n_devices); fflush(stdout);
     for (int i=0; i < telem->n_devices; i++) {
         strncpy(telem->devices[i]->name, cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "name")->valuestring, 63);
         strncpy(telem->devices[i]->alias, cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "alias")->valuestring, 63);
@@ -47,6 +48,7 @@ gboolean update_telem_net(gpointer* data_vp) {
 
     cJSON* services = cJSON_Parse(service_buf);
     telem->n_services = cJSON_GetArraySize(services);
+    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m found %d services\n", telem->n_services); fflush(stdout);
     for (int i=0; i < telem->n_services; i++) {
         strncpy(telem->services[i]->name, cJSON_GetObjectItem(cJSON_GetArrayItem(services, i), "name")->valuestring, 63);
         strncpy(telem->services[i]->status, cJSON_GetObjectItem(cJSON_GetArrayItem(services, i), "status")->valuestring, 63);

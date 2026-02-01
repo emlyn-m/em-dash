@@ -23,8 +23,7 @@ void generate_date(time_t date_begin, char* res) {
     
 }
 
-gboolean update_weather(gpointer* data) {
-    
+gboolean update_weather(gpointer* data) {    
     weather_t* weather_data = (weather_t*) data;
     
     time_t ctime;
@@ -83,7 +82,7 @@ gboolean update_weather(gpointer* data) {
         weather_data->events[event_idx]->time = parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset)->valuestring);
         weather_data->events[event_idx]->temp_c = cJSON_GetArrayItem(temps, time_offset)->valuedouble;
         weather_data->events[event_idx]->rain_prob = cJSON_GetArrayItem(rain_probs, time_offset)->valuedouble;
-        weather_data->events[event_idx]->wmo_code = cJSON_GetArrayItem(wmo_codes, time_offset)->valuedouble;
+        weather_data->events[event_idx]->wmo_code = cJSON_GetArrayItem(wmo_codes, time_offset)->valueint;
         
         printf("ts=%s    t=%ld    T=%lf*C    P=%lf    wmo=%d\n", cJSON_GetArrayItem(weather_times, time_offset)->valuestring, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
         

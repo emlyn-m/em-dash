@@ -104,7 +104,7 @@ gboolean update_events(gpointer* calendar_gp) {
         cJSON* token_resp_j = cJSON_Parse(token_resp_buf);
         free(token_resp_buf);
 
-        int token_expiry = floor(cJSON_GetObjectItem(token_resp_j, "expires_in")->valuedouble);
+        int token_expiry = cJSON_GetObjectItem(token_resp_j, "expires_in")->valueint;
         char* token_value = cJSON_GetObjectItem(token_resp_j, "access_token")->valuestring;
         
         cal->token_exp = ctime + token_expiry;

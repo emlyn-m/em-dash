@@ -34,6 +34,8 @@ typedef struct ClockData {
 } clock_data_t;
 typedef struct DeviceData {
 	char* name;
+	char* alias;
+	char* ip;
 	gboolean online;
 } device_t;
 typedef struct ServiceData {
@@ -54,7 +56,8 @@ typedef struct TelemetryData {
 	double jitter;
 	char* ip;
 	
-	GtkWidget** device_widgets;
+	GtkWidget** device_name_widgets;
+	GtkWidget** device_ip_widgets;
 	GtkWidget** service_name_widgets;
 	GtkWidget** service_status_widgets;
 	GtkWidget* battery_label;

@@ -1,16 +1,15 @@
 # Serverside
 
-FPATH_LOCAL="/home/emlyn/pets/kindle/build_kindlepw2/winter_dash"
-FPATH_REMOTE="/winter_dash_test"
-BOOK_NAME="winter_dash"
+FPATH_LOCAL="/home/emlyn/pets/kindle/build_kindlepw2/dash"
+FPATH_REMOTE="/dash_test"
+BOOK_NAME="dash"
 
 TX_PORT=1338
-STDOUT_IP=10.253.152.12
+STDOUT_IP=10.210.88.11
 STDOUT_PORT=1339
 
-book_content="\"#!/bin/sh\n# Name: ; run $BOOK_NAME\n# Author: winter\n\n rm /tmp/f; mkfifo /tmp/f; $FPATH_REMOTE & pid=\\\$!; cat /tmp/f | /bin/sh -i 2>&1 | nc -w 30 $STDOUT_IP $STDOUT_PORT > /tmp/f; kill \\\$pid \""
-echo "mount / -o remount,rw && rm -f $FPATH_REMOTE && rm -f /mnt/us/documents/$BOOK_NAME.sh && echo '$(cat $FPATH_LOCAL | base64 -w 0)' | base64 -d > $FPATH_REMOTE && chmod +x $FPATH_REMOTE && echo -e $book_content > /mnt/us/documents/$BOOK_NAME.sh && exit" | nc -lvp $TX_PORT
-#
-
-
-[{"name": "gtk+-2.0", "type": "pkgconfig", "version": "2.24.33", "compile_args": ["-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/gtk-2.0", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/gtk-2.0/include", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/pango-1.0", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/atk-1.0", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/gdk-pixbuf-2.0", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/libmount", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/blkid", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/fribidi", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/cairo", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/freetype2", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/libpng16", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/harfbuzz", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/glib-2.0", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/glib-2.0/include", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/pixman-1", "-I/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/include/sysprof-6", "-pthread"], "link_args": ["/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libgtk-x11-2.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libgdk-x11-2.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libpangocairo-1.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libatk-1.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libgdk_pixbuf-2.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libpangoft2-1.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libpango-1.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libgio-2.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libgobject-2.0.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libcairo.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libfontconfig.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libfreetype.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libbz2.so", "/home/emlyn/x-tools/arm-kindlepw2-linux-gnueabi/arm-kindlepw2-linux-gnueabi/sysroot/usr/lib/libglib-2.0.so"], "include_directories": [], "sources": [], "extra_files": [], "dependencies": [], "depends": [], "meson_variables": ["gtk_dep"]}]
+book_content="\"#!/bin/sh\n# Name: ; run $BOOK_NAME\n# Author: winter\n\n rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | $FPATH_REMOTE 2>&1 | nc -w 5 $STDOUT_IP $STDOUT_PORT > /tmp/f \""
+echo -e "\x1b[38;5;139m\x1b[1mINFO:\x1b[0m ready to transmit on port $TX_PORT"
+echo "mount / -o remount,rw && rm -f $FPATH_REMOTE && rm -f /mnt/us/documents/$BOOK_NAME.sh && echo '$(cat $FPATH_LOCAL | base64 -w 0)' | base64 -d > $FPATH_REMOTE && chmod +x $FPATH_REMOTE && echo -e $book_content > /mnt/us/documents/$BOOK_NAME.sh && exit" | nc -lvp $TX_PORT 2>/dev/null
+echo -e "\n\x1b[38;5;139m\x1b[1mINFO:\x1b[0m listening for stdout/stderr on port $STDOUT_PORT"
+nc -lvp $STDOUT_PORT 2>/dev/null

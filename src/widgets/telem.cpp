@@ -90,7 +90,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	
 	// wrapper
 	telem_t* data = (telem_t*) malloc(sizeof(telem_t));
-	const int MAX_DEVICES = 7;
+	const int MAX_DEVICES = 8;
 	const int MAX_SERVICES = 10;
 	data->n_devices = 0;
 	data->devices = (device_t**) malloc(MAX_DEVICES * sizeof(device_t*));

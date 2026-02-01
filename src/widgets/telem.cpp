@@ -15,11 +15,17 @@ gboolean devices_update(gpointer* data_p) {
 	    memset(device_name_buf, 0, 64);
 		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "- %s", data->devices[i]->alias);
 		gtk_label_set_text(GTK_LABEL(data->device_name_widgets[i]), device_name_buf);
+        gtk_widget_set_visible(data->device_name_widgets[i], true);
 		if (data->devices[i]->online) {
+		    gtk_widget_set_visible(data->device_ip_widgets[i], true);
 		    gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
 		} else {
 			gtk_widget_set_visible(data->device_ip_widgets[i], false);
 		}
+	}
+	for (uint32_t i=data->n_devices; i < data->max_devices; i++) {
+        gtk_widget_set_visible(data->device_name_widgets[i], false);
+        gtk_widget_set_visible(data->device_ip_widgets[i], false);
 	}
 	
 	return TRUE;
@@ -29,10 +35,16 @@ gboolean services_update(gpointer* data_vp) {
     telem_t* data = (telem_t*) data_vp;
 	
 	for (uint32_t i=0; i < data->n_services; i++) {
+        gtk_widget_set_visible(data->service_name_widgets[i], true);
+        gtk_widget_set_visible(data->service_status_widgets[i], true);
 		gtk_label_set_text(GTK_LABEL(data->service_name_widgets[i]), data->services[i]->name);
 		gtk_label_set_text(GTK_LABEL(data->service_status_widgets[i]), data->services[i]->status);
 	}
-	
+	for (uint32_t i=data->n_services; i<data->max_services; i++) {
+        gtk_widget_set_visible(data->service_name_widgets[i], false);
+        gtk_widget_set_visible(data->service_status_widgets[i], false);
+	}
+
 	return TRUE;
 }
 
@@ -93,28 +105,28 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	
 	// wrapper
 	telem_t* data = (telem_t*) malloc(sizeof(telem_t));
-	const int MAX_DEVICES = 8;
-	const int MAX_SERVICES = 10;
+	data->max_devices = 8;
+	data->max_services = 10;
 	data->n_devices = 0;
-	data->devices = (device_t**) malloc(MAX_DEVICES * sizeof(device_t*));
-	for (int i=0; i < MAX_DEVICES; i++) { 
+	data->devices = (device_t**) malloc(data->max_devices * sizeof(device_t*));
+	for (int i=0; i < data->max_devices; i++) { 
 	    data->devices[i] = (device_t*) malloc(sizeof(device_t));
 		data->devices[i]->name = (char*) malloc(64 * sizeof(char)); memset(data->devices[i]->name, 0, 64);
 		data->devices[i]->alias = (char*) malloc(64 * sizeof(char)); memset(data->devices[i]->alias, 0, 64);
 		data->devices[i]->ip = (char*) malloc(32 * sizeof(char)); memset(data->devices[i]->ip, 0, 32);
 
 	}
-	data->device_name_widgets = (GtkWidget**) malloc(MAX_DEVICES * sizeof(GtkWidget*));
-	data->device_ip_widgets = (GtkWidget**) malloc(MAX_DEVICES * sizeof(GtkWidget*));
+	data->device_name_widgets = (GtkWidget**) malloc(data->max_devices * sizeof(GtkWidget*));
+	data->device_ip_widgets = (GtkWidget**) malloc(data->max_devices * sizeof(GtkWidget*));
 	data->n_services = 0;
-	data->services = (service_t**) malloc(MAX_SERVICES * sizeof(service_t*));
-	for (int i=0; i < MAX_SERVICES; i++) {
+	data->services = (service_t**) malloc(data->max_services * sizeof(service_t*));
+	for (int i=0; i < data->max_services; i++) {
 	    data->services[i] = (service_t*) malloc(sizeof(service_t)); 
 		data->services[i]->name = (char*) malloc(64 * sizeof(char)); memset(data->services[i]->name, 0, 64);
 		data->services[i]->status = (char*) malloc(64 * sizeof(char)); memset(data->services[i]->status, 0, 64);
 	}
-	data->service_name_widgets = (GtkWidget**) malloc(MAX_SERVICES * sizeof(GtkWidget*));
-	data->service_status_widgets = (GtkWidget**) malloc(MAX_SERVICES * sizeof(GtkWidget*));
+	data->service_name_widgets = (GtkWidget**) malloc(data->max_services * sizeof(GtkWidget*));
+	data->service_status_widgets = (GtkWidget**) malloc(data->max_services * sizeof(GtkWidget*));
 	data->battery = 0;
 	data->max_pings = 20;
 	data->num_pings = 0;
@@ -146,7 +158,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	PangoFontDescription* font_desc_lg_bold = pango_font_description_from_string(FONT_BOLD_10);
 	PangoFontDescription* font_desc_sm_bold = pango_font_description_from_string(FONT_BOLD_8);
 
-	for (uint32_t i=0; i < MAX_DEVICES; i++) {
+	for (uint32_t i=0; i < data->max_devices; i++) {
         GtkWidget* instance_block = gtk_vbox_new(FALSE, 0);
 		data->device_name_widgets[i] = gtk_label_new("");
 		data->device_ip_widgets[i] = gtk_label_new("");
@@ -162,7 +174,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	// services
 	GtkWidget* service_block = gtk_vbox_new(false, 0);
 
-	for (uint32_t i=0; i < MAX_DEVICES; i++) {
+	for (uint32_t i=0; i < data->max_services; i++) {
 	    GtkWidget* instance_block = gtk_hbox_new(FALSE, 0);
 		data->service_name_widgets[i] = gtk_label_new("");
 		data->service_status_widgets[i] = gtk_label_new("");
@@ -180,7 +192,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	pango_font_description_free(font_desc_sm_bold);
 	pango_font_description_free(font_desc_lg_bold);
 	gtk_box_pack_start(GTK_BOX(telem_info), device_block, FALSE, FALSE, 5*SCALE);
-	gtk_box_pack_start(GTK_BOX(telem_info), service_block, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_end(GTK_BOX(telem_info), service_block, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_info, TRUE, TRUE, 5*SCALE);
 
 

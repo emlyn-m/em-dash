@@ -43,6 +43,8 @@ typedef struct ServiceData {
 	char* status;
 } service_t;
 typedef struct TelemetryData {
+    guint8 max_devices;
+	guint8 max_services;
 	guint8 n_devices;
 	guint8 n_services;
 	device_t** devices;

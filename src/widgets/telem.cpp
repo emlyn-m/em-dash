@@ -15,7 +15,11 @@ gboolean devices_update(gpointer* data_p) {
 	    memset(device_name_buf, 0, 64);
 		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "- %s", data->devices[i]->alias);
 		gtk_label_set_text(GTK_LABEL(data->device_name_widgets[i]), device_name_buf);
-		gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
+		if (data->devices[i]->online) {
+		    gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
+		} else {
+			gtk_widget_set_visible(data->device_ip_widgets[i], false);
+		}
 	}
 	
 	return TRUE;

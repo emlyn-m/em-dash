@@ -51,7 +51,6 @@ time_t parse_gcal_datetime(cJSON* obj) {
 }
 
 gboolean update_events(gpointer* calendar_gp) {
-    return FALSE;
         
     const uint32_t TOKEN_BUFSIZE = 2048;
     calendar_t* cal = (calendar_t*) calendar_gp;

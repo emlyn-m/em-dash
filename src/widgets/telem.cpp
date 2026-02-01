@@ -13,8 +13,7 @@ gboolean devices_update(gpointer* data_p) {
 	char device_name_buf[64];
 	for (uint32_t i=0; i < data->n_devices; i++) {
 	    memset(device_name_buf, 0, 64);
-		// snprintf(device_name_buf, 64, data->devices[i]->online ? "◉ %s" : "○ %s", data->devices[i]->name);
-		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "_ %s", data->devices[i]->name);
+		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "_ %s", data->devices[i]->alias);
 		gtk_label_set_text(GTK_LABEL(data->device_name_widgets[i]), device_name_buf);
 		gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
 	}

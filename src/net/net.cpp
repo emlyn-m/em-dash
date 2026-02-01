@@ -21,13 +21,13 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
     time_t time_start = time(NULL);
     char port_buf[6]; memset(port_buf, 0, 6); snprintf(port_buf, 6, "%d", port);
     if (getaddrinfo(hostname, port_buf, &hints, &res)) {
-        fprintf(stderr, "error in getaddrinfo"); 
+        fprintf(stderr, "error in getaddrinfo"); fflush(stderr);
         return 1; 
     }
     
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (connect(sockfd,res->ai_addr,res->ai_addrlen)) {
-        fprintf(stderr, "error in connect");
+        fprintf(stderr, "error in connect"); fflush(stderr);
         return 1;
     };
     
@@ -41,7 +41,7 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
     char buf[read_buf_maxsize]; memset(buf, 0, read_buf_maxsize);
 
     if (!recv(sockfd, buf, read_buf_maxsize, 0)) {
-        fprintf(stderr, "read 0 bytes :(\n");
+        fprintf(stderr, "read 0 bytes :(\n"); fflush(stdout);
     };
     time_t time_end = std::time(NULL);
     *pingp = (time_end - time_start);
@@ -50,7 +50,7 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
     char* body_offset = strstr(buf, "\r\n\r\n") + 4*sizeof(char);
     int body_length = strlen(body_offset);
     if (!(*out = (char*) malloc(sizeof(char) * (body_length + 1)))) {
-        fprintf(stderr, "failed to realloc output buffer to size %d\n", body_length + 1);
+        fprintf(stderr, "failed to realloc output buffer to size %d\n", body_length + 1); fflush(stderr);
         return 1;
     }; 
     (*out)[body_length] = '\0';

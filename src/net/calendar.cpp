@@ -51,6 +51,7 @@ time_t parse_gcal_datetime(cJSON* obj) {
 }
 
 gboolean update_events(gpointer* calendar_gp) {
+    return FALSE;
         
     const uint32_t TOKEN_BUFSIZE = 2048;
     calendar_t* cal = (calendar_t*) calendar_gp;
@@ -60,12 +61,12 @@ gboolean update_events(gpointer* calendar_gp) {
         return TRUE; 
     }
     
-    printf("executing calendar update...\n");
+    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m executing calendar update...\n"); fflush(stdout);
     fflush(stdout);
     
     if (ctime > cal->token_exp) {
         
-        printf("expired token, regenerating...\n");
+        printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m expired token, regenerating...\n");
         fflush(stdout);
         
         if (!cal->token_buf) {
@@ -75,11 +76,11 @@ gboolean update_events(gpointer* calendar_gp) {
         
         int token_result = generate_gcal_jwt((char*) SERVICE_EMAIL, (char*) PRIVKEY, TOKEN_BUFSIZE, cal->token_buf);
         if (token_result) { 
-            fprintf(stderr, "failed to generate jwt\n"); fflush(stderr);
+            fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to generate jwt\n"); fflush(stderr);
             return TRUE; 
         } // error!!
         
-        printf("successfully generated jwt\n"); fflush(stdout);
+        printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m successfully generated jwt\n"); fflush(stdout);
         
         const uint32_t token_redeem_bufsize = 2048;
         char* token_redeem_payload = (char*) malloc(token_redeem_bufsize * sizeof(char));
@@ -91,10 +92,10 @@ gboolean update_events(gpointer* calendar_gp) {
         FILE* token_redeem_fp = popen(token_redeem_payload, "r");
         free(token_redeem_payload);
         if (!token_redeem_fp) { /* failed to exec -  yikes! */ 
-            fprintf(stderr, "failed to exec token redeem"); fflush(stderr);
+            fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to exec token redeem"); fflush(stderr);
             return TRUE; 
         }
-        printf("redeemed token\n"); fflush(stdout);
+        printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m redeemed google oauth token\n"); fflush(stdout);
         
         const uint32_t token_resp_bufsize = 2048;
         char* token_resp_buf = (char*) malloc(token_resp_bufsize * sizeof(char));
@@ -113,7 +114,7 @@ gboolean update_events(gpointer* calendar_gp) {
         cJSON_free(token_resp_j);  // todo: free - once i work out token sizing
     }
     
-    printf("valid token found\n"); fflush(stdout);
+    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m existing valid token found\n"); fflush(stdout);
     
     time_t tlo_t;
     time_t thi_t;
@@ -136,10 +137,8 @@ gboolean update_events(gpointer* calendar_gp) {
     char events_req_cmdbuf[2048];
     snprintf(events_req_cmdbuf, 2048, "curl -sH 'Authorization: Bearer %s' '%s'", cal->token_buf, events_req_url);
     FILE* events_req_fp = popen(events_req_cmdbuf, "r");
-    if (!events_req_fp) { fprintf(stderr, "failed to exec events fetch\n"); return TRUE; }
-    
-    printf("made events request\n"); fflush(stdout);
-    
+    if (!events_req_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to exec events fetch\n"); return TRUE; }
+        
     const uint32_t EVENTS_BUF_SIZE = 1000000; // todo: wow i really dont even know if this'll be long enough;
     char events_buf[EVENTS_BUF_SIZE]; 
     memset(events_buf, 0, EVENTS_BUF_SIZE);
@@ -163,13 +162,14 @@ gboolean update_events(gpointer* calendar_gp) {
         
         cal->events[i]->end_time = parse_gcal_datetime(cJSON_GetObjectItem(event_obj, "end"));  // we need way better logic for handling the 'date' format on this
         if (!cal->events[i]->end_time) { cal->events[i]->end_time = thi_t; }  // surely neither of these should happen BUT just in case :)
+        
+        printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m found event %s (%ld - %ld)\n", cal->events[i]->title, cal->events[i]->start_time, cal->events[i]->end_time); fflush(stdout);
     }
     
     cal->num_events = cJSON_GetArraySize(event_lst);
-    
     cal->last_updated = time(NULL);
-    printf("successful update\n"); fflush(stdout);
-    
+
+    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m calendar update complete\n"); fflush(stdout);
     return TRUE;
    
 }

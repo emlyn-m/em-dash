@@ -151,7 +151,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
     
-    minecraft_run = subprocess.run(['nc', '-vw 0', MINECRAFT_HEALTH_ENDPOINT, str(MINECRAFT_HEALTH_PORT)], capture_output=True, text=True)
+    minecraft_run = subprocess.run(['nc', '-vz', MINECRAFT_HEALTH_ENDPOINT, str(MINECRAFT_HEALTH_PORT)], capture_output=True, text=True)
     minecraft_status =(
         TSHealth.DOWN if minecraft_run.returncode == 1 
         else TSHealth.HEALTHY if minecraft_run.stderr.strip().endswith('succeeded!') 

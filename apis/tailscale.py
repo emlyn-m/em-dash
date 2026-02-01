@@ -4,6 +4,7 @@ from typing import Union
 from enum import Enum
 import subprocess
 import json
+import logging
 
 JELLYFIN_HEALTH_ENDPOINT  = 'https://jellyfin.tailscale.emlyn.xyz/health/'
 MIKOCHI_HEALTH_ENDPOINT   = 'https://mikochi.tailscale.emlyn.xyz/'
@@ -44,6 +45,7 @@ class TSService(BaseModel):
 router = APIRouter()
 @router.get('/api/tailscale/devices', response_model_exclude_unset=True)
 async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
+    logger = logging.getLogger(__name__)
     device_run = subprocess.run(["tailscale", "status", "--json"], capture_output=True, text=True)
     if (device_run.returncode):
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -61,7 +63,7 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
             name=device_j['Peer'][peer_id]['HostName'],
             alias=device_j['Peer'][peer_id]['DNSName'].split('.')[0],
             ip=device_j['Peer'][peer_id]['TailscaleIPs'][0],
-            online=(device_j['Peer'][peer_id]['Online'] == 'True')
+            online=device_j['Peer'][peer_id]['Online']
         ))
     
     return devs

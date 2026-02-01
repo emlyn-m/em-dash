@@ -21,12 +21,12 @@ int main(int argc, char* argv[]) {
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	GdkColor color = { 0, 255<<8, 255<<8, 255<<8 };
 	gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &color);
-	
+
 	GtkWidget* stack = gtk_notebook_new();
 	gtk_notebook_set_show_tabs(GTK_NOTEBOOK(stack), false);
 	gtk_notebook_set_show_border(GTK_NOTEBOOK(stack), false);
 
-	GtkWidget* screens[N_SCREENS] = { 
+	GtkWidget* screens[N_SCREENS] = {
 	    generate_life_screen(stack, set_screen),
 		generate_ctrl_screen(stack, set_screen),
 	};

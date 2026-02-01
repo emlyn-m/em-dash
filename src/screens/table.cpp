@@ -7,14 +7,14 @@
 #define OFFSET_SIZE 5
 #define SCALE 1
 
-static gboolean shadow_expose(GtkWidget* widget, GdkEventExpose* event, gpointer _data) {	
+static gboolean shadow_expose(GtkWidget* widget, GdkEventExpose* event, gpointer _data) {
     cairo_t* cr = gdk_cairo_create(widget->window);
-    
+
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_rectangle(cr, OFFSET_SIZE/2.0, OFFSET_SIZE*1.5, event->area.width - 2*OFFSET_SIZE, event->area.height - 2*OFFSET_SIZE);
     cairo_fill(cr);
     cairo_destroy(cr);
-    
+
     return TRUE;
 }
 
@@ -23,7 +23,7 @@ GtkWidget* gtk_table_custom(guint rows, guint cols) {
 	gtk_table_set_row_spacings(GTK_TABLE(table), 0); //PADDING*SCALE);
 	gtk_table_set_col_spacings(GTK_TABLE(table), 0); //PADDING*SCALE);
 	gtk_container_set_border_width(GTK_CONTAINER(table), 2*PADDING*SCALE);
-	
+
 	return table;
 }
 

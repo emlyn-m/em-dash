@@ -22,7 +22,7 @@ void generate_date(time_t date_begin, char* res) {
     strftime(res, 15, (char*) "%Y-%m-%d", date);
 }
 
-gboolean update_weather(gpointer* data) {    
+gboolean update_weather(gpointer* data) {
     weather_t* weather_data = (weather_t*) data;
 
     time_t ctime;
@@ -86,7 +86,7 @@ gboolean update_weather(gpointer* data) {
         fflush(stdout);
         time_offset++;
         event_idx++;
-    }    
+    }
 
     cJSON_free(weather);
     free(weather_buf);

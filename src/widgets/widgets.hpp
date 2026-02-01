@@ -16,14 +16,14 @@
 #define FONT_18 "Geist Mono, 9"
 #define FONT_20 "Geist Mono, 10"
 #define FONT_30 "Geist Mono, 15"
-#define FONT_BOLD_8  "Geist Mono, Bold 4" 
-#define FONT_BOLD_10 "Geist Mono, Bold 5" 
-#define FONT_BOLD_12 "Geist Mono, Bold 6" 
-#define FONT_BOLD_14 "Geist Mono, Bold 7" 
-#define FONT_BOLD_16 "Geist Mono, Bold 8" 
-#define FONT_BOLD_18 "Geist Mono, Bold 9" 
-#define FONT_BOLD_20 "Geist Mono, Bold 10" 
-#define FONT_BOLD_30 "Geist Mono, Bold 15" 
+#define FONT_BOLD_8  "Geist Mono, Bold 4"
+#define FONT_BOLD_10 "Geist Mono, Bold 5"
+#define FONT_BOLD_12 "Geist Mono, Bold 6"
+#define FONT_BOLD_14 "Geist Mono, Bold 7"
+#define FONT_BOLD_16 "Geist Mono, Bold 8"
+#define FONT_BOLD_18 "Geist Mono, Bold 9"
+#define FONT_BOLD_20 "Geist Mono, Bold 10"
+#define FONT_BOLD_30 "Geist Mono, Bold 15"
 
 
 typedef struct ClockData {
@@ -57,7 +57,7 @@ typedef struct TelemetryData {
 	unsigned int max_pings;
 	double jitter;
 	char* ip;
-	
+
 	GtkWidget** device_name_widgets;
 	GtkWidget** device_ip_widgets;
 	GtkWidget** service_name_widgets;
@@ -82,20 +82,20 @@ typedef struct CalendarData {
 	uint32_t show_events;
 	cal_event_t** events;
 	cal_event_t* active_event;
-	
+
 	char* token_buf;
 	uint64_t token_exp;
 	time_t last_updated;
 	uint32_t update_frequency;
-	
+
 	GtkWidget* title_widget;
 	GtkWidget* title_date_widget;
 	GtkWidget* title_day_widget;
-	
+
 	GtkWidget* active_event_widget;
 	GtkWidget* active_event_title_widget;
 	GtkWidget* active_event_duration_widget;
-	
+
 	GtkWidget** events_title_widgets;
 	GtkWidget** events_time_widgets;
 } calendar_t;
@@ -105,7 +105,7 @@ typedef struct WeatherEvent {
 	double rain_prob;
 	double temp_c;
 	int wmo_code;
-	
+
 	GtkWidget* widget_time;
 	GtkWidget* widget_temp;
 	GtkWidget* widget_icon;
@@ -113,7 +113,7 @@ typedef struct WeatherEvent {
 typedef struct WeatherData {
 	uint32_t num_weather_events;
 	weather_ev_t** events;
-	
+
 	time_t last_update;
 	time_t update_freq;
 } weather_t;

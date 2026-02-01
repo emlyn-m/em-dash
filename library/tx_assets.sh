@@ -1,11 +1,54 @@
 #!/bin/sh
 
+set -e
+
+gen_tx_cmd() {
+    if [ ! -f $1 ]; then
+        echo -e "\x1b[38;5;139m\x1b[1mERR:\x1b[0m file \"$1\" does not exist" >&2
+        exit 1
+    fi
+    echo "echo '$(cat $1 | base64 -w 0)' | base64 -d > $2/$(basename $1) && "
+}
+
+HELP_MSG="\x1b[38;5;139m\x1b[1mHELP:\x1b[0m tx_assets.sh [data files] --fonts [font files]"
+REMOTE_FONT_PATH="/usr/share/fonts"
+REMOTE_DATA_PATH="/data"
 TX_PORT=1337
 
-FONT_PATH="./src/assets/GeistMono-Regular.ttf"
-FONT_BOLD_PATH="./src/assets/GeistMono-Bold.ttf"
+if [ "$#" -eq 0 ]; then
+    echo -e $HELP_MSG
+    exit 1
+fi
 
-tx_font_cmd="echo '$(cat $FONT_PATH | base64 -w 0)' | base64 -d > /usr/share/fonts/GeistMono-Regular.ttf"
-tx_font_bold="echo '$(cat $FONT_BOLD_PATH | base64 -w 0)' | base64 -d > /usr/share/fonts/GeistMono-Bold.ttf"
+full_tx_cmd=""
+active_mode_path=$REMOTE_DATA_PATH
+active_mode_name=""
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --fonts)
+            if [ -n "$2" ]; then
+                active_mode_name=" font"
+                active_mode_path=$REMOTE_FONT_PATH
+            else
+                echo -e "\x1b[38;5;139m\x1b[1mERR:\x1b[0m --fonts without any font files" >&2
+                exit 1
+            fi
+            ;;
+        *)
+            echo -e "\x1b[38;5;139m\x1b[1mINFO:\x1b[0m loading$active_mode_name $1 with name \"$(basename $1)\""
+            full_tx_cmd="$full_tx_cmd$(gen_tx_cmd $1 $active_mode_path)"
+            ;;
+    esac
+    shift # shift to the next argument or value
 
-echo $tx_font_cmd "&&" $tx_font_bold "&& fc-cache -vf /usr/share/fonts && exit" | nc -lvp $TX_PORT
+done
+
+if [ -z "$full_tx_cmd" ]; then
+    echo -e "\x1b[38;5;139m\x1b[1mERR:\x1b[0m no files specified"
+    exit 1
+fi
+
+full_tx_cmd="${full_tx_cmd}fc-cache -vf $REMOTE_FONT_PATH && exit" 
+echo -e "\x1b[38;5;139m\x1b[1mDBG: \x1b[0m using \"$full_tx_cmd\""
+echo -e "\x1b[38;5;139m\x1b[1mINFO:\x1b[0m ready transmit on port $TX_PORT"
+echo $full_tx_cmd | nc -lvp $TX_PORT 2>/dev/null

@@ -1,1 +1,0 @@
-sudo mount /dev/sda1 /mnt && rm -rf build_kindlepw2/dash.p build_kindlepw2/dash && meson compile -C build_kindlepw2 && sudo rm /mnt/documents/dash && sudo cp build_kindlepw2/dash /mnt/documents && sudo eject /mnt

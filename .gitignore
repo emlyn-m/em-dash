@@ -2,3 +2,7 @@
 meson.build
 meson.options
 src/secrets.h
+
+apis/__pycache__
+apis/.venv
+apis/.python_version

@@ -1,0 +1,7 @@
+[project]
+name = "apis"
+version = "0.1.0"
+description = "APIs for Kindle Dash"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []

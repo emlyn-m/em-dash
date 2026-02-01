@@ -22,6 +22,9 @@ gboolean update_telem_net(gpointer* data_vp) {
         printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m read filled device_buf - end: <%s>\n", device_buf + DEVICE_BUFSIZE - 10); fflush(stdout);
         return TRUE;
     };
+    int device_req_status = pclose(device_fp);
+	if (device_req_status == -1) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m pclose error on device_req\n"); fflush(stderr); return TRUE; }
+	if (WEXITSTATUS(device_req_status)) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(device_req_status)); fflush(stderr); return TRUE; }
 
     char service_req_cmdbuf[1024]; memset(service_req_cmdbuf, 0, 1024);
     snprintf(service_req_cmdbuf, 1024, "curl -s %s", TELEM_SERVICE_ENDPOINT);
@@ -32,6 +35,9 @@ gboolean update_telem_net(gpointer* data_vp) {
         printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m read filled service_buf - end: <%s>\n", service_buf + SERVICE_BUFSIZE - 10); fflush(stdout);
         return TRUE;
     };
+	int service_req_status = pclose(service_fp);
+	if (service_req_status == -1) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m pclose error on service_req\n"); fflush(stderr); return TRUE; }
+	if (WEXITSTATUS(service_req_status)) { fprintf(stderr, "\x1b[38;5;138m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(service_req_status)); fflush(stderr); return TRUE; }
 
 
     cJSON* devices = cJSON_Parse(device_buf);

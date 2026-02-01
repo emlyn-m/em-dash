@@ -13,7 +13,8 @@ gboolean devices_update(gpointer* data_p) {
 	char device_name_buf[64];
 	for (uint32_t i=0; i < data->n_devices; i++) {
 	    memset(device_name_buf, 0, 64);
-		snprintf(device_name_buf, 64, data->devices[i]->online ? "◉ %s" : "○ %s", data->devices[i]->name);
+		// snprintf(device_name_buf, 64, data->devices[i]->online ? "◉ %s" : "○ %s", data->devices[i]->name);
+		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "_ %s", data->devices[i]->name);
 		gtk_label_set_text(GTK_LABEL(data->device_name_widgets[i]), device_name_buf);
 		gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
 	}
@@ -89,7 +90,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	
 	// wrapper
 	telem_t* data = (telem_t*) malloc(sizeof(telem_t));
-	const int MAX_DEVICES = 10;
+	const int MAX_DEVICES = 7;
 	const int MAX_SERVICES = 10;
 	data->n_devices = 0;
 	data->devices = (device_t**) malloc(MAX_DEVICES * sizeof(device_t*));
@@ -133,53 +134,57 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_label, FALSE, FALSE, 0);
 
 	GtkWidget* telem_info = gtk_vbox_new(false, 0);
-	
-	
+
+
 	// devices
 	GtkWidget* device_block = gtk_vbox_new(false, 5*SCALE);
-	PangoFontDescription* font_desc_dev = pango_font_description_from_string(FONT_12);
-	PangoFontDescription* font_desc_dev_ip = pango_font_description_from_string(FONT_8);
-	
+	PangoFontDescription* font_desc_lg = pango_font_description_from_string(FONT_10);
+	PangoFontDescription* font_desc_sm = pango_font_description_from_string(FONT_8);
+	PangoFontDescription* font_desc_lg_bold = pango_font_description_from_string(FONT_BOLD_10);
+	PangoFontDescription* font_desc_sm_bold = pango_font_description_from_string(FONT_BOLD_8);
+
 	for (uint32_t i=0; i < MAX_DEVICES; i++) {
-        GtkWidget* instance_block = gtk_hbox_new(FALSE, 0);
+        GtkWidget* instance_block = gtk_vbox_new(FALSE, 0);
 		data->device_name_widgets[i] = gtk_label_new("");
 		data->device_ip_widgets[i] = gtk_label_new("");
-		gtk_misc_set_alignment (GTK_MISC(data->device_name_widgets[i]), 0.0, 0.5);
-		gtk_misc_set_alignment (GTK_MISC(data->device_ip_widgets[i]), 0.0, 0.5);
-		gtk_widget_modify_font(data->device_name_widgets[i], font_desc_dev);
-		gtk_widget_modify_font(data->device_ip_widgets[i], font_desc_dev_ip);
+		gtk_misc_set_alignment (GTK_MISC(data->device_name_widgets[i]), 0.0, 1.0);
+		gtk_misc_set_alignment (GTK_MISC(data->device_ip_widgets[i]), 1.0, 0.0);
+		gtk_widget_modify_font(data->device_name_widgets[i], font_desc_sm_bold);
+		gtk_widget_modify_font(data->device_ip_widgets[i], font_desc_sm);
 		gtk_box_pack_start(GTK_BOX(instance_block), data->device_name_widgets[i], FALSE, FALSE, 0);
 		gtk_box_pack_end(GTK_BOX(instance_block), data->device_ip_widgets[i], FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(device_block), instance_block, FALSE, FALSE, 0);
 	}
-		
+
 	// services
 	GtkWidget* service_block = gtk_vbox_new(false, 0);
-	
+
 	for (uint32_t i=0; i < MAX_DEVICES; i++) {
 	    GtkWidget* instance_block = gtk_hbox_new(FALSE, 0);
 		data->service_name_widgets[i] = gtk_label_new("");
 		data->service_status_widgets[i] = gtk_label_new("");
-		gtk_misc_set_alignment (GTK_MISC(data->service_name_widgets[i]), 0.0, 0.5);
-		gtk_misc_set_alignment (GTK_MISC(data->service_status_widgets[i]), 0.0, 0.5);
-		gtk_widget_modify_font(data->service_name_widgets[i], font_desc_dev);
-		gtk_widget_modify_font(data->service_status_widgets[i], font_desc_dev);
+		gtk_misc_set_alignment (GTK_MISC(data->service_name_widgets[i]), 0.0, 0.0);
+		gtk_misc_set_alignment (GTK_MISC(data->service_status_widgets[i]), 1.0, 1.0);
+		gtk_widget_modify_font(data->service_name_widgets[i], font_desc_sm_bold);
+		gtk_widget_modify_font(data->service_status_widgets[i], font_desc_sm);
 		gtk_box_pack_start(GTK_BOX(instance_block), data->service_name_widgets[i], FALSE, FALSE, 0);
 		gtk_box_pack_end(GTK_BOX(instance_block), data->service_status_widgets[i], FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(service_block), instance_block, FALSE, FALSE, 0);
 	}
-	
-	pango_font_description_free(font_desc_dev);
-	pango_font_description_free(font_desc_dev_ip);
+
+	pango_font_description_free(font_desc_sm);
+	pango_font_description_free(font_desc_lg);
+	pango_font_description_free(font_desc_sm_bold);
+	pango_font_description_free(font_desc_lg_bold);
 	gtk_box_pack_start(GTK_BOX(telem_info), device_block, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_info), service_block, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_info, TRUE, TRUE, 5*SCALE);
 
-	
+
 	// telem_stats
 	PangoFontDescription* font_desc_label = pango_font_description_from_string(FONT_8);
 	GtkWidget* telem_stats = gtk_vbox_new(FALSE, 0);
-	
+
 	// battery label
 	GtkWidget* battery_info = gtk_hbox_new(false, 0);
 	GtkWidget* battery_label = gtk_label_new("battery");
@@ -190,7 +195,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	gtk_box_pack_start(GTK_BOX(battery_info), battery_label, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_end(GTK_BOX(battery_info), battery_value, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), battery_info, FALSE, FALSE, 0);
-	
+
 	// ping label
 	GtkWidget* ping_info = gtk_hbox_new(false, 0);
 	GtkWidget* ping_label = gtk_label_new("ping");
@@ -201,7 +206,7 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	gtk_box_pack_start(GTK_BOX(ping_info), ping_label, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_end(GTK_BOX(ping_info), ping_value, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), ping_info, FALSE, FALSE, 0);
-	
+
 	// jitter label
 	GtkWidget* jitter_info = gtk_hbox_new(false, 0);
 	GtkWidget* jitter_label = gtk_label_new("jitter");
@@ -222,17 +227,17 @@ GtkWidget* telem_widget(double update_freq_ms) {
 	gtk_misc_set_alignment(GTK_MISC(ip_value), 0.5, 0.0);
 	gtk_box_pack_start(GTK_BOX(ip_info), ip_value, TRUE, TRUE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, TRUE, TRUE, 0);
-	
+
 	g_timeout_add(update_freq_ms, (GSourceFunc) ip_update, data);
 	g_timeout_add(update_freq_ms, (GSourceFunc) battery_update, data);
-	g_timeout_add(20*update_freq_ms, (GSourceFunc) update_telem_net, data);
+	g_timeout_add(5*update_freq_ms, (GSourceFunc) update_telem_net, data);
 	g_timeout_add(update_freq_ms, (GSourceFunc) devices_update, data);
 	g_timeout_add(update_freq_ms, (GSourceFunc) services_update, data);
 
-	
+
 
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_stats, FALSE, FALSE, 5);
 	pango_font_description_free(font_desc_label);
-	
+
 	return wrapper;
 }

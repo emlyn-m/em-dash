@@ -60,7 +60,7 @@ class Listener(slixmpp.ClientXMPP):
 		msg_sev = msg_content['sev']
 		msg_body = msg_content['body']
 
-		print(f'     \x1b[48;5;030m INFO \x1b[0m  Received a class {msg_class} msg (sev={msg_sev}) \'{msg_body}\' (sent at {msg_timestamp})')
+		#print(f'     \x1b[48;5;030m INFO \x1b[0m  Received a class {msg_class} msg (sev={msg_sev}) \'{msg_body}\' (sent at {msg_timestamp})')
 		await self.msg_queue.put(Message(
 			msg_timestamp=msg_timestamp,
 			msg_class=msg_class,

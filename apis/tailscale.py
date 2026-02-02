@@ -36,7 +36,7 @@ class TSService(BaseModel):
 			raise ValueError('["healthy", "down"] states cannot have details')
 		return self
 
-class TSServiceCheck():
+class TSServiceCheck(BaseModel):
     url: str
     handler: Callable[[aiohttp.ClientResponse, str], TSService]
 
@@ -150,16 +150,16 @@ async def execcheck(session: aiohttp.ClientSession, url: str, handler: Callable[
 	except aiohttp.client_exceptions.ClientConnectorDNSError, aiohttp.client_exceptions.InvalidUrlClientError:
 		service = handler(None, '')
 
-	print(f'     \x1b[48;5;030m INFO \x1b[0m  Found service {service.name} - {service.status}')
+	print(f'     \x1b[48;5;030m INFO \x1b[0m  Found service {service.name} - {service.status} per {url} {f"({service.details})" if service.details else ""}')
 	return service
 
 
 status_checks = [
-	{ 'url': os.environ['JELLYFIN_HEALTH_ENDPOINT'], 'handler': execcheck_jellyfin },
-	{ 'url': os.environ['MIKOCHI_HEALTH_ENDPOINT'],  'handler': execcheck_mikochi },
-	{ 'url': os.environ['PROSODY_HEALTH_ENDPOINT'],  'handler': execcheck_prosody },
-	{ 'url': os.environ['DELUGE_HEALTH_ENDPOINT'],   'handler': execcheck_deluge },
-	{ 'url': os.environ['MATRIX_HEALTH_ENDPOINT'],   'handler': execcheck_matrix }
+	TSServiceCheck(url=os.environ['JELLYFIN_HEALTH_ENDPOINT'], handler=execcheck_jellyfin ),
+	TSServiceCheck(url=os.environ['MIKOCHI_HEALTH_ENDPOINT'],  handler=execcheck_mikochi  ),
+	TSServiceCheck(url=os.environ['PROSODY_HEALTH_ENDPOINT'],  handler=execcheck_prosody  ),
+	TSServiceCheck(url=os.environ['DELUGE_HEALTH_ENDPOINT'],   handler=execcheck_deluge   ),
+	TSServiceCheck(url=os.environ['MATRIX_HEALTH_ENDPOINT'],   handler=execcheck_matrix   )
 ]
 
 
@@ -169,7 +169,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
 
 	# http - general case
 	async with aiohttp.ClientSession() as session:
-		ts_services = await asyncio.gather(*[execcheck(session, chk['url'], chk['handler']) for chk in status_checks], return_exceptions=True)
+		ts_services = await asyncio.gather(*[execcheck(session, chk.url, chk.handler) for chk in status_checks], return_exceptions=True)
 
 	# non-netcat - special case
 	execcheck_mc = subprocess.run(['nc', '-vz', os.environ['MINECRAFT_HEALTH_ENDPOINT'], str(os.environ['MINECRAFT_HEALTH_PORT'])], capture_output=True, text=True)

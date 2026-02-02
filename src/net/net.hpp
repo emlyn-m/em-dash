@@ -10,3 +10,4 @@ time_t parse_gcal_datetime(cJSON* obj);
 
 gboolean update_weather(gpointer* data);
 gboolean update_telem_net(gpointer* data);
+gboolean update_alerts_net(gpointer* data);

@@ -120,11 +120,12 @@ typedef struct WeatherData {
 
 typedef struct AlertEvent {
 	uint64_t time;
-	char* category;
 	uint8_t severity;
+	char* category;
 	char* msg;
 } alert_ev_t;
 typedef struct AlertData {
+	uint32_t max_alerts;
 	uint32_t num_alerts;
 	alert_ev_t** alerts;
 	GtkWidget** alert_meta_widgets;

@@ -51,8 +51,8 @@ class Listener(slixmpp.ClientXMPP):
 	async def start(self, event):
 		self.send_presence()
 		await self.get_roster()
+		print('     \x1b[48;5;030m INFO \x1b[0m  Roster received, fetching archive')
 		await self.retrieve_messages()
-
 		print('     \x1b[48;5;030m INFO \x1b[0m  Startup complete')
 
 	async def on_message(self, msg):
@@ -73,19 +73,19 @@ class Listener(slixmpp.ClientXMPP):
 
 
 def init_listener():
-	def _init_listener():
-		msg_queue = asyncio.Queue()
-		xmpp_listener = Listener(msg_queue, CLIENT_JID, CLIENT_PWD)
-		xmpp_listener.register_plugin('xep_0199')
-		xmpp_listener.connect()
-		yield msg_queue
-		try:
-			asyncio.get_event_loop().run()
-		except KeyboardInterrupt:
-			print('     \x1b[48;5;030m INFO \x1b[0m  saying goodnight')
-	return next(_init_listener())
+	msg_queue = asyncio.Queue()
+	xmpp_listener = Listener(msg_queue, CLIENT_JID, CLIENT_PWD)
+	xmpp_listener.register_plugin('xep_0199')
+	xmpp_listener.connect()
+	yield msg_queue
 
-msg_queue = init_listener()
+	try:
+		asyncio.get_event_loop().run()
+	except KeyboardInterrupt:
+		print('     \x1b[48;5;030m INFO \x1b[0m  saying goodnight')
+
+
+msg_queue = next(init_listener())
 msg_archive = []
 router = fastapi.APIRouter()
 
@@ -103,8 +103,11 @@ async def get_msgs(max_events:int|None=None, before: int|None=None, after: int|N
 	try:
 		while latest_item := msg_queue.get_nowait(): msg_archive.append(latest_item)
 	except asyncio.QueueEmpty:
-		pass
+		print(f'     \x1b[48;5;030m INFO \x1b[0m  have {len(msg_archive)} msgs')
 
 	events = list(filter( lambda msg: msg_sendcheck(msg, before, after, msg_class, max_sev), msg_archive ))
 	events.sort(key=lambda msg: -msg.msg_timestamp)
-	return events[:(max_events if max_events else len(events))]
+	events_rsp = events[:(max_events if max_events else len(events))]
+
+	print(f'     \x1b[48;5;030m INFO \x1b[0m  sending {len(events_rsp)} msgs')
+	return events_rsp

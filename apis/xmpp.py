@@ -5,13 +5,10 @@ import fastapi
 import time
 import json
 import re
+import os
 
 from pydantic import BaseModel
 import logging
-
-
-CLIENT_JID = 'server@prosody.tailscale.emlyn.xyz'
-CLIENT_PWD = 'password'
 
 
 class Message(BaseModel):
@@ -74,7 +71,7 @@ class Listener(slixmpp.ClientXMPP):
 
 def init_listener():
 	msg_queue = asyncio.Queue()
-	xmpp_listener = Listener(msg_queue, CLIENT_JID, CLIENT_PWD)
+	xmpp_listener = Listener(msg_queue, os.environ['CLIENT_JID'], os.environ['CLIENT_PWD'])
 	xmpp_listener.register_plugin('xep_0199')
 	xmpp_listener.connect()
 	yield msg_queue

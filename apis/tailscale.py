@@ -63,7 +63,6 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
 
 @router.get('/api/tailscale/services', response_model_exclude_unset=True, response_model_exclude_none=True)
 async def fetch_services() -> Union[list[TSService], Err]:
-    print(os.environ)
     status_results = []
 
     jellyfin_run = subprocess.run(['curl', '-f', os.environ['JELLYFIN_HEALTH_ENDPOINT']], capture_output=True, text=True)

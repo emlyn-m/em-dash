@@ -30,7 +30,6 @@ gboolean update_weather_display(gpointer* weather_vp) {
     weather_t* weather_data = (weather_t*) weather_vp;
     for (uint32_t event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) {
         weather_ev_t* event = weather_data->events[event_idx];
-
         char temp_s[11];
         snprintf(temp_s, 11, "%.1lf°", event->temp_c);
         gtk_label_set_text(GTK_LABEL(event->widget_temp), temp_s);
@@ -92,13 +91,15 @@ GtkWidget* weather_widget() {
 
 		(weather->events[i])->widget_temp = temp;
 		(weather->events[i])->widget_time = time;
+		weather->events[i]->time = 0;
+		weather->events[i]->wmo_code= 0;
 	}
 
 	pango_font_description_free(font_temp);
 	pango_font_description_free(font_time);
 
-	g_timeout_add(getenv(WEATHER_UPDATE_FREQUENCY), (GSourceFunc) update_weather, weather);
-	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), 1000, (GSourceFunc) update_weather_display, weather);
+	g_timeout_add(atol(getenv("WEATHER_UPDATE_FREQUENCY")), (GSourceFunc) update_weather, weather);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),      (GSourceFunc) update_weather_display, weather);
 
 	return wrapper;
 }

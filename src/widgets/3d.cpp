@@ -203,7 +203,7 @@ GtkWidget* model_init() {
     GtkWidget* draw_obj = gtk_drawing_area_new();
     g_object_set_data(G_OBJECT(draw_obj), "model", cat);
     g_signal_connect(draw_obj, "expose-event", G_CALLBACK(on_draw), cat);
-    g_timeout_add(getenv(UI_UPDATE_FREQUENCY), on_timeout, draw_obj);
+    g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), on_timeout, draw_obj);
 
     return draw_obj;
 }

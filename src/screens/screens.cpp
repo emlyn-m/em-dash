@@ -30,14 +30,13 @@ GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 
    	gtk_table_add(table, 0, 1, 0, 1, time_widget());
 	gtk_table_add(table, 1, 4, 0, 1, weather_widget());
-	gtk_table_add(table, 4, 5, 0, 4, telem_widget(5000.0));
+	gtk_table_add(table, 4, 5, 0, 4, telem_widget());
 	gtk_table_add(table, 0, 2, 1, 3, calendar_widget());
 	gtk_table_add(table, 2, 4, 1, 5, tasks_widget());
 	gtk_table_add(table, 0, 2, 3, 5, alerts_widget());
 	gtk_table_add(table, 4, 5, 4, 5, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_screen, ctrl_data));
 
 	return table;
-
 }
 
 

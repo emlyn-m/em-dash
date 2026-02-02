@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 import slixmpp
 from slixmpp.plugins.xep_0313 import stanza
 import fastapi
@@ -47,6 +48,7 @@ class Listener(slixmpp.ClientXMPP):
 
 	async def start(self, event):
 		self.send_presence()
+		print('     \x1b[48;5;030m INFO \x1b[0m  XMPPListener start called')
 		await self.get_roster()
 		print('     \x1b[48;5;030m INFO \x1b[0m  Roster received, fetching archive')
 		await self.retrieve_messages()
@@ -69,21 +71,26 @@ class Listener(slixmpp.ClientXMPP):
 		))
 
 
-def init_listener():
+@asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
 	msg_queue = asyncio.Queue()
 	xmpp_listener = Listener(msg_queue, os.environ['CLIENT_JID'], os.environ['CLIENT_PWD'])
 	xmpp_listener.register_plugin('xep_0199')
 	xmpp_listener.connect()
-	yield msg_queue
 
+	app.state.msg_queue = msg_queue
+	app.state.xmpp_listener = xmpp_listener
+	app.state.msg_archive = []
+
+	yield
+
+	print('     \x1b[48;5;030m INFO \x1b[0m  saying goodnight')
+	listener_task.cancel()
 	try:
-		asyncio.get_event_loop().run()
-	except KeyboardInterrupt:
-		print('     \x1b[48;5;030m INFO \x1b[0m  saying goodnight')
-
-
-msg_queue = next(init_listener())
-msg_archive = []
+		await listener_task
+	except asyncio.CancelledError:
+		pass
+	xmpp_listener.disconnect()
 router = fastapi.APIRouter()
 
 def msg_sendcheck(msg: Message, before: int|None=None, after: int|None=None, msg_class: int|None=None, max_sev: int|None=None):
@@ -96,7 +103,10 @@ def msg_sendcheck(msg: Message, before: int|None=None, after: int|None=None, msg
 
 
 @router.get('/api/xmpp')
-async def get_msgs(max_events:int|None=None, before: int|None=None, after: int|None=None, msg_class: int|None=None, max_sev: int|None=None) -> list[Message]:
+async def get_msgs(request: fastapi.Request, max_events:int|None=None, before: int|None=None, after: int|None=None, msg_class: int|None=None, max_sev: int|None=None) -> list[Message]:
+	msg_queue = request.app.state.msg_queue
+	msg_archive = request.app.state.msg_archive
+
 	try:
 		while latest_item := msg_queue.get_nowait(): msg_archive.append(latest_item)
 	except asyncio.QueueEmpty:

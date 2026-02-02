@@ -99,10 +99,12 @@ def msg_sendcheck(msg: Message, before: int|None=None, after: int|None=None, msg
 
 
 @router.get('/api/xmpp')
-async def get_msgs(before: int|None=None, after: int|None=None, msg_class: int|None=None, max_sev: int|None=None) -> list[Message]:
+async def get_msgs(max_events:int|None=None, before: int|None=None, after: int|None=None, msg_class: int|None=None, max_sev: int|None=None) -> list[Message]:
 	try:
 		while latest_item := msg_queue.get_nowait(): msg_archive.append(latest_item)
 	except asyncio.QueueEmpty:
-		print(f'\x1b[38;5;139m\x1b[1mINFO:\x1b[0m returning {len(msg_archive)} msgs')
+		pass
 
-	return list(filter( lambda msg: msg_sendcheck(msg, before, after, msg_class, max_sev), msg_archive ))
+	events = list(filter( lambda msg: msg_sendcheck(msg, before, after, msg_class, max_sev), msg_archive ))
+	events.sort(key=lambda msg: -msg.msg_timestamp)
+	return events[:(max_events if max_events else len(events))]

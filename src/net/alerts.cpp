@@ -1,6 +1,5 @@
 #include "src/net/cJSON.h"
 #include "src/widgets/widgets.hpp"
-#include "../secrets.h"
 
 #include <cstdio>
 #include <cstring>
@@ -21,7 +20,7 @@ gboolean update_alerts_net(gpointer* data_vp) {
     printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m begin alert network update\n"); fflush(stdout);
 
     char alert_req_cmdbuf[1024]; memset(alert_req_cmdbuf, 0, 1024);
-    snprintf(alert_req_cmdbuf, 1024, "curl -s '%s'", ALERT_ENDPOINT);
+    snprintf(alert_req_cmdbuf, 1024, "curl -s '%s'", getenv("ALERT_ENDPOINT"));
     FILE* alert_fp = popen(alert_req_cmdbuf, "r");
     if (!alert_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch alerts\n"); fflush(stderr); return TRUE; }
     char alert_buf[ALERT_BUFSIZE]; memset(alert_buf, 0, ALERT_BUFSIZE);

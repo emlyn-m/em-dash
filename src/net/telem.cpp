@@ -14,7 +14,7 @@ gboolean update_telem_net(gpointer* data_vp) {
     printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m begin telemetry network update\n"); fflush(stdout);
 
     char device_req_cmdbuf[1024]; memset(device_req_cmdbuf, 0, 1024);
-    snprintf(device_req_cmdbuf, 1024, "curl -s %s", TELEM_DEVICE_ENDPOINT);
+    snprintf(device_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_DEVICE_ENDPOINT"));
     FILE* device_fp = popen(device_req_cmdbuf, "r");
     if (!device_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch devices\n"); fflush(stderr); return TRUE; }
     char device_buf[SERVICE_BUFSIZE]; memset(device_buf, 0, SERVICE_BUFSIZE);
@@ -27,7 +27,7 @@ gboolean update_telem_net(gpointer* data_vp) {
 	if (WEXITSTATUS(device_req_status)) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(device_req_status)); fflush(stderr); return TRUE; }
 
     char service_req_cmdbuf[1024]; memset(service_req_cmdbuf, 0, 1024);
-    snprintf(service_req_cmdbuf, 1024, "curl -s %s", TELEM_SERVICE_ENDPOINT);
+    snprintf(service_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_SERVICE_ENDPOINT"));
     FILE* service_fp = popen(service_req_cmdbuf, "r");
     if (!service_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch devices\n"); fflush(stderr); return TRUE; }
     char service_buf[SERVICE_BUFSIZE]; memset(service_buf, 0, SERVICE_BUFSIZE);

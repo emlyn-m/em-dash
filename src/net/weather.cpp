@@ -8,7 +8,6 @@
 #include <cstring>
 #include <ctime>
 
-#define WEATHER_API_CMD "curl -s 'https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&hourly=temperature_2m,precipitation_probability,weather_code&start_date=%s&end_date=%s&timezone=%s'"
 
 time_t parse_time_offset(char* time_buf) {
     struct tm date = {0};
@@ -39,7 +38,9 @@ gboolean update_weather(gpointer* data) {
 
 
     char* weather_req_cmdbuf = (char*) malloc(1024 * sizeof(char));
-    snprintf(weather_req_cmdbuf, 1024, WEATHER_API_CMD, WEATHER_LATITUDE, WEATHER_LONGITUDE, date_low, date_high, WEATHER_TIMEZONE);
+	printf("%s\n", getenv("WEATHER_API_CMD"));
+	fflush(stdout);
+    snprintf(weather_req_cmdbuf, 1024, getenv("WEATHER_API_CMD"), getenv("WEATHER_LATITUDE"), getenv("WEATHER_LONGITUDE"), date_low, date_high, getenv("WEATHER_TIMEZONE"));
     printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m using fetch command \"%s\"\n", weather_req_cmdbuf); fflush(stdout);
     FILE* weather_fp = popen(weather_req_cmdbuf, "r");
     free(weather_req_cmdbuf);
@@ -71,7 +72,6 @@ gboolean update_weather(gpointer* data) {
     }
 
     int time_offset = 0;
-
 
     while ( parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset+1)->valuestring) < ctime ) { time_offset++; }
     int event_idx = 0;

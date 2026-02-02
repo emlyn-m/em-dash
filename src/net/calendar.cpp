@@ -1,5 +1,4 @@
 #include "../widgets/widgets.hpp"
-#include "../secrets.h"
 #include "net.hpp"
 #include "cJSON.h"
 
@@ -9,8 +8,6 @@
 #include <cstring>
 #include <ctime>
 
-#define JWT_REDEEM_URL "https://oauth2.googleapis.com/token"
-#define     EVENTS_URL "https://www.googleapis.com/calendar/v3/calendars/%s/events?singleEvents=true&orderBy=startTime&maxResults=%d&timeMin=%s&timeMax=%s"
 
 time_t parse_gcal_datetime(cJSON* obj) {
     struct tm return_time;
@@ -73,7 +70,7 @@ gboolean update_events(gpointer* calendar_gp) {
             memset(cal->token_buf, 0, TOKEN_BUFSIZE);
         }
 
-        int token_result = generate_gcal_jwt((char*) SERVICE_EMAIL, (char*) PRIVKEY, TOKEN_BUFSIZE, cal->token_buf);
+        int token_result = generate_gcal_jwt((char*) getenv("GOOGLE_SERVICE_EMAIL"), (char*) getenv("GOOGLE_PRIVKEY"), TOKEN_BUFSIZE, cal->token_buf);
         if (token_result) {
             fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to generate jwt\n"); fflush(stderr);
             return TRUE;
@@ -86,7 +83,7 @@ gboolean update_events(gpointer* calendar_gp) {
         snprintf(
             token_redeem_payload, token_redeem_bufsize,
             "curl -sX POST -H \"Content-Type: application/x-www-form-urlencoded\" -d \"grant_type=urn%%3Aietf%%3Aparams%%3Aoauth%%3Agrant-type%%3Ajwt-bearer&assertion=%s\" %s",
-            cal->token_buf, JWT_REDEEM_URL
+            cal->token_buf, getenv("GOOGLE_JWT_REDEEM_URL")
         );
         FILE* token_redeem_fp = popen(token_redeem_payload, "r");
         free(token_redeem_payload);
@@ -110,7 +107,7 @@ gboolean update_events(gpointer* calendar_gp) {
         cal->token_exp = ctime + token_expiry;
         strcpy(cal->token_buf, token_value);
 
-        cJSON_free(token_resp_j);  // todo: free - once i work out token sizing
+        cJSON_free(token_resp_j);
     }
 
     printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m existing valid token found\n"); fflush(stdout);
@@ -129,7 +126,7 @@ gboolean update_events(gpointer* calendar_gp) {
     char events_req_url[512];
     snprintf(
         events_req_url, 512,
-        EVENTS_URL, CALENDAR_ID, MAX_CAL_EVENTS,
+        getenv("GOOGLE_EVENTS_URL"), getenv("GOOGLE_CALENDAR_ID"), MAX_CAL_EVENTS,
         timestamp_lo, timestamp_hi
     );
 

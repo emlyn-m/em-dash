@@ -97,8 +97,8 @@ GtkWidget* weather_widget() {
 	pango_font_description_free(font_temp);
 	pango_font_description_free(font_time);
 
-	g_timeout_add(1000, (GSourceFunc) update_weather, weather);
-	g_timeout_add(1000, (GSourceFunc) update_weather_display, weather);
+	g_timeout_add(getenv(WEATHER_UPDATE_FREQUENCY), (GSourceFunc) update_weather, weather);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), 1000, (GSourceFunc) update_weather_display, weather);
 
 	return wrapper;
 }

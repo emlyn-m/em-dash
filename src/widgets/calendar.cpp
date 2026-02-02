@@ -231,10 +231,10 @@ GtkWidget* calendar_widget() {
 	pango_font_description_free(font_desc_event);
 	pango_font_description_free(font_desc_event_active);
 
-	g_timeout_add(30000, (GSourceFunc) update_events,         calendar_data);   // todo: find some way to trigger this once immediately, then again every idk however long - should probs store as a field in cal_data (alternatively we should call the callback over and over but return immediately 99/100 times lmao (based on time not rng obv - wow im tired))
-	g_timeout_add(1000, (GSourceFunc) title_update,          calendar_data);
-	g_timeout_add(1000, (GSourceFunc) active_event_update,   calendar_data);
-	g_timeout_add(1000, (GSourceFunc) pending_events_update, calendar_data);
+	g_timeout_add(getenv(CALENDAR_UPDATE_FREQUENCY), (GSourceFunc) update_events,         calendar_data);   // todo: find some way to trigger this once immediately, then again every idk however long - should probs store as a field in cal_data (alternatively we should call the callback over and over but return immediately 99/100 times lmao (based on time not rng obv - wow im tired))
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) title_update,          calendar_data);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) active_event_update,   calendar_data);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) pending_events_update, calendar_data);
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
 	return wrapper;
 }

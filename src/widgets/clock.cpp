@@ -92,7 +92,7 @@ GtkWidget* time_widget() {
 	pango_font_description_free(font_desc_ampm);
 
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20);
-	g_timeout_add(1000, (GSourceFunc) clock_update, data);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) clock_update, data);
 
 
 	return wrapper;

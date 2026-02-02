@@ -104,7 +104,7 @@ GtkWidget* tasks_widget() {
 	pango_font_description_free(font_task);
 	pango_font_description_free(font_checkbox);
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
-	g_timeout_add(1000, (GSourceFunc) tasks_update, task_data);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) tasks_update, task_data);
 
 	return wrapper;
 }

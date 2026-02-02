@@ -75,8 +75,8 @@ GtkWidget* alerts_widget() {
 
 
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
-	g_timeout_add(1000, (GSourceFunc) alerts_update, alert_data);
-	g_timeout_add(10000, (GSourceFunc) update_alerts_net, alert_data);
+	g_timeout_add(getenv(UI_UPDATE_FREQUENCY), (GSourceFunc) alerts_update, alert_data);
+	g_timeout_add(getenv(ALERT_UPDATE_FREQUENCY), (GSourceFunc) update_alerts_net, alert_data);
 
 
 	return wrapper;

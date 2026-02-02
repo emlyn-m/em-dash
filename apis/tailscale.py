@@ -67,28 +67,18 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
 
 	return devs
 
-async def execcheck(session: aiohttp.ClientSession, url: str, handler: Callable[[aiohttp.ClientResponse, str], TSService]) -> TSService:
-	async with session.get(url, ssl=ssl.SSLContext()) as rsp:
-		service = handler(rsp, await rsp.text())
-		print(f'     \x1b[48;5;030m INFO \x1b[0m  Found service {service.name} - {service.status}')
-		return service
-
-async def execcheck_all(checks: list[TSServiceCheck]):
-	async with aiohttp.ClientSession() as session:
-		return await asyncio.gather(*[execcheck(session, chk['url'], chk['handler']) for chk in checks], return_exceptions=True)
 
 def execcheck_jellyfin(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 	jellyfin_status = (
 		TSHealth.HEALTHY if txt.strip() == 'Healthy'
-		else TSHealth.DEGRADED if rsp.ok
+		else TSHealth.DEGRADED if rsp
 		else TSHealth.DOWN
 	)
 	return TSService(
 		name='Jellyfin',
 		status=jellyfin_status,
 		details=(
-			f'/health: {txt}' if jellyfin_status == TSHealth.DEGRADED
-			else f'http status: {rsp.status}' if jellyfin_status == TSHealth.DOWN
+			f'/health: {rsp.status} {txt}' if jellyfin_status == TSHealth.DEGRADED
 			else None
 		)
 	)
@@ -96,13 +86,14 @@ def execcheck_jellyfin(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 def execcheck_mikochi(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 	mikochi_status = (
 		TSHealth.HEALTHY if rsp.ok
+		else TSHealth.DEGRADED if rsp
 		else TSHealth.DOWN
 	)
 	return TSService(
 		name='Mikochi',
 		status=mikochi_status,
 		details=(
-			f'http status: {rsp.status}' if mikochi_status == TSHealth.DOWN
+			f'http status: {rsp.status}' if mikochi_status == TSHealth.DEGRADED
 			else None
 		)
 	)
@@ -110,31 +101,29 @@ def execcheck_mikochi(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 def execcheck_prosody(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 	prosody_status = (
 		TSHealth.HEALTHY if txt.strip() == 'OK' else
-		TSHealth.DEGRADED if rsp.ok else
+		TSHealth.DEGRADED if rsp else
 		TSHealth.DOWN
 	)
 	return TSService(
 		name='Prosody',
 		status=prosody_status,
 		details=(
-			f'/health: {txt}' if prosody_status == TSHealth.DEGRADED
-			else f'http status: {rsp.status}' if prosody_status == TSHealth.DOWN
+			f'/health: {rsp.status} {txt}' if prosody_status == TSHealth.DEGRADED
 			else None
 		)
 	)
 
 def execcheck_deluge(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 	deluge_status = (
-		TSHealth.HEALTHY if txt.strip() == 'OK'
-		else TSHealth.DEGRADED if rsp.ok
+		TSHealth.HEALTHY if rsp.ok
+		else TSHealth.DEGRADED if rsp
 		else TSHealth.DOWN
 	)
 	return TSService(
 		name='Deluge',
 		status=deluge_status,
 		details=(
-			f'/health: {txt}' if deluge_status == TSHealth.DEGRADED
-			else f'http status: {rsp.status}' if deluge_status == TSHealth.DOWN
+			f'/health: {rsp.status}' if deluge_status == TSHealth.DEGRADED
 			else None
 		)
 	)
@@ -142,18 +131,27 @@ def execcheck_deluge(rsp: aiohttp.ClientResponse, txt: str) -> TSService:
 def execcheck_matrix(rsp: aiohttp.ClientResponse, txt: str):
 	matrix_status = (
 		TSHealth.HEALTHY if txt.strip() == 'OK'
-		else TSHealth.DEGRADED if rsp.ok
+		else TSHealth.DEGRADED if rsp
 		else TSHealth.DOWN
 	)
 	return TSService(
 		name='Matrix',
 		status=matrix_status,
 		details=(
-			f'/health: {txt}' if matrix_status == TSHealth.DEGRADED
-			else f'http status: {rsp.status}' if matrix_status == TSHealth.DOWN
+			f'/health: {rsp.status} {txt}' if matrix_status == TSHealth.DEGRADED
 			else None
 		)
 	)
+
+async def execcheck(session: aiohttp.ClientSession, url: str, handler: Callable[[aiohttp.ClientResponse, str], TSService]) -> TSService:
+	try:
+		async with session.get(url, ssl=ssl.SSLContext()) as rsp:
+			service = handler(rsp, await rsp.text())
+	except aiohttp.client_exceptions.ClientConnectorDNSError:
+		service = handler(None, '')
+
+	print(f'     \x1b[48;5;030m INFO \x1b[0m  Found service {service.name} - {service.status}')
+	return service
 
 
 status_checks = [
@@ -163,6 +161,7 @@ status_checks = [
 	{ 'url': os.environ['DELUGE_HEALTH_ENDPOINT'],   'handler': execcheck_deluge },
 	{ 'url': os.environ['MATRIX_HEALTH_ENDPOINT'],   'handler': execcheck_matrix }
 ]
+
 
 @router.get('/api/tailscale/services', response_model_exclude_unset=True, response_model_exclude_none=True)
 async def fetch_services() -> Union[list[TSService], Err]:

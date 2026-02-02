@@ -16,13 +16,13 @@ MINECRAFT_HEALTH_PORT     = 25565
 
 class Err(BaseModel):
     msg: str
-    
+
 class TSDevice(BaseModel):
     name: str
     alias: str
     ip: str
     online: bool
-        
+
 class TSHealth(str, Enum):
     HEALTHY='healthy'
     DEGRADED='degraded'
@@ -33,14 +33,14 @@ class TSService(BaseModel):
     name: str
     status: TSHealth
     details: str|None = None
-    
+
     @model_validator(mode='after')
     def validate_service(self) -> 'TSService':
         if self.details and self.status in (TSHealth.HEALTHY, TSHealth.DOWN):
             raise ValueError('["healthy", "down"] states cannot have details')
         return self
-        
-    
+
+
 
 router = APIRouter()
 @router.get('/api/tailscale/devices', response_model_exclude_unset=True)
@@ -50,10 +50,10 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
     if (device_run.returncode):
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return Err(msg=device_run.stderr.strip())
-        
+
     device_j = json.loads(device_run.stdout)
     devs = [ TSDevice(
-        name=device_j['Self']['HostName'], 
+        name=device_j['Self']['HostName'],
         alias=device_j['Self']['DNSName'].split('.')[0],
         ip=device_j['Self']['TailscaleIPs'][0],
         online=True
@@ -65,13 +65,13 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
             ip=device_j['Peer'][peer_id]['TailscaleIPs'][0],
             online=device_j['Peer'][peer_id]['Online']
         ))
-    
+
     return devs
 
 @router.get('/api/tailscale/services', response_model_exclude_unset=True, response_model_exclude_none=True)
 async def fetch_services() -> Union[list[TSService], Err]:
     status_results = []
-    
+
     jellyfin_run = subprocess.run(['curl', '-f', JELLYFIN_HEALTH_ENDPOINT], capture_output=True, text=True)
     jellyfin_status=(
         TSHealth.DOWN if jellyfin_run.returncode == 22
@@ -88,11 +88,11 @@ async def fetch_services() -> Union[list[TSService], Err]:
             else None
         )
     ))
-    
+
     mikochi_run = subprocess.run(['curl', '-f', MIKOCHI_HEALTH_ENDPOINT], capture_output=True, text=True)
     mikochi_status=(
-        TSHealth.DOWN if mikochi_run.returncode == 22 else 
-        TSHealth.CHECK_FAILED if mikochi_run.returncode else 
+        TSHealth.DOWN if mikochi_run.returncode == 22 else
+        TSHealth.CHECK_FAILED if mikochi_run.returncode else
         TSHealth.HEALTHY
     )
     status_results.append(TSService(
@@ -102,11 +102,11 @@ async def fetch_services() -> Union[list[TSService], Err]:
             f'cURL: {mikochi_run.returncode}' if mikochi_status == TSHealth.CHECK_FAILED else None
         )
     ))
-    
+
     prosody_run = subprocess.run(['curl', '-f', PROSODY_HEALTH_ENDPOINT], capture_output=True, text=True)
     prosody_status=(
-        TSHealth.DOWN if prosody_run.returncode == 22 else 
-        TSHealth.CHECK_FAILED if prosody_run.returncode else 
+        TSHealth.DOWN if prosody_run.returncode == 22 else
+        TSHealth.CHECK_FAILED if prosody_run.returncode else
         TSHealth.HEALTHY if prosody_run.stdout.strip() == 'OK' else
         TSHealth.DEGRADED
     )
@@ -119,7 +119,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
             else None
         )
     ))
-    
+
     deluge_run = subprocess.run(['curl', '-f', DELUGE_HEALTH_ENDPOINT], capture_output=True, text=True)
     deluge_status=(
         TSHealth.DOWN if deluge_run.returncode == 22
@@ -152,11 +152,11 @@ async def fetch_services() -> Union[list[TSService], Err]:
             else None
         )
     ))
-    
+
     minecraft_run = subprocess.run(['nc', '-vz', MINECRAFT_HEALTH_ENDPOINT, str(MINECRAFT_HEALTH_PORT)], capture_output=True, text=True)
     minecraft_status =(
-        TSHealth.DOWN if minecraft_run.returncode == 1 
-        else TSHealth.HEALTHY if minecraft_run.stderr.strip().endswith('succeeded!') 
+        TSHealth.DOWN if minecraft_run.returncode == 1
+        else TSHealth.HEALTHY if minecraft_run.stderr.strip().endswith('succeeded!')
         else TSHealth.CHECK_FAILED
     )
     status_results.append(TSService(

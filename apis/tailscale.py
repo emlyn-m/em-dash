@@ -5,14 +5,7 @@ from enum import Enum
 import subprocess
 import json
 import logging
-
-JELLYFIN_HEALTH_ENDPOINT  = 'https://jellyfin.tailscale.emlyn.xyz/health/'
-MIKOCHI_HEALTH_ENDPOINT   = 'https://mikochi.tailscale.emlyn.xyz/'
-PROSODY_HEALTH_ENDPOINT   = 'http://prosody.tailscale.emlyn.xyz/health'
-DELUGE_HEALTH_ENDPOINT    = 'https://deluge.tailscale.emlyn.xyz'
-MATRIX_HEALTH_ENDPOINT    = 'https://matrix.tailscale.emlyn.xyz/health'
-MINECRAFT_HEALTH_ENDPOINT = 'minecraft.tailscale.emlyn.xyz'
-MINECRAFT_HEALTH_PORT     = 25565
+import os
 
 class Err(BaseModel):
     msg: str
@@ -70,9 +63,10 @@ async def fetch_devices(response: Response) -> Union[list[TSDevice], Err]:
 
 @router.get('/api/tailscale/services', response_model_exclude_unset=True, response_model_exclude_none=True)
 async def fetch_services() -> Union[list[TSService], Err]:
+    print(os.environ)
     status_results = []
 
-    jellyfin_run = subprocess.run(['curl', '-f', JELLYFIN_HEALTH_ENDPOINT], capture_output=True, text=True)
+    jellyfin_run = subprocess.run(['curl', '-f', os.environ['JELLYFIN_HEALTH_ENDPOINT']], capture_output=True, text=True)
     jellyfin_status=(
         TSHealth.DOWN if jellyfin_run.returncode == 22
         else  TSHealth.CHECK_FAILED if jellyfin_run.returncode
@@ -89,7 +83,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
 
-    mikochi_run = subprocess.run(['curl', '-f', MIKOCHI_HEALTH_ENDPOINT], capture_output=True, text=True)
+    mikochi_run = subprocess.run(['curl', '-f', os.environ['MIKOCHI_HEALTH_ENDPOINT']], capture_output=True, text=True)
     mikochi_status=(
         TSHealth.DOWN if mikochi_run.returncode == 22 else
         TSHealth.CHECK_FAILED if mikochi_run.returncode else
@@ -103,7 +97,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
 
-    prosody_run = subprocess.run(['curl', '-f', PROSODY_HEALTH_ENDPOINT], capture_output=True, text=True)
+    prosody_run = subprocess.run(['curl', '-f', os.environ['PROSODY_HEALTH_ENDPOINT']], capture_output=True, text=True)
     prosody_status=(
         TSHealth.DOWN if prosody_run.returncode == 22 else
         TSHealth.CHECK_FAILED if prosody_run.returncode else
@@ -120,7 +114,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
 
-    deluge_run = subprocess.run(['curl', '-f', DELUGE_HEALTH_ENDPOINT], capture_output=True, text=True)
+    deluge_run = subprocess.run(['curl', '-f', os.environ['DELUGE_HEALTH_ENDPOINT']], capture_output=True, text=True)
     deluge_status=(
         TSHealth.DOWN if deluge_run.returncode == 22
         else TSHealth.CHECK_FAILED if deluge_run.returncode
@@ -136,7 +130,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
 
-    matrix_run = subprocess.run(['curl', '-f', MATRIX_HEALTH_ENDPOINT], capture_output=True, text=True)
+    matrix_run = subprocess.run(['curl', '-f', os.environ['MATRIX_HEALTH_ENDPOINT']], capture_output=True, text=True)
     matrix_status=(
         TSHealth.DOWN if matrix_run.returncode == 22
         else TSHealth.CHECK_FAILED if matrix_run.returncode
@@ -153,7 +147,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
         )
     ))
 
-    minecraft_run = subprocess.run(['nc', '-vz', MINECRAFT_HEALTH_ENDPOINT, str(MINECRAFT_HEALTH_PORT)], capture_output=True, text=True)
+    minecraft_run = subprocess.run(['nc', '-vz', os.environ['MINECRAFT_HEALTH_ENDPOINT'], str(os.environ['MINECRAFT_HEALTH_PORT'])], capture_output=True, text=True)
     minecraft_status =(
         TSHealth.DOWN if minecraft_run.returncode == 1
         else TSHealth.HEALTHY if minecraft_run.stderr.strip().endswith('succeeded!')

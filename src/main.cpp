@@ -18,8 +18,7 @@ int main(int argc, char* argv[]) {
 	GtkWidget *window;
 	gtk_init (&argc, &argv);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-//	gtk_window_set_title(GTK_WINDOW(window), "L:A_N:application_ID:xyz.emlyn.kindle_PC:N_O:R");
-	gtk_window_set_title(GTK_WINDOW(window), "L:A_N:application_ID:xyz.emlyn.kindle_PC:T_O:R");
+	gtk_window_set_title(GTK_WINDOW(window), "L:A_N:application_ID:xyz.emlyn.kindle_PC:N_O:R");
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	GdkColor color = { 0, 255<<8, 255<<8, 255<<8 };
 	gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &color);

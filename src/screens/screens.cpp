@@ -20,14 +20,21 @@ void set_screen(GtkButton* _button, GdkEvent* _event, void* data_v) {
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(data->stack), data->target_screen_idx);
 }
 
-void keyboard_onpress(kb_data_t* data) {
-    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m pressed at coords %lf, %lf  layer %d\n", data->x, data->y, data->layer);
-    fflush(stdout);
+gboolean keyboard_onpress(kb_data_t* data) {
+	char char_val = match_keycode(data->lookup_table, data->layer, data->x, data->y);
+	if (char_val == '\n') {
+		return FALSE; // newline - end of input, so exit keyboard
+	}
+
+	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m pressed char '%c' at coords %lf, %lf  layer %d\n", char_val, data->x, data->y, data->layer);
+	fflush(stdout);
+
+	return TRUE;
 }
 
 void keyboard_onenter(kb_data_t* data) {
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m typed \"%s\"\n", data->kb_buf);
-    fflush(stdout);
+	fflush(stdout);
 }
 
 GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) ) {
@@ -43,7 +50,7 @@ GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	gtk_table_add(table, 4, 5, 0, 4, telem_widget());
 	gtk_table_add(table, 0, 2, 1, 3, calendar_widget());
 	// gtk_table_add(table, 2, 4, 1, 5, tasks_widget());
-	// gtk_table_add(table, 2, 4, 1, 5, keyboard_widget(keyboard_onpress, keyboard_onenter));
+	gtk_table_add(table, 2, 4, 1, 5, keyboard_widget(keyboard_onpress, keyboard_onenter));
 
 	gtk_table_add(table, 0, 2, 3, 5, alerts_widget());
 	gtk_table_add(table, 4, 5, 4, 5, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_screen, ctrl_data));

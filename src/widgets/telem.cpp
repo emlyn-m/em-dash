@@ -12,37 +12,37 @@ gboolean devices_update(gpointer* data_p) {
 
 	char device_name_buf[64];
 	for (uint32_t i=0; i < data->n_devices; i++) {
-	    memset(device_name_buf, 0, 64);
+		memset(device_name_buf, 0, 64);
 		snprintf(device_name_buf, 64, data->devices[i]->online ? "$ %s" : "- %s", data->devices[i]->alias);
 		gtk_label_set_text(GTK_LABEL(data->device_name_widgets[i]), device_name_buf);
-        gtk_widget_set_visible(data->device_name_widgets[i], true);
+	    gtk_widget_set_visible(data->device_name_widgets[i], true);
 		if (data->devices[i]->online) {
-		    gtk_widget_set_visible(data->device_ip_widgets[i], true);
-		    gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
+			gtk_widget_set_visible(data->device_ip_widgets[i], true);
+			gtk_label_set_text(GTK_LABEL(data->device_ip_widgets[i]), data->devices[i]->ip);
 		} else {
 			gtk_widget_set_visible(data->device_ip_widgets[i], false);
 		}
 	}
 	for (uint32_t i=data->n_devices; i < data->max_devices; i++) {
-        gtk_widget_set_visible(data->device_name_widgets[i], false);
-        gtk_widget_set_visible(data->device_ip_widgets[i], false);
+	    gtk_widget_set_visible(data->device_name_widgets[i], false);
+	    gtk_widget_set_visible(data->device_ip_widgets[i], false);
 	}
 
 	return TRUE;
 }
 
 gboolean services_update(gpointer* data_vp) {
-    telem_t* data = (telem_t*) data_vp;
+	telem_t* data = (telem_t*) data_vp;
 
 	for (uint32_t i=0; i < data->n_services; i++) {
-        gtk_widget_set_visible(data->service_name_widgets[i], true);
-        gtk_widget_set_visible(data->service_status_widgets[i], true);
+	    gtk_widget_set_visible(data->service_name_widgets[i], true);
+	    gtk_widget_set_visible(data->service_status_widgets[i], true);
 		gtk_label_set_text(GTK_LABEL(data->service_name_widgets[i]), data->services[i]->name);
 		gtk_label_set_text(GTK_LABEL(data->service_status_widgets[i]), data->services[i]->status);
 	}
 	for (uint32_t i=data->n_services; i<data->max_services; i++) {
-        gtk_widget_set_visible(data->service_name_widgets[i], false);
-        gtk_widget_set_visible(data->service_status_widgets[i], false);
+	    gtk_widget_set_visible(data->service_name_widgets[i], false);
+	    gtk_widget_set_visible(data->service_status_widgets[i], false);
 	}
 
 	return TRUE;
@@ -60,7 +60,7 @@ gboolean ip_update(gpointer* data_p) {
 
 	data->ping_logs[data->ping_offset] = duration;
 	if (data->num_pings >= 2) {
-	    data->jitter += abs((float) (data->ping_logs[data->ping_offset]) - data->ping_logs[(data->ping_offset - 1) % data->num_pings]);
+		data->jitter += abs((float) (data->ping_logs[data->ping_offset]) - data->ping_logs[(data->ping_offset - 1) % data->num_pings]);
 
 		char jitter_buf[32];
 		snprintf(jitter_buf, 31, "%dms", (int) data->jitter);
@@ -76,29 +76,29 @@ gboolean ip_update(gpointer* data_p) {
 }
 
 gboolean battery_update(gpointer* data_p) {
-    telem_t* data = (telem_t*) data_p;
+	telem_t* data = (telem_t*) data_p;
 
-    FILE* read_battery_fp = popen("cat " STR(BATTERY_PATH), "r");
-    if (!read_battery_fp) { return TRUE; }
-    fscanf(read_battery_fp, "%d", &(data->battery));
+	FILE* read_battery_fp = popen("cat " STR(BATTERY_PATH), "r");
+	if (!read_battery_fp) { return TRUE; }
+	fscanf(read_battery_fp, "%d", &(data->battery));
 
-    FILE* read_current_fp = popen("cat " STR(CURRENT_PATH), "r");
-    if (!read_current_fp) { return TRUE; }
-    int current_now;
-    fscanf(read_current_fp, "%d", &current_now);
-    data->charging = current_now > 0;
+	FILE* read_current_fp = popen("cat " STR(CURRENT_PATH), "r");
+	if (!read_current_fp) { return TRUE; }
+	int current_now;
+	fscanf(read_current_fp, "%d", &current_now);
+	data->charging = current_now > 0;
 
-    char battery_value[8]; memset(battery_value, 0, 8);
-    char* battery_end = battery_value + snprintf(battery_value, 4, "%d", data->battery);
-    if (data->charging) {
-        battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1;
-    } else {
-        battery_end[0] = '%';
-    }
+	char battery_value[8]; memset(battery_value, 0, 8);
+	char* battery_end = battery_value + snprintf(battery_value, 4, "%d", data->battery);
+	if (data->charging) {
+	    battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1;
+	} else {
+	    battery_end[0] = '%';
+	}
 
-    gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
+	gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
 
-    return TRUE;
+	return TRUE;
 }
 
 GtkWidget* telem_widget() {
@@ -110,7 +110,7 @@ GtkWidget* telem_widget() {
 	data->n_devices = 0;
 	data->devices = (device_t**) malloc(data->max_devices * sizeof(device_t*));
 	for (int i=0; i < data->max_devices; i++) {
-	    data->devices[i] = (device_t*) malloc(sizeof(device_t));
+		data->devices[i] = (device_t*) malloc(sizeof(device_t));
 		data->devices[i]->name = (char*) malloc(64 * sizeof(char)); memset(data->devices[i]->name, 0, 64);
 		data->devices[i]->alias = (char*) malloc(64 * sizeof(char)); memset(data->devices[i]->alias, 0, 64);
 		data->devices[i]->ip = (char*) malloc(32 * sizeof(char)); memset(data->devices[i]->ip, 0, 32);
@@ -121,7 +121,7 @@ GtkWidget* telem_widget() {
 	data->n_services = 0;
 	data->services = (service_t**) malloc(data->max_services * sizeof(service_t*));
 	for (int i=0; i < data->max_services; i++) {
-	    data->services[i] = (service_t*) malloc(sizeof(service_t));
+		data->services[i] = (service_t*) malloc(sizeof(service_t));
 		data->services[i]->name = (char*) malloc(64 * sizeof(char)); memset(data->services[i]->name, 0, 64);
 		data->services[i]->status = (char*) malloc(64 * sizeof(char)); memset(data->services[i]->status, 0, 64);
 	}
@@ -159,7 +159,7 @@ GtkWidget* telem_widget() {
 	PangoFontDescription* font_desc_sm_bold = pango_font_description_from_string(FONT_BOLD_8);
 
 	for (uint32_t i=0; i < data->max_devices; i++) {
-        GtkWidget* instance_block = gtk_vbox_new(FALSE, 0);
+	    GtkWidget* instance_block = gtk_vbox_new(FALSE, 0);
 		data->device_name_widgets[i] = gtk_label_new("");
 		data->device_ip_widgets[i] = gtk_label_new("");
 		gtk_misc_set_alignment (GTK_MISC(data->device_name_widgets[i]), 0.0, 1.0);
@@ -175,7 +175,7 @@ GtkWidget* telem_widget() {
 	GtkWidget* service_block = gtk_vbox_new(false, 0);
 
 	for (uint32_t i=0; i < data->max_services; i++) {
-	    GtkWidget* instance_block = gtk_hbox_new(FALSE, 0);
+		GtkWidget* instance_block = gtk_hbox_new(FALSE, 0);
 		data->service_name_widgets[i] = gtk_label_new("");
 		data->service_status_widgets[i] = gtk_label_new("");
 		gtk_misc_set_alignment (GTK_MISC(data->service_name_widgets[i]), 0.0, 0.0);

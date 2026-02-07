@@ -16,11 +16,11 @@ gboolean tasks_update(void* data_p) {
 
 struct task_onclick_data { task_t* task; uint32_t idx; };
 void update_task(GtkButton* button, GdkEvent* event, void* data_vp) {
-    struct task_onclick_data* data = (struct task_onclick_data*) data_vp;
-    data->task->tasks[data->idx]->completed = 1-(data->task->tasks[data->idx]->completed);
-    tasks_update(data->task);
+	struct task_onclick_data* data = (struct task_onclick_data*) data_vp;
+	data->task->tasks[data->idx]->completed = 1-(data->task->tasks[data->idx]->completed);
+	tasks_update(data->task);
 
-    gtk_container_get_children(GTK_CONTAINER(button));
+	gtk_container_get_children(GTK_CONTAINER(button));
 }
 
 

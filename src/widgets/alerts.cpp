@@ -10,7 +10,7 @@ gboolean alerts_update(gpointer* data_p) {
 	for (uint32_t i=0; i < data->num_alerts; i++) {
 		alert_ev_t* alert = data->alerts[i];
 		gtk_widget_set_visible(data->alert_widgets[i], TRUE);
-        gtk_widget_set_visible(data->alert_meta_widgets[i], TRUE);
+	    gtk_widget_set_visible(data->alert_meta_widgets[i], TRUE);
 
 		char* meta_buf = (char*) malloc(30 * sizeof(char));
 		snprintf(meta_buf, 30, "%s;sev%d", alert->category, alert->severity);

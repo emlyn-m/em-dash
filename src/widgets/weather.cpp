@@ -10,50 +10,50 @@
 #include <cstdlib>
 
 void generate_time(time_t time_d, char* res) {
-    struct tm* time = localtime(&time_d);
-    strftime(res, 10, (char*) "%-I %p", time);
+	struct tm* time = localtime(&time_d);
+	strftime(res, 10, (char*) "%-I %p", time);
 }
 
 gboolean wmo_compare(int code, const int codes[], int n_codes) {
-    for (int i=0; i < n_codes; i++) {
-        if (code == codes[i]) { return true; }
-    }
-    return false;
+	for (int i=0; i < n_codes; i++) {
+	    if (code == codes[i]) { return true; }
+	}
+	return false;
 }
 
 gboolean update_weather_display(gpointer* weather_vp) {
-    const int WMO_SUNNY[1] = { 0 };
-    const int WMO_CLOUDY[3] = { 1, 2, 3 };
-    const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
-    const int WMO_THUNDER[3] = { 95, 96, 99 };
+	const int WMO_SUNNY[1] = { 0 };
+	const int WMO_CLOUDY[3] = { 1, 2, 3 };
+	const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
+	const int WMO_THUNDER[3] = { 95, 96, 99 };
 
-    weather_t* weather_data = (weather_t*) weather_vp;
-    for (uint32_t event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) {
-        weather_ev_t* event = weather_data->events[event_idx];
-        char temp_s[11];
-        snprintf(temp_s, 11, "%.1lf°", event->temp_c);
-        gtk_label_set_text(GTK_LABEL(event->widget_temp), temp_s);
+	weather_t* weather_data = (weather_t*) weather_vp;
+	for (uint32_t event_idx=0; event_idx < weather_data->num_weather_events; event_idx++) {
+	    weather_ev_t* event = weather_data->events[event_idx];
+	    char temp_s[11];
+	    snprintf(temp_s, 11, "%.1lf°", event->temp_c);
+	    gtk_label_set_text(GTK_LABEL(event->widget_temp), temp_s);
 
-        char time_s[10];
-        generate_time(event->time, time_s);
-        gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
+	    char time_s[10];
+	    generate_time(event->time, time_s);
+	    gtk_label_set_text(GTK_LABEL(event->widget_time), time_s);
 
-        const int icon_width = 30;
-        const int icon_height = 30;
+	    const int icon_width = 30;
+	    const int icon_height = 30;
 
-        if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
-        } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
-            set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
-        }
+	    if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
+	        set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
+	    } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
+	        set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
+	    } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
+	        set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);
+	    } else if (wmo_compare(event->wmo_code, WMO_THUNDER, 3)) {
+	        set_image_src(GTK_IMAGE(event->widget_icon), thunder, icon_width, icon_height);
+	    }
 
 
-    }
-    return TRUE;
+	}
+	return TRUE;
 }
 
 GtkWidget* weather_widget() {
@@ -64,7 +64,7 @@ GtkWidget* weather_widget() {
 	weather->update_freq = 30 * 60 * 1000; // ms
 	weather->events = (weather_ev_t**) malloc(weather->num_weather_events * sizeof(weather_ev_t*));
 	for (uint32_t i=0; i < weather->num_weather_events; i++) {
-	    weather->events[i] = (weather_ev_t*) malloc(sizeof(weather_ev_t));
+		weather->events[i] = (weather_ev_t*) malloc(sizeof(weather_ev_t));
 	}
 
 	// wrapper
@@ -99,7 +99,7 @@ GtkWidget* weather_widget() {
 	pango_font_description_free(font_time);
 
 	g_timeout_add(atol(getenv("WEATHER_UPDATE_FREQUENCY")), (GSourceFunc) update_weather, weather);
-	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),      (GSourceFunc) update_weather_display, weather);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),	  (GSourceFunc) update_weather_display, weather);
 
 	return wrapper;
 }

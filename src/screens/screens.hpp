@@ -7,8 +7,8 @@
 #define SCREEN_IDX_CTRL 1
 
 typedef struct set_screen_data {
-    GtkWidget* stack;
-    guint target_screen_idx;
+	GtkWidget* stack;
+	guint target_screen_idx;
 } set_screen_data_t;
 
 void set_screen(GtkButton* _button, GdkEvent* _event, void* data_v);

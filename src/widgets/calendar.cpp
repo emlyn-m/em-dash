@@ -15,10 +15,10 @@ gboolean title_update(gpointer* data_p) {
 	calendar_t* data = (calendar_t*) data_p;
 
  	const auto now = std::chrono::system_clock::now();
-    const std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::tm tm_struct = *std::localtime(&t);
+	const std::time_t t = std::chrono::system_clock::to_time_t(now);
+	std::tm tm_struct = *std::localtime(&t);
 
-    char* message_buf = (char*) malloc(64 * sizeof(char));
+	char* message_buf = (char*) malloc(64 * sizeof(char));
 	if (data->active_event != NULL) {
 		snprintf(message_buf, 64, "%s, %s %d", DAYS[tm_struct.tm_wday], MONTHS[tm_struct.tm_mon], tm_struct.tm_mday);
 		gtk_label_set_text(GTK_LABEL(data->title_day_widget), message_buf);
@@ -48,7 +48,6 @@ gboolean title_update(gpointer* data_p) {
 
 gboolean active_event_update(gpointer* data_p) {
 
-
 	calendar_t* data = (calendar_t*) data_p;
 
 	time_t most_recent_start = 0;
@@ -56,7 +55,7 @@ gboolean active_event_update(gpointer* data_p) {
 	cal_event_t* active_event = NULL;
 	for (uint i=0; i < data->num_events; i++) {
 
-	    if ((data->events[i]->start_time < ctime) && (data->events[i]->end_time > ctime) && (data->events[i]->start_time > most_recent_start)) {
+		if ((data->events[i]->start_time < ctime) && (data->events[i]->end_time > ctime) && (data->events[i]->start_time > most_recent_start)) {
 			active_event = data->events[i];
 			most_recent_start = data->events[i]->start_time;
 		}
@@ -72,13 +71,13 @@ gboolean active_event_update(gpointer* data_p) {
 	memset(time_buf, '\0', 64);
    	snprintf(
   		time_buf, 64, "%d:%02d %s - %d:%02d %s",
-       	tm_start.tm_hour % 12, tm_start.tm_min, tm_start.tm_hour < 12 ? (char*) "am" : (char*) "pm",
-       	tm_end.tm_hour % 12, tm_end.tm_min, tm_end.tm_hour < 12 ? (char*) "am" : (char*) "pm"
+	   	tm_start.tm_hour % 12, tm_start.tm_min, tm_start.tm_hour < 12 ? (char*) "am" : (char*) "pm",
+	   	tm_end.tm_hour % 12, tm_end.tm_min, tm_end.tm_hour < 12 ? (char*) "am" : (char*) "pm"
    	);
 
 
-    gtk_label_set_text(GTK_LABEL(data->active_event_title_widget), data->active_event->title);
-    gtk_label_set_text(GTK_LABEL(data->active_event_duration_widget), time_buf);
+	gtk_label_set_text(GTK_LABEL(data->active_event_title_widget), data->active_event->title);
+	gtk_label_set_text(GTK_LABEL(data->active_event_duration_widget), time_buf);
 
 	return TRUE;
 }
@@ -87,50 +86,50 @@ gboolean pending_events_update(gpointer* data_p) {
 
 	calendar_t* data = (calendar_t*) data_p;
 	const auto now = std::chrono::system_clock::now();
-    const std::time_t t = std::chrono::system_clock::to_time_t(now);
+	const std::time_t t = std::chrono::system_clock::to_time_t(now);
 
 
-    int32_t show_offset;
-    if (data->num_events <= data->show_events) {
-    	show_offset = 0;
-    } else {
-	    int32_t current_event_idx = 0;
+	int32_t show_offset;
+	if (data->num_events <= data->show_events) {
+		show_offset = 0;
+	} else {
+		int32_t current_event_idx = 0;
 	   	for (uint32_t i=0; i < data->num_events; i++) {
-	    	if (data->events[i] == data->active_event) {
-	     		current_event_idx = i;
-	       		break;
-	     	}
+			if (data->events[i] == data->active_event) {
+		 		current_event_idx = i;
+		   		break;
+		 	}
 	  		if (data->events[i]->end_time > t && ((current_event_idx < 0) || (data->events[i]->start_time > data->events[current_event_idx]->start_time))) {
-     			current_event_idx = i;
+	 			current_event_idx = i;
 	  		}
-	    }
+		}
 
-	    int32_t low = current_event_idx - 1;
-	    int32_t high = current_event_idx + data->show_events - 2;
-	    if (low < 0) {
+		int32_t low = current_event_idx - 1;
+		int32_t high = current_event_idx + data->show_events - 2;
+		if (low < 0) {
 			show_offset = 0;
 		} else if (high >= (int) data->num_events) {
 			show_offset = low - (high - data->num_events + 1);
 		} else { show_offset = low; }
-    }
+	}
 
    	PangoFontDescription* font_desc_event = pango_font_description_from_string(FONT_12);
 	PangoFontDescription* font_desc_event_active = pango_font_description_from_string(FONT_BOLD_12);
 
    	char* time_buf = (char*) malloc(128 * sizeof(char));
-    const uint32_t widget_offset = std::max((uint32_t) 0, data->show_events - data->num_events);
+	const uint32_t widget_offset = std::max((uint32_t) 0, data->show_events - data->num_events);
 	for (uint32_t i=0; i < std::min(data->show_events, data->num_events); i++) {
 
 		cal_event_t* event = (data->events)[i+show_offset];
   		std::tm tm_start = *std::localtime((time_t*) &(event->start_time));
   		std::tm tm_end = *std::localtime((time_t*) &(event->end_time));
 
-    	memset(time_buf, '\0', 128);
-     	snprintf(
-      		time_buf, 127, "%d:%02d %s - %d:%02d %s",
-        	tm_start.tm_hour % 12, tm_start.tm_min, tm_start.tm_hour < 12 ? (char*) "am" : (char*) "pm",
-         	tm_end.tm_hour % 12, tm_end.tm_min, tm_end.tm_hour < 12 ? (char*) "am" : (char*) "pm"
-      	);
+		memset(time_buf, '\0', 128);
+	 	snprintf(
+	  		time_buf, 127, "%d:%02d %s - %d:%02d %s",
+	    	tm_start.tm_hour % 12, tm_start.tm_min, tm_start.tm_hour < 12 ? (char*) "am" : (char*) "pm",
+	     	tm_end.tm_hour % 12, tm_end.tm_min, tm_end.tm_hour < 12 ? (char*) "am" : (char*) "pm"
+	  	);
 
 		gtk_label_set_text(GTK_LABEL(data->events_time_widgets[i+widget_offset]), time_buf);
 		char event_title_buf[11]; memcpy(event_title_buf, event->title, 7);
@@ -231,10 +230,10 @@ GtkWidget* calendar_widget() {
 	pango_font_description_free(font_desc_event);
 	pango_font_description_free(font_desc_event_active);
 
-	g_timeout_add(atol(getenv("CALENDAR_UPDATE_FREQUENCY")), (GSourceFunc) update_events,         calendar_data);   // todo: find some way to trigger this once immediately, then again every idk however long - should probs store as a field in cal_data (alternatively we should call the callback over and over but return immediately 99/100 times lmao (based on time not rng obv - wow im tired))
-	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),       (GSourceFunc) title_update,          calendar_data);
-	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),       (GSourceFunc) active_event_update,   calendar_data);
-	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),       (GSourceFunc) pending_events_update, calendar_data);
+	g_timeout_add(atol(getenv("CALENDAR_UPDATE_FREQUENCY")), (GSourceFunc) update_events,	     calendar_data);   // todo: find some way to trigger this once immediately, then again every idk however long - should probs store as a field in cal_data (alternatively we should call the callback over and over but return immediately 99/100 times lmao (based on time not rng obv - wow im tired))
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),	   (GSourceFunc) title_update,          calendar_data);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),	   (GSourceFunc) active_event_update,   calendar_data);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),	   (GSourceFunc) pending_events_update, calendar_data);
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
 	return wrapper;
 }

@@ -17,6 +17,10 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	const size_t ALERT_BUFSIZE = 100000;
 
 	alert_t* alert_data = (alert_t*) data_vp;
+	time_t now = time(NULL);
+	if (now < (alert_data->last_update + alert_data->update_freq)) {
+	    return TRUE;  // too new - skipping
+	}
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m begin alert network update\n"); fflush(stdout);
 
 	char alert_req_cmdbuf[1024]; memset(alert_req_cmdbuf, 0, 1024);
@@ -48,6 +52,7 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m found %s alert \"%s\" (sev %d, sent at %ld)\n", alert_obj->category, alert_obj->msg, alert_obj->severity, (unsigned long) alert_obj->time);
 	    fflush(stdout);
 	}
-
+	
+	alert_data->last_update = now;
 	return TRUE;
 }

@@ -108,6 +108,8 @@ GtkWidget* telem_widget() {
 	data->max_devices = 8;
 	data->max_services = 10;
 	data->n_devices = 0;
+	data->last_update = 0;
+	data->update_freq = atol(getenv("TELEM_UPDATE_FREQUENCY"));
 	data->devices = (device_t**) malloc(data->max_devices * sizeof(device_t*));
 	for (int i=0; i < data->max_devices; i++) {
 		data->devices[i] = (device_t*) malloc(sizeof(device_t));
@@ -243,11 +245,11 @@ GtkWidget* telem_widget() {
 	gtk_box_pack_start(GTK_BOX(ip_info), ip_value, TRUE, TRUE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, TRUE, TRUE, 0);
 
-	g_timeout_add(atol(getenv("TELEM_UPDATE_FREQUENCY")), (GSourceFunc) ip_update, data);
-	g_timeout_add(atol(getenv("TELEM_UPDATE_FREQUENCY")), (GSourceFunc) battery_update, data);
-	g_timeout_add(atol(getenv("TELEM_UPDATE_FREQUENCY")), (GSourceFunc) update_telem_net, data);
-	g_timeout_add(atol(getenv("TELEM_UPDATE_FREQUENCY")), (GSourceFunc) devices_update, data);
-	g_timeout_add(atol(getenv("TELEM_UPDATE_FREQUENCY")), (GSourceFunc) services_update, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) ip_update, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) battery_update, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_telem_net, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) devices_update, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) services_update, data);
 
 
 

@@ -32,6 +32,8 @@ GtkWidget* alerts_widget() {
 	alert_data->max_alerts = 4;
 	alert_data->num_alerts = 0;
 	alert_data->alerts = (alert_ev_t**) malloc(alert_data->max_alerts * sizeof(alert_ev_t*));
+	alert_data->last_update = 0;
+	alert_data->update_freq = atol(getenv("ALERT_UPDATE_FREQUENCY"));
 	alert_data->alert_widgets = (GtkWidget**) malloc(alert_data->max_alerts * sizeof(GtkWidget*));
 	alert_data->alert_meta_widgets = (GtkWidget**) malloc(alert_data->max_alerts * sizeof(GtkWidget*));
 
@@ -76,7 +78,7 @@ GtkWidget* alerts_widget() {
 
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) alerts_update, alert_data);
-	g_timeout_add(atol(getenv("ALERT_UPDATE_FREQUENCY")), (GSourceFunc) update_alerts_net, alert_data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_alerts_net, alert_data);
 
 
 	return wrapper;

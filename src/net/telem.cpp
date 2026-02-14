@@ -13,6 +13,10 @@ gboolean update_telem_net(gpointer* data_vp) {
 	const size_t SERVICE_BUFSIZE = 100000;
 
 	telem_t* telem = (telem_t*) data_vp;
+	time_t now = time(NULL);
+	if (now < (telem->last_update + telem->update_freq)) {
+	    return TRUE;  // skipping
+	}
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m begin telemetry network update\n"); fflush(stdout);
 
 	char device_req_cmdbuf[1024]; memset(device_req_cmdbuf, 0, 1024);

@@ -61,7 +61,7 @@ GtkWidget* weather_widget() {
 	weather_t* weather = (weather_t*) malloc(sizeof(weather_t));
 	weather->num_weather_events = 10;
 	weather->last_update = 0;
-	weather->update_freq = 30 * 60 * 1000; // ms
+	weather->update_freq = atol(getenv("WEATHER_UPDATE_FREQUENCY"));
 	weather->events = (weather_ev_t**) malloc(weather->num_weather_events * sizeof(weather_ev_t*));
 	for (uint32_t i=0; i < weather->num_weather_events; i++) {
 		weather->events[i] = (weather_ev_t*) malloc(sizeof(weather_ev_t));
@@ -98,7 +98,7 @@ GtkWidget* weather_widget() {
 	pango_font_description_free(font_temp);
 	pango_font_description_free(font_time);
 
-	g_timeout_add(atol(getenv("WEATHER_UPDATE_FREQUENCY")), (GSourceFunc) update_weather, weather);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_weather, weather);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),	  (GSourceFunc) update_weather_display, weather);
 
 	return wrapper;

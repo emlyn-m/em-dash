@@ -1,6 +1,5 @@
 #include "src/net/cJSON.h"
 #include "src/widgets/widgets.hpp"
-#include "../secrets.h"
 
 #include <cstdio>
 #include <cstdlib>

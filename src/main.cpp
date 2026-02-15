@@ -5,8 +5,7 @@
 #include <cstring>
 #include "glib-object.h"
 
-#include "../screens/screens.hpp"
-#include "src/widgets/widgets.hpp"
+#include "screens/screens.hpp"
 
 #define CELL_ROWCOUNT 5
 #define CELL_COLCOUNT 5

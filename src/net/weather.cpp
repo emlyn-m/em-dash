@@ -1,6 +1,4 @@
 #include "glib.h"
-#include "../secrets.h"
-#include "gtk/gtk.h"
 #include "src/net/cJSON.h"
 #include "src/widgets/widgets.hpp"
 #include <cstdio>

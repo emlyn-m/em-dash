@@ -5,7 +5,6 @@
 #include "../images/sun.h"
 #include "../images/thunder.h"
 
-
 #include "gtk/gtk.h"
 #include <cstdlib>
 

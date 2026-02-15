@@ -1,6 +1,4 @@
 .cache/
-meson.build
-meson.options
 src/secrets.h
 .env
 

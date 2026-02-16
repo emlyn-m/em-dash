@@ -9,5 +9,5 @@ int generate_gcal_jwt(char* service_email, char* privkey, int out_size, char* ou
 time_t parse_gcal_datetime(cJSON* obj);
 
 gboolean update_weather(gpointer* data);
-gboolean update_telem_net(gpointer* data);
+gboolean update_telem_async(gpointer* data);
 gboolean update_alerts_net(gpointer* data);

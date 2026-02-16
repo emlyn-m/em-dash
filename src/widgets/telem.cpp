@@ -50,26 +50,18 @@ gboolean services_update(gpointer* data_vp) {
 gboolean ip_update(gpointer* data_p) {
 	telem_t* data = (telem_t*) data_p;
 
-	time_t duration;
-	http_get((char*) "ipinfo.io", (char*) "ip", 80, &(data->ip), &duration);
-	gtk_label_set_text(GTK_LABEL(data->ip_label), data->ip);
+	if (data->num_pings) {
+    	gtk_label_set_text(GTK_LABEL(data->ip_label), data->ip);
+    	if (data->num_pings >= 2) {
+    		char jitter_buf[32];
+    		snprintf(jitter_buf, 31, "%dms", (int) data->jitter);
+    		gtk_label_set_text(GTK_LABEL(data->jitter_label), jitter_buf);
+        }
 
-	data->num_pings = MIN(data->num_pings+1, data->max_pings);
-	data->ping_offset = (data->ping_offset + 1) % data->num_pings;
-
-	data->ping_logs[data->ping_offset] = duration;
-	if (data->num_pings >= 2) {
-		data->jitter += abs((float) (data->ping_logs[data->ping_offset]) - data->ping_logs[(data->ping_offset - 1) % data->num_pings]);
-
-		char jitter_buf[32];
-		snprintf(jitter_buf, 31, "%dms", (int) data->jitter);
-		gtk_label_set_text(GTK_LABEL(data->jitter_label), jitter_buf);
-
+    	char ping_buf[32];
+    	snprintf(ping_buf, 31, "%ldms", data->ping_logs[data->num_pings - 1]);
+    	gtk_label_set_text(GTK_LABEL(data->ping_label), ping_buf);
 	}
-
-	char ping_buf[32];
-	snprintf(ping_buf, 31, "%ldms", data->ping_logs[data->num_pings - 1]);
-	gtk_label_set_text(GTK_LABEL(data->ping_label), ping_buf);
 
    	return TRUE;
 }
@@ -77,23 +69,10 @@ gboolean ip_update(gpointer* data_p) {
 gboolean battery_update(gpointer* data_p) {
 	telem_t* data = (telem_t*) data_p;
 
-	FILE* read_battery_fp = popen("cat " STR(BATTERY_PATH), "r");
-	if (!read_battery_fp) { return TRUE; }
-	fscanf(read_battery_fp, "%d", &(data->battery));
-
-	FILE* read_current_fp = popen("cat " STR(CURRENT_PATH), "r");
-	if (!read_current_fp) { return TRUE; }
-	int current_now;
-	fscanf(read_current_fp, "%d", &current_now);
-	data->charging = current_now > 0;
-
 	char battery_value[8]; memset(battery_value, 0, 8);
 	char* battery_end = battery_value + snprintf(battery_value, 4, "%d", data->battery);
-	if (data->charging) {
-	    battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1;
-	} else {
-	    battery_end[0] = '%';
-	}
+	if (data->charging) { battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1; }
+	else { battery_end[0] = '%'; }
 
 	gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
 
@@ -246,7 +225,7 @@ GtkWidget* telem_widget() {
 
 	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) ip_update, data);
 	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) battery_update, data);
-	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_telem_net, data);
+	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_telem_async, data);
 	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) devices_update, data);
 	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) services_update, data);
 

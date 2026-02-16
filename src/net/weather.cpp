@@ -28,6 +28,7 @@ gboolean update_weather(gpointer* data) {
 	}
 
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m beginning weather update\n"); fflush(stdout);
+	if (fork()) { return TRUE; }
 
 	char date_low[15];
 	char date_high[15];
@@ -36,25 +37,23 @@ gboolean update_weather(gpointer* data) {
 
 
 	char* weather_req_cmdbuf = (char*) malloc(1024 * sizeof(char));
-	printf("%s\n", getenv("WEATHER_API_CMD"));
-	fflush(stdout);
-	snprintf(weather_req_cmdbuf, 1024, getenv("WEATHER_API_CMD"), getenv("WEATHER_LATITUDE"), getenv("WEATHER_LONGITUDE"), date_low, date_high, getenv("WEATHER_TIMEZONE"));
+	snprintf(weather_req_cmdbuf, 1024, getenv("WEATHER_API_CMD"), getenv("WEATHER_LATITUDE"), getenv("WEATHER_LONGITUDE"), getenv("WEATHER_TIMEZONE"), date_low, date_high);
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m using fetch command \"%s\"\n", weather_req_cmdbuf); fflush(stdout);
 	FILE* weather_fp = popen(weather_req_cmdbuf, "r");
 	free(weather_req_cmdbuf);
 	if (!weather_fp) {
 	    fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch weather\n"); fflush(stderr);
-	    return TRUE;
+	    _exit(0);
 	}
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m fetched weather\n"); fflush(stdout);
 
 
 	const size_t WEATHER_SIZE = 100000;
-	char* weather_buf = (char*) malloc(WEATHER_SIZE * sizeof(char));
+	char* weather_buf = (char*) malloc(WEATHER_SIZE * sizeof(char)); memset(weather_buf, 0, WEATHER_SIZE);
 	if ( fread(weather_buf, sizeof(char), WEATHER_SIZE, weather_fp) == WEATHER_SIZE ) {
 	    printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m read filled buffer of weather_req - end: <%s>\n", weather_buf + WEATHER_SIZE - 10); fflush(stdout);
 	    free(weather_buf);
-	    return TRUE;
+	    _exit(0);
 	};
 	cJSON* weather = cJSON_Parse(weather_buf);
 	cJSON* hourly = cJSON_GetObjectItem(weather, "hourly");
@@ -63,10 +62,10 @@ gboolean update_weather(gpointer* data) {
 	cJSON* wmo_codes = cJSON_GetObjectItem(hourly, "weather_code");
 	cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
 
-	if (!(weather || hourly || temps || rain_probs || weather_times)) {
+	if (!(weather && hourly && temps && rain_probs && weather_times)) {
 	    fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m parse weather, json <%s>\n", weather_buf);
 	    fflush(stderr);
-	    return TRUE;
+	    _exit(0);
 	}
 
 	int time_offset = 0;
@@ -92,5 +91,5 @@ gboolean update_weather(gpointer* data) {
 	weather_data->last_update = ctime;
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m weather update complete\n"); fflush(stdout);
 
-	return TRUE;
+	_exit(0);
 }

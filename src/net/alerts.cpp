@@ -16,25 +16,27 @@ const char* CATEGORY_NAMES[4] = {
 gboolean update_alerts_net(gpointer* data_vp) {
 	const size_t ALERT_BUFSIZE = 100000;
 
+	if (fork()) { return TRUE; }
+	
 	alert_t* alert_data = (alert_t*) data_vp;
 	time_t now = time(NULL);
 	if (now < (alert_data->last_update + alert_data->update_freq)) {
-	    return TRUE;  // too new - skipping
+	    _exit(0);  // too new - skipping
 	}
 	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m begin alert network update\n"); fflush(stdout);
 
 	char alert_req_cmdbuf[1024]; memset(alert_req_cmdbuf, 0, 1024);
 	snprintf(alert_req_cmdbuf, 1024, "curl -s '%s'", getenv("ALERT_ENDPOINT"));
 	FILE* alert_fp = popen(alert_req_cmdbuf, "r");
-	if (!alert_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch alerts\n"); fflush(stderr); return TRUE; }
+	if (!alert_fp) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch alerts\n"); fflush(stderr); _exit(0); }
 	char alert_buf[ALERT_BUFSIZE]; memset(alert_buf, 0, ALERT_BUFSIZE);
 	if ( std::fread(alert_buf, sizeof(char), ALERT_BUFSIZE, alert_fp) == ALERT_BUFSIZE ) {
 	    printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m read filled alert_buf - end: <%s>\n", alert_buf + ALERT_BUFSIZE - 10); fflush(stdout);
-	    return TRUE;
+	    _exit(0);
 	};
 	int alert_req_status = pclose(alert_fp);
-	if (alert_req_status == -1) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m pclose error on alert_req\n"); fflush(stderr); return TRUE; }
-	if (WEXITSTATUS(alert_req_status)) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m alert_req returned error %d\n", WEXITSTATUS(alert_req_status)); fflush(stderr); return TRUE; }
+	if (alert_req_status == -1) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m pclose error on alert_req\n"); fflush(stderr); _exit(0); }
+	if (WEXITSTATUS(alert_req_status)) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m alert_req returned error %d\n", WEXITSTATUS(alert_req_status)); fflush(stderr); _exit(0); }
 
 
 	cJSON* alerts = cJSON_Parse(alert_buf);
@@ -54,5 +56,5 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	}
 	
 	alert_data->last_update = now;
-	return TRUE;
+	_exit(0);
 }

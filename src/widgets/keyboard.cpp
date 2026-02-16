@@ -31,14 +31,14 @@ void set_keyboard(gboolean show) {
 	if (show) { lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "open", (char*) "xyz.emlyn.kindle:abc:0"); }
 	else { 
 	    lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "close", (char*) "xyz.emlyn.kindle");
-		// todo - delay this by 0.5 - 1s
-		if (fork() == 0) {
-		    usleep(500000);  // .5 second delay
-			printf("slept!!\n"); fflush(stdout);
-            // execlp("eips", "eips", "''", NULL);
-            execlp("/mnt/us/libkh/bin/fbink", "fbink", "-s", "-f", NULL);
-            _exit(0);
-		}
+//		// todo - delay this by 0.5 - 1s
+//		if (fork() == 0) {
+//		    usleep(500000);  // .5 second delay
+//			printf("slept!!\n"); fflush(stdout);
+//            // execlp("eips", "eips", "''", NULL);
+//            execlp("/mnt/us/libkh/bin/fbink", "fbink", "-s", "-f", NULL);
+//            _exit(0);
+//		}
 	}
 }
 

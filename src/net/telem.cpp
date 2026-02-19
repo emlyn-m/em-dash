@@ -7,6 +7,7 @@
 #include <cstring>
 #include <sys/wait.h>
 #include <gtk-2.0/gtk/gtk.h>
+#include <pthread.h>
 
 void* update_telem_async(void* data_vp) {
     telem_t* telem = (telem_t*) data_vp;

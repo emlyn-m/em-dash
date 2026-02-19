@@ -5,6 +5,7 @@
 #include <cstring>
 #include <algorithm>
 #include <gtk-2.0/gtk/gtk.h>
+#include <pthread.h>
 
 const char* CATEGORY_NAMES[4] = {
 	"class_0",

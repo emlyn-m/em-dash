@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <pthread.h>
 
 
 time_t parse_time_offset(char* time_buf) {

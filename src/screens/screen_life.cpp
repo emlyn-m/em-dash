@@ -29,7 +29,8 @@ GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 
 	set_screen_data_t* ctrl_data = (set_screen_data_t*) malloc(sizeof(set_screen_data_t));
 	ctrl_data->stack = stack;
-	ctrl_data->target_screen_idx = SCREEN_IDX_CTRL;
+	// ctrl_data->target_screen_idx = SCREEN_IDX_CTRL;
+	ctrl_data->target_screen_idx = SCREEN_IDX_LED1;
 
 	GtkWidget* table = gtk_table_custom(5,5);
 

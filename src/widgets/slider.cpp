@@ -47,7 +47,7 @@ static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpoi
 static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer data) {
 	KindleSlider *slider = (KindleSlider*)data;
 	if (slider->dragging) {
-	    int height = widget->allocation.height - 200;
+	    int height = widget->allocation.height - 0;  // prev -200
 	    slider->value = 1.0 - (event->y / height);
 	    slider->value = CLAMP(slider->value, 0.0, 1.0);
 	    gtk_widget_queue_draw(widget);

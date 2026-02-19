@@ -5,7 +5,7 @@
 #define CELL_COLCOUNT 5
 #define PADDING 20
 #define OFFSET_SIZE 5
-#define SCALE 1
+#define SCALE 0.5
 
 static gboolean shadow_expose(GtkWidget* widget, GdkEventExpose* event, gpointer _data) {
 	cairo_t* cr = gdk_cairo_create(widget->window);

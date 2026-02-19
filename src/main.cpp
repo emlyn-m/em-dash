@@ -29,9 +29,11 @@ int main(int argc, char* argv[]) {
 	GtkWidget* screens[N_SCREENS] = {
 	    generate_life_screen(stack, set_screen),
 		generate_ctrl_screen(stack, set_screen),
+		generate_led_screen(stack, set_screen),
 	};
 	for (int i=0; i < N_SCREENS; i++) {
 	    gtk_container_add(GTK_CONTAINER(stack), screens[i]);
+		gtk_widget_show(screens[i]);
 	}
 	gtk_container_add(GTK_CONTAINER(window), stack);
 

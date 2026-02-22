@@ -151,13 +151,14 @@ typedef struct TaskData {
 	GtkWidget** task_widgets;
 } task_t;
 
-typedef struct {
+typedef struct KindleSlider {
 	GtkWidget *drawing_area;
 	float value;      // 0.0 to 1.0
+	void* data;
 	gboolean dragging;
-	void (*callback_change)(float);
-	void (*callback_release)(float);
-} KindleSlider;
+	void (*callback_change)(float, void*);
+	void (*callback_release)(float, void*);
+} kindle_slider_t;
 
 typedef struct kb_lut {
 	int layer;
@@ -196,5 +197,5 @@ void set_keyboard(gboolean show);
 void read_keyboard(kb_data_t* data);
 GtkWidget* keyboard_widget(gboolean (*onpress)(kb_data_t*), void (*onenter)(kb_data_t*));
 void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
-KindleSlider* kindle_slider_new(void (*callback_change)(float), void (*callback_release)(float));
+kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*));
 GtkWidget* model_init();

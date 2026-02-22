@@ -43,7 +43,7 @@ void set_brightness(GtkButton* _b, GdkEvent* _e, void* brightness) {
 	fclose(bfile);
 }
 
-void slider_brightness_callback(float progress) {
+void slider_brightness_callback(float progress, void* _v) {
 	void* progress_guint;
 	memcpy(&progress_guint, &progress, sizeof(progress));
 	set_brightness(NULL, NULL, progress_guint);
@@ -67,7 +67,7 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 
 	GtkWidget* table = gtk_table_custom(15,10);
 
-	KindleSlider* slider = kindle_slider_new(NULL, &slider_brightness_callback);
+	KindleSlider* slider = kindle_slider_new(NULL, NULL, &slider_brightness_callback);
 	gtk_table_add(table, 0, 2, 0, 9, slider->drawing_area);
 	gtk_table_add(table, 0, 2, 9, 10, label_widget((char*) "γ"));
 	gtk_table_add(table, 2, 5, 0, 2, button_widget((char*) "LED Strip", set_led1_handler, ctrl_data));

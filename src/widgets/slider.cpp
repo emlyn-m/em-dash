@@ -26,40 +26,40 @@ static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event, gpointer dat
 	    width - 2*border_offset_px, fill_height + icon_height_px - border_offset_px
 	);
 
-
 	g_object_unref(gc);
 	return TRUE;
 }
 
 static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-	KindleSlider *slider = (KindleSlider*)data;
+	kindle_slider_t *slider = (kindle_slider_t*)data;
 	slider->dragging = TRUE;
 	return TRUE;
 }
 
 static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-	KindleSlider *slider = (KindleSlider*)data;
+	kindle_slider_t *slider = (kindle_slider_t*)data;
 	slider->dragging = FALSE;
-	if (slider->callback_release) { slider->callback_release(slider->value); }
+	if (slider->callback_release) { slider->callback_release(slider->value, slider->data); }
 	return TRUE;
 }
 
 static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer data) {
-	KindleSlider *slider = (KindleSlider*)data;
+	kindle_slider_t *slider = (kindle_slider_t*)data;
 	if (slider->dragging) {
 	    int height = widget->allocation.height - 0;  // prev -200
 	    slider->value = 1.0 - (event->y / height);
 	    slider->value = CLAMP(slider->value, 0.0, 1.0);
 	    gtk_widget_queue_draw(widget);
-	    if (slider->callback_change) { slider->callback_change(slider->value); }
+	    if (slider->callback_change) { slider->callback_change(slider->value, slider->data); }
 	}
 	return TRUE;
 }
 
-KindleSlider* kindle_slider_new(void (*callback_change)(float progress), void (*callback_release)(float progress)) {
-	KindleSlider *slider = g_new0(KindleSlider, 1);
+kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float progress, void*), void (*callback_release)(float progress, void*)) {
+	kindle_slider_t *slider = g_new0(kindle_slider_t, 1);
 	slider->value = 1.0;
 	slider->dragging = FALSE;
+	slider->data = data;
 	slider->callback_change = callback_change;
 	slider->callback_release = callback_release;
 

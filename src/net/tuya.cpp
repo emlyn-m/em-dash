@@ -26,6 +26,12 @@ void tuya_led_new(
     led->name = name;
     led->ip = ip;
     led->key = key;
+    
+    led->power = 0;
+    led->hue = 0;
+    led->sat = 0;
+    led->val = 0;
+    
     led->seqno = 1;
     led->sock = 0;
     srand(time(0));
@@ -272,7 +278,7 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     unsigned char output_buf[BUFSIZE]; memset(output_buf, 0, BUFSIZE);
     const uint32_t min_len = 16 + 4;
     
-    size_t header_len = recv(led->sock, output_buf, min_len, 0);
+    int header_len = recv(led->sock, output_buf, min_len, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && header_len <= 0) {
         printf(LOGFMT("recv() in tuya_cmd_send returned %d\n", LOG_WRN, LOG_WRN_C), errno);
@@ -293,12 +299,11 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
         msg->command = header.command;
         msg->payload_len = remaining;
     }
-    
-    printf(LOGFMT("rx %zu byte initial: ", LOG_DBG, LOG_DBG_C), header_len);
-    for (size_t i=0; i < header_len; i++) { printf("%02x", (unsigned char) output_buf[i]); }
+    printf(LOGFMT("rx %d byte initial: ", LOG_DBG, LOG_DBG_C), header_len);
+    for (int i=0; i < header_len; i++) { printf("%02x", (unsigned char) output_buf[i]); }
     printf("\n");
     
-    printf(LOGFMT("rx remaining (expecting %zu bytes)... ", LOG_DBG, LOG_DBG_C), header.total_len - header_len); fflush(stdout);
+    printf(LOGFMT("rx remaining (expecting %u bytes)... ", LOG_DBG, LOG_DBG_C), header.total_len - header_len); fflush(stdout);
     size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
     if (body_rx < 0) { printf("\n%s", LOGFMT("failed!\n", LOG_WRN, LOG_WRN_C)); return ERR_SOCK_FAIL; }
     else if (body_rx == 0) { printf("\n%s", LOGFMT("closed!\n", LOG_WRN, LOG_WRN_C)); return ERR_SOCK_CLOSE; }

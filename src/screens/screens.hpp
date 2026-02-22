@@ -16,4 +16,5 @@ void set_screen(GtkButton* _button, GdkEvent* _event, void* data_v);
 
 GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
 GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
-GtkWidget* generate_led_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
+GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
+GtkWidget* generate_lamp_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );

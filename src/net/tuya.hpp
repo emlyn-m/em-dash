@@ -43,6 +43,11 @@ typedef struct tuya_led {
     uint32_t ip;
     unsigned char* key;
     
+    int power;
+    uint32_t hue;
+    uint32_t sat;
+    uint32_t val;
+    
     int sock;
     uint32_t random_id;
     unsigned int seqno;

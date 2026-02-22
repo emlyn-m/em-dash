@@ -7,7 +7,6 @@
 #include <ctime>
 
 gboolean clock_update(void* data_p) {
-
 	clock_data_t* data = (clock_data_t*) data_p;
 	const char* MONTHS[] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
 

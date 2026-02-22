@@ -2,6 +2,7 @@ project('dash', 'cpp', version: 'v1.0.0', default_options: ['cpp_std=c++17'], me
 
 gtk_dep = dependency('gtk+-2.0')
 thread_dep = dependency('threads')
+crypto_dep = dependency('openssl')
 
 sources = files(
     './src/main.cpp',
@@ -12,6 +13,7 @@ sources = files(
 	'./src/net/net.cpp',
 	'./src/net/telem.cpp',
 	'./src/net/weather.cpp',
+	'./src/net/tuya.cpp',
 	'./src/screens/screens.cpp',
 	'./src/screens/screen_life.cpp',
 	'./src/screens/screen_ctrl.cpp',
@@ -33,4 +35,4 @@ sources = files(
 
 include_dirs = include_directories()
 
-executable('dash', sources, include_directories: include_dirs, dependencies: [gtk_dep,thread_dep], cpp_args: '-static-libstdc++', link_args: '-static-libstdc++')
+executable('dash', sources, include_directories: include_dirs, dependencies: [gtk_dep,thread_dep,crypto_dep], cpp_args: '-static-libstdc++', link_args: '-static-libstdc++')

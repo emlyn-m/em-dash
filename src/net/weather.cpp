@@ -65,7 +65,7 @@ void* update_weather_async(void* data_vp) {
 	int time_offset = 0;
    
 	while ( parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset+1)->valuestring) < ctime ) { time_offset++; }
-	int event_idx = 0;
+	uint32_t event_idx = 0;
 	while (event_idx < weather_data->num_weather_events) {
    
 	    weather_data->events[event_idx]->time = parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset)->valuestring);

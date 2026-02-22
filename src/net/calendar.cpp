@@ -2,7 +2,6 @@
 #include "net.hpp"
 #include "cJSON.h"
 
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -162,7 +161,7 @@ void* update_events_async(void* data_vp) {
 
 gboolean update_events(gpointer* calendar_gp) {
 	calendar_t* cal = (calendar_t*) calendar_gp;
-	unsigned long ctime = time(NULL);
+	long ctime = time(NULL);
 
 	if ((cal->last_updated + cal->update_frequency) > ctime) {
 	    return TRUE;

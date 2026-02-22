@@ -163,7 +163,7 @@ gboolean update_events(gpointer* calendar_gp) {
 	calendar_t* cal = (calendar_t*) calendar_gp;
 	long ctime = time(NULL);
 
-	if ((cal->last_updated + cal->update_frequency) > ctime) {
+	if ((long) (cal->last_updated + cal->update_frequency) > (long) ctime) {
 	    return TRUE;
 	}
 

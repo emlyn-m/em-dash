@@ -1,6 +1,8 @@
-#include "glib.h"
+#include "src/log.hpp"
 #include "src/net/cJSON.h"
 #include "src/widgets/widgets.hpp"
+
+#include "glib.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -32,20 +34,20 @@ void* update_weather_async(void* data_vp) {
    
 	char* weather_req_cmdbuf = (char*) malloc(1024 * sizeof(char));
 	snprintf(weather_req_cmdbuf, 1024, getenv("WEATHER_API_CMD"), getenv("WEATHER_LATITUDE"), getenv("WEATHER_LONGITUDE"), getenv("WEATHER_TIMEZONE"), date_low, date_high);
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m using fetch command \"%s\"\n", weather_req_cmdbuf); fflush(stdout);
+	printf(LOGFMT("using fetch command \"%s\"\n", LOG_INF), weather_req_cmdbuf); fflush(stdout);
 	FILE* weather_fp = popen(weather_req_cmdbuf, "r");
 	free(weather_req_cmdbuf);
 	if (!weather_fp) {
-	    fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m failed to fetch weather\n"); fflush(stderr);
+	    fprintf(stderr, LOGFMT("failed to fetch weather\n", LOG_ERR)); fflush(stderr);
 	    return NULL;
 	}
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m fetched weather\n"); fflush(stdout);
+	printf(LOGFMT("fetched weather\n", LOG_INF)); fflush(stdout);
    
    
 	const size_t WEATHER_SIZE = 100000;
 	char* weather_buf = (char*) malloc(WEATHER_SIZE * sizeof(char)); memset(weather_buf, 0, WEATHER_SIZE);
 	if ( fread(weather_buf, sizeof(char), WEATHER_SIZE, weather_fp) == WEATHER_SIZE ) {
-	    printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m read filled buffer of weather_req - end: <%s>\n", weather_buf + WEATHER_SIZE - 10); fflush(stdout);
+	    printf(LOGFMT("read filled buffer of weather_req - end: <%s>\n", LOG_ERR), weather_buf + WEATHER_SIZE - 10); fflush(stdout);
 	    free(weather_buf);
 	    return NULL;
 	};
@@ -57,7 +59,7 @@ void* update_weather_async(void* data_vp) {
 	cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
    
 	if (!(weather && hourly && temps && rain_probs && weather_times)) {
-	    fprintf(stderr, "\x1b[38;5;139m\x1b[1mERR:\x1b[0m parse weather, json <%s>\n", weather_buf);
+	    fprintf(stderr, LOGFMT("parse weather, json <%s>\n", LOG_ERR), weather_buf);
 	    fflush(stderr);
 	    return NULL;
 	}
@@ -73,7 +75,7 @@ void* update_weather_async(void* data_vp) {
 	    weather_data->events[event_idx]->rain_prob = cJSON_GetArrayItem(rain_probs, time_offset)->valuedouble;
 	    weather_data->events[event_idx]->wmo_code = cJSON_GetArrayItem(wmo_codes, time_offset)->valueint;
    
-	    printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m weather event %d: time=%ld, temp=%lf*C, p_precip=%lf, wmo=%d\n", event_idx, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
+	    printf(LOGFMT("weather event %d: time=%ld, temp=%lf*C, p_precip=%lf, wmo=%d\n", LOG_INF), event_idx, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
 	    fflush(stdout);
 	    time_offset++;
 	    event_idx++;
@@ -94,12 +96,12 @@ gboolean update_weather(gpointer* data) {
 	}
 
 	weather_data->last_update = 2086733650;
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m beginning weather update\n"); fflush(stdout);
+	printf(LOGFMT("beginning weather update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_weather_async, data);
 
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m weather update complete\n"); fflush(stdout);
+	printf(LOGFMT("weather update complete\n", LOG_INF)); fflush(stdout);
 
 	return TRUE;
 }

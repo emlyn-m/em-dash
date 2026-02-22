@@ -1,6 +1,7 @@
-#include "../widgets/widgets.hpp"
-#include "./cJSON.h"
+#include "src/net/cJSON.h"
+
 #include "glib.h"
+
 
 int http_get(char* hostname, char* path, int port, char** out, time_t* pingp);
 

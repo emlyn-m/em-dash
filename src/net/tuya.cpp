@@ -1,3 +1,6 @@
+#include "src/log.hpp"
+#include "src/net/tuya.hpp"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,8 +14,6 @@
 #include <time.h>
 #include <errno.h>
 #include <cinttypes>
-
-#include "tuya.hpp"
 
 
 void tuya_led_new(
@@ -41,7 +42,7 @@ void tuya_led_new(
 void tuya_msg_free(tuya_msg_t* msg) { if (msg && msg->payload) { free(msg->payload); msg->payload = NULL; } }
 
 int _tuya_socket_open(tuya_led_t* led) {
-    printf("%s", LOGFMT("connecting to led socket...\n", LOG_DBG, LOG_DBG_C));
+    printf("%s", LOGFMT("connecting to led socket...\n", LOG_DBG));
     int status, sock;
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -54,10 +55,10 @@ int _tuya_socket_open(tuya_led_t* led) {
     serv_addr.sin_port = htons(TUYA_PORT);
     int flag = 1;
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
-    printf("%s", LOGFMT("set tcp_nodelay flag\n", LOG_DBG, LOG_DBG_C));
+    printf("%s", LOGFMT("set tcp_nodelay flag\n", LOG_DBG));
 
     if ((status = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) { close(sock); return ERR_SOCK_FAIL; }
-    printf("%s", LOGFMT("connection success!\n", LOG_DBG, LOG_DBG_C));
+    printf("%s", LOGFMT("connection success!\n", LOG_DBG));
     led->sock = sock;
     return 0;
 }
@@ -74,7 +75,7 @@ static uint32_t _crc32(unsigned char *buf, size_t len) {
 
 unsigned char* _pad(unsigned char* buf, int len, int target_len, int* out_len) {
     int padnum = target_len - len % target_len;
-    printf(LOGFMT("padding %d bytes for a length of %d\n", LOG_DBG, LOG_DBG_C), padnum, len+padnum);
+    printf(LOGFMT("padding %d bytes for a length of %d\n", LOG_DBG), padnum, len+padnum);
     *out_len = len + padnum;
     unsigned char* output_buf;
     while (!(output_buf = (unsigned char*) malloc(len + padnum))) {};
@@ -107,10 +108,10 @@ int _popen_crypt(unsigned char* pt_buf, int pt_len, unsigned char* key, unsigned
     int ct_hlen = fread(ct_hexbuf, 1, 2*pt_len + 1, enc_fp);
     pclose(enc_fp);
     if (ct_hlen <= 0) { 
-        printf(LOGFMT("_popen_crypt read 0 bytes\n", LOG_WRN, LOG_WRN_C));
+        printf(LOGFMT("_popen_crypt read 0 bytes\n", LOG_WRN));
         return 0;
     } else {
-        printf(LOGFMT("_popen_crypt read %d bytes\n", LOG_DBG, LOG_DBG_C), ct_hlen);
+        printf(LOGFMT("_popen_crypt read %d bytes\n", LOG_DBG), ct_hlen);
     }
     
     for (int i=0; i < ct_hlen - 1; i+=2) {
@@ -195,7 +196,7 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
     if (dps) { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, ",\"dps\":%s}",  dps ? dps : "{}"); }
     else { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, "}"); }
     
-    printf(LOGFMT("header (%zu bytes): %s\n", LOG_DBG, LOG_DBG_C), strlen((char*) payload), payload);
+    printf(LOGFMT("header (%zu bytes): %s\n", LOG_DBG), strlen((char*) payload), payload);
     unsigned char header_buf[VERSION_HEADER_SIZE] = { 0 };
     unsigned char* header = header_buf;
     if (!( ( command == COMMAND_QUERY) )) { _tuya_generate_header(header); }
@@ -203,23 +204,23 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
     uint8_t* encoded = _tuya_payload_encode(led, command, payload, header, &msg_size);
     if (!encoded) { return ERR_ENCODE_FAIL; }
     
-    printf(LOGFMT("encoded (%d bytes): ", LOG_DBG, LOG_DBG_C), msg_size);
+    printf(LOGFMT("encoded (%d bytes): ", LOG_DBG), msg_size);
     for (size_t i=0; i < msg_size; i++) { printf("%02x", encoded[i]); }
     printf("\n");
     
     int success = send(led->sock, encoded, msg_size, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && success <= 0) {
-        printf(LOGFMT("send() in tuya_cmd_send returned %d\n", LOG_WRN, LOG_WRN_C), errno);
+        printf(LOGFMT("send() in tuya_cmd_send returned %d\n", LOG_WRN), errno);
         if (errno) {
             int sock_open_status;
-            if (( sock_open_status = _tuya_socket_open(led) )) { printf(LOGFMT("failed to open socket: %d\n", LOG_ERR, LOG_ERR_C), sock_open_status); };
+            if (( sock_open_status = _tuya_socket_open(led) )) { printf(LOGFMT("failed to open socket: %d\n", LOG_ERR), sock_open_status); };
         }
         success = send(led->sock, encoded, msg_size, 0);
     }
     if (success < 0) { return ERR_SOCK_FAIL; }
     
-    printf(LOGFMT("sent %d bytes\n", LOG_INF, LOG_INF_C), success);
+    printf(LOGFMT("sent %d bytes\n", LOG_INF), success);
     free(encoded);
     return 0;
 }
@@ -234,8 +235,8 @@ _tuya_header_t _tuya_header_parse(unsigned char* header_buf, size_t header_size)
     _tuya_header_t header;
     const uint32_t header_len = 16;
     uint32_t prefix; _unpack_u32_be(header_buf, &prefix);
-    if (prefix != PREFIX_55AA_VALUE) { printf(LOGFMT("unknown prefix %d\n", LOG_WRN, LOG_WRN_C), prefix); }
-    else { printf("%s", LOGFMT("received 55AA prefix\n", LOG_DBG, LOG_DBG_C)); }
+    if (prefix != PREFIX_55AA_VALUE) { printf(LOGFMT("unknown prefix %d\n", LOG_WRN), prefix); }
+    else { printf("%s", LOGFMT("received 55AA prefix\n", LOG_DBG)); }
     
     _unpack_u32_be(header_buf+4, &header.seqno);
     _unpack_u32_be(header_buf+8, &header.command);
@@ -261,7 +262,7 @@ void _tuya_payload_decode(tuya_led_t* led, uint32_t expected_command, unsigned c
     else { msg->retcode = -1; }
     
     unsigned char padded[ct_len]; memset(padded, 0, ct_len);
-    printf(LOGFMT("using range %zu to %zu of payload size %zu\n", LOG_DBG, LOG_DBG_C), ct_offset, ct_offset + ct_len, msg->payload_len);
+    printf(LOGFMT("using range %zu to %zu of payload size %zu\n", LOG_DBG), ct_offset, ct_offset + ct_len, msg->payload_len);
     memcpy(ct, encoded + ct_offset, ct_len);
     if ((msg->payload_len = _decrypt(ct, ct_len, led->key, padded)) <= 0) {
         msg->payload_len = 0;
@@ -281,15 +282,15 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     int header_len = recv(led->sock, output_buf, min_len, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && header_len <= 0) {
-        printf(LOGFMT("recv() in tuya_cmd_send returned %d\n", LOG_WRN, LOG_WRN_C), errno);
+        printf(LOGFMT("recv() in tuya_cmd_send returned %d\n", LOG_WRN), errno);
         if (errno) {
             int sock_open_status;
-            if (( sock_open_status = _tuya_socket_open(led) )) { printf(LOGFMT("failed to open socket: %d\n", LOG_ERR, LOG_ERR_C), sock_open_status); };
+            if (( sock_open_status = _tuya_socket_open(led) )) { printf(LOGFMT("failed to open socket: %d\n", LOG_ERR), sock_open_status); };
         }
         header_len = recv(led->sock, output_buf, min_len, 0);
     }
-    if (header_len < 0) { printf("%s", LOGFMT("rx header failed!\n", LOG_DBG, LOG_DBG_C)); return ERR_SOCK_FAIL; }
-    else if (header_len == 0) { printf("%s", LOGFMT("rx closed\n", LOG_DBG, LOG_DBG_C)); return ERR_SOCK_CLOSE; }
+    if (header_len < 0) { printf("%s", LOGFMT("rx header failed!\n", LOG_DBG)); return ERR_SOCK_FAIL; }
+    else if (header_len == 0) { printf("%s", LOGFMT("rx closed\n", LOG_DBG)); return ERR_SOCK_CLOSE; }
     
     _tuya_header_t header = _tuya_header_parse(output_buf, (size_t) header_len);
     uint32_t remaining = header.total_len - header_len;
@@ -299,14 +300,14 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
         msg->command = header.command;
         msg->payload_len = remaining;
     }
-    printf(LOGFMT("rx %d byte initial: ", LOG_DBG, LOG_DBG_C), header_len);
+    printf(LOGFMT("rx %d byte initial: ", LOG_DBG), header_len);
     for (int i=0; i < header_len; i++) { printf("%02x", (unsigned char) output_buf[i]); }
     printf("\n");
     
-    printf(LOGFMT("rx remaining (expecting %u bytes)... ", LOG_DBG, LOG_DBG_C), header.total_len - header_len); fflush(stdout);
+    printf(LOGFMT("rx remaining (expecting %u bytes)... ", LOG_DBG), header.total_len - header_len); fflush(stdout);
     size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
-    if (body_rx < 0) { printf("\n%s", LOGFMT("failed!\n", LOG_WRN, LOG_WRN_C)); return ERR_SOCK_FAIL; }
-    else if (body_rx == 0) { printf("\n%s", LOGFMT("closed!\n", LOG_WRN, LOG_WRN_C)); return ERR_SOCK_CLOSE; }
+    if (body_rx < 0) { printf("\n%s", LOGFMT("failed!\n", LOG_WRN)); return ERR_SOCK_FAIL; }
+    else if (body_rx == 0) { printf("\n%s", LOGFMT("closed!\n", LOG_WRN)); return ERR_SOCK_CLOSE; }
     printf("%zu bytes: ", body_rx);
     for (size_t i=0; i < body_rx; i++) { printf("%02x", (unsigned char) (output_buf + header_len)[i]); }
     printf("\n");

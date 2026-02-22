@@ -1,3 +1,10 @@
+#include "src/log.hpp"
+#include "src/net/cJSON.h"
+#include "src/net/tuya.hpp"
+#include "src/screens/table.hpp"
+#include "src/screens/screens.hpp"
+#include "src/widgets/widgets.hpp"
+
 #include <arpa/inet.h>
 #include <cstdio>
 #include <gtk-2.0/gtk/gtk.h>
@@ -6,13 +13,8 @@
 #include <unistd.h>
 #include <cstring>
 #include <pthread.h>
-
 #include "glib.h"
-#include "screens.hpp"
-#include "../widgets/widgets.hpp"
-#include "./table.hpp"
-#include "../net/tuya.hpp"
-#include "src/net/cJSON.h"
+
 
 void set_ctrl_handler(GtkButton* _button, GdkEvent* _event, void* data_v) {
     set_screen_data_t* data = (set_screen_data_t*) data_v;
@@ -78,11 +80,11 @@ void* _spawn_led_strip_thread(void* args_vp) {
     tuya_msg_t msg = { 0 };
     status = tuya_msg_recv(led, expected_cmd, &msg);
     if (status) {
-        if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR, LOG_ERR_C)); }
-        else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR, LOG_ERR_C)); }
-        else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR, LOG_ERR_C), status); }
+        if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR)); }
+        else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR)); }
+        else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR), status); }
     } else {
-        printf(LOGFMT("rx msg %d\n", LOG_INF, LOG_INF_C), msg.seqno);
+        printf(LOGFMT("rx msg %d\n", LOG_INF), msg.seqno);
         printf("      command=%d\n", msg.command);
         printf("      retcode=%d\n", msg.retcode);
         if (msg.payload && msg.payload_len > 0) {
@@ -97,12 +99,12 @@ void* _spawn_led_strip_thread(void* args_vp) {
     while (1) {
         status = tuya_msg_recv(led, 0, &msg);
         if (status) {
-            if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR, LOG_ERR_C)); break; }
-            else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR, LOG_ERR_C)); break; }
-            else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR, LOG_ERR_C), status); break; }
+            if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR)); break; }
+            else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR)); break; }
+            else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR), status); break; }
         }
         if (msg.command == COMMAND_STATUS) {
-            printf(LOGFMT("rx msg %d\n", LOG_INF, LOG_INF_C), msg.seqno);
+            printf(LOGFMT("rx msg %d\n", LOG_INF), msg.seqno);
             printf("      command=%d\n", msg.command);
             printf("      retcode=%d\n", msg.retcode);
             if (msg.payload && msg.payload_len > 0) {
@@ -155,7 +157,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	gtk_table_add(table, 0, 1, 0, 1, wrapper);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) power_button_update, pb_args);
 	GtkWidget* labelbox = gtk_hbox_new(FALSE, 0);
-	GtkWidget* label = label_widget((char*) "led_strip.0");
+	GtkWidget* label = label_widget((char*) led->name);
 	gtk_box_pack_start(GTK_BOX(labelbox), label, FALSE, FALSE, 10);
 	gtk_table_add(table, 1, 7, 0, 1, labelbox);
 	gtk_table_add(table, 7, 9, 0, 1, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_ctrl_handler,    ctrl_data));

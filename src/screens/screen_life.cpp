@@ -1,12 +1,14 @@
+#include "src/log.hpp"
+#include "src/screens/table.hpp"
+#include "src/screens/screens.hpp"
+#include "src/widgets/widgets.hpp"
+
 #include <cstdio>
 #include <gtk-2.0/gtk/gtk.h>
 #include <gtk-2.0/gdk/gdk.h>
 #include <cstdlib>
 #include <unistd.h>
 
-#include "screens.hpp"
-#include "../widgets/widgets.hpp"
-#include "./table.hpp"
 
 gboolean keyboard_onpress(kb_data_t* data) {
 	char char_val = match_keycode(data->lookup_table, data->layer, data->x, data->y);
@@ -14,14 +16,14 @@ gboolean keyboard_onpress(kb_data_t* data) {
 		return FALSE; // newline - end of input, so exit keyboard
 	}
 
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m pressed char '%c' at coords %lf, %lf  layer %d\n", char_val, data->x, data->y, data->layer);
+	printf(LOGFMT("dressed char '%c' at coords %lf, %lf  layer %d\n", LOG_INF), char_val, data->x, data->y, data->layer);
 	fflush(stdout);
 
 	return TRUE;
 }
 
 void keyboard_onenter(kb_data_t* data) {
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m typed \"%s\"\n", data->kb_buf);
+	printf(LOGFMT("typed \"%s\"\n", LOG_INF), data->kb_buf);
 	fflush(stdout);
 }
 

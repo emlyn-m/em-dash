@@ -1,16 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define LOG_DBG "dbg"
-#define LOG_INF "inf"
-#define LOG_WRN "wrn"
-#define LOG_ERR "err"
-#define LOG_DBG_C "045"
-#define LOG_INF_C "76"
-#define LOG_WRN_C "209"
-#define LOG_ERR_C "163"
-#define LOGFMT(FMT, LVL_NAME, LVL_COLOR) "\x1b[1m\x1b[38;5;" LVL_COLOR "m" LVL_NAME "\x1b[0m " FMT 
-
 #define MAX_RETRIES 5
 #define ERR_DPS_LIMIT 1
 #define ERR_DPS_NOT_FOUND 2

@@ -1,3 +1,7 @@
+#include "src/screens/table.hpp"
+#include "src/screens/screens.hpp"
+#include "src/widgets/widgets.hpp"
+
 #include <cstdio>
 #include <cstring>
 #include <gtk-2.0/gtk/gtk.h>
@@ -5,9 +9,6 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include "screens.hpp"
-#include "../widgets/widgets.hpp"
-#include "./table.hpp"
 
 // #define BRIGHTNESS_SYSFILE "/sys/class/backlight/intel_backlight/brightness"
 // #define BRIGHTNESS_SYSFILE "./test"

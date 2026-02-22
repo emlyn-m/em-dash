@@ -1,7 +1,9 @@
+#include "src/net/net.hpp"
+
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <cstdlib>
-#include "net.hpp"
 
 
 int generate_gcal_jwt(char* service_email, char* privkey, int out_size, char* out) {

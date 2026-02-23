@@ -101,6 +101,7 @@ gboolean update_telem_async(gpointer* data_vp) {
 	if (now < (telem->last_update + telem->update_freq)) {
 	    return TRUE;  // skipping
 	}
+	telem->last_update = now;
 	printf(LOGFMT("begin telemetry network update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;

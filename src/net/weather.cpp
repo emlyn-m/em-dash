@@ -94,6 +94,7 @@ gboolean update_weather(gpointer* data) {
 	if ( weather_data->last_update + weather_data->update_freq > (ctime = time(NULL)) ) {
 	    return TRUE;
 	}
+	weather_data->last_update = ctime;
 
 	printf(LOGFMT("beginning weather update\n", LOG_INF)); fflush(stdout);
 	

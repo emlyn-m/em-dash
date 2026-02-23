@@ -167,6 +167,7 @@ gboolean update_events(gpointer* calendar_gp) {
 	if ((long) (cal->last_updated + cal->update_frequency) > (long) ctime) {
 	    return TRUE;
 	}
+	cal->last_updated = ctime;
 
 	printf(LOGFMT("executing calendar update...\n", LOG_INF)); fflush(stdout);
 	fflush(stdout);

@@ -61,6 +61,7 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	    return TRUE;  // too new - skipping
 	}
 	
+	alert_data->last_update = now;
 	printf(LOGFMT("begin alert network update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;

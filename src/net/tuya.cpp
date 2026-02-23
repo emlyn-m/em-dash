@@ -97,26 +97,32 @@ int _popen_crypt(unsigned char* pt_buf, int pt_len, unsigned char* key, unsigned
     for (int i=0; i < 8; i++) {
         key_high += ((uint64_t) key[i]) << 8*(7-i); key_low += ((uint64_t) key[8+i]) << 8*(7-i);
     }
-    char cmdbuf[152 + 2*pt_len]; memset(cmdbuf, 0, 152 + 2*pt_len);
-    char hexbuf[2*pt_len + 1]; memcpy(hexbuf, pt_buf, pt_len); hexbuf[2*pt_len] = 0;
-    for (int i=0; i < pt_len; i++) { snprintf(hexbuf+(2*i), 3, "%02x", pt_buf[i]); }
-    snprintf(cmdbuf, 152 + 2*pt_len, "echo -n %s | xxd -r -p | openssl enc%s -aes-128-ecb -nosalt -K %016" PRIx64 "%016" PRIx64 " -in /dev/stdin -out /dev/stdout | xxd -p -c 0", hexbuf, decrypt ? " -d" : "", key_high, key_low);
+    char cmdbuf[679]; memset(cmdbuf, 0, 679);
+    char hexbuf[512]; memcpy(hexbuf, pt_buf, pt_len); hexbuf[511] = 0;
+    for (int i=0; i < pt_len; i++) {
+        if (!(i%30) && i) { hexbuf[2*(i+(i/30)-1)] = '\\'; hexbuf[2*(i+(i/30)-1)+1] = 'n'; }
+        snprintf(hexbuf+(2*(i+i/30)), 3, "%02x", pt_buf[i]);
+    }
+    snprintf(cmdbuf, 679, "echo -en '%s' | xxd -r -p -c30 | openssl enc %s -nopad -aes-128-ecb -nosalt -K %016" PRIx64 "%016" PRIx64 " -in /dev/stdin -out /dev/stdout | xxd -p | tr -d \'\\n\'", hexbuf, decrypt ? "-d" : "-e", key_high, key_low);
+    printf(LOGFMT("cmd: <%s>\n", LOG_DBG), cmdbuf);
     FILE* enc_fp = popen(cmdbuf, "r");
     if (!enc_fp) { return 0; }
     
-    char ct_hexbuf[2*pt_len + 1]; memset(ct_hexbuf, 0, 2*pt_len+1);
-    int ct_hlen = fread(ct_hexbuf, 1, 2*pt_len + 1, enc_fp);
+    char ct_hexbuf[512]; memset(ct_hexbuf, 0, 2*pt_len+1);
+    int ct_hlen = fread(ct_hexbuf, 1, 512, enc_fp);
     pclose(enc_fp);
     if (ct_hlen <= 0) { 
         printf(LOGFMT("_popen_crypt read 0 bytes\n", LOG_WRN));
         return 0;
     } else {
-        printf(LOGFMT("_popen_crypt read %d bytes\n", LOG_DBG), ct_hlen);
+        printf(LOGFMT("_popen_crypt read %d bytes: ", LOG_DBG), ct_hlen);
     }
     
     for (int i=0; i < ct_hlen - 1; i+=2) {
         sscanf(ct_hexbuf+i, "%02hhx", &(ct_buf[i / 2]));
+        printf("%02hhx", ct_buf[i / 2]);
     }
+    printf("\n");
     return ct_hlen/2;
 }
 

@@ -35,47 +35,44 @@ gboolean keyboard_onpress(kb_data_t* data) {
 
 	printf(LOGFMT("dressed char '%c' at coords %lf, %lf  layer %d\n", LOG_INF), char_val, data->x, data->y, data->layer);
 	fflush(stdout);
+	
+	task_t* task_data = (task_t*) data->add_data;
+	if (task_data->pending_idx < 0) {
+    	if (task_data->num_tasks++ >= task_data->max_tasks) {
+    	    task_data->num_tasks = task_data->max_tasks;
+    		char* old_first_taskbuf = task_data->tasks[0]->task;
+    	    for (int i=0; i < task_data->max_tasks - 1; i++) {
+    			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
+    			task_data->tasks[i]->completed = task_data->tasks[i+1]->completed;
+    		}
+    		task_data->tasks[task_data->max_tasks - 1]->task = old_first_taskbuf; memset(task_data->tasks[task_data->max_tasks-1]->task, 0, 256);
+    	}
+        task_data->pending_idx = task_data->num_tasks - 1;
+    	task_data->tasks[task_data->pending_idx]->completed = false;
+	}
+	
+    printf(LOGFMT("char %02x in position %d for idx %d/%d\n", LOG_DBG), char_val, strlen(task_data->tasks[task_data->pending_idx]->task), task_data->pending_idx, task_data->num_tasks);
+    fflush(stdout);
+	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[task_data->pending_idx]->task) < 255) {
+	    task_data->tasks[task_data->pending_idx]->task[strlen(task_data->tasks[task_data->pending_idx]->task)] = char_val;
+		tasks_update(task_data);
+	}
 
 	return TRUE;
 }
 
 void keyboard_onenter(kb_data_t* data) {
-	fflush(stdout);
-	
-	int actual_buf_len = 0;
-	for (size_t i=0; i < strlen(data->kb_buf) - 1; i++) {
-	    if (data->kb_buf[i] >= 0x2e && data->kb_buf[i] <= 0x7e) { actual_buf_len++; }
-	};
-	
-	if (actual_buf_len <= 0) { 
-	    return;
-	}
-	
-	task_t* task_data = (task_t*) data->add_data;
-	if (task_data->num_tasks++ >= task_data->max_tasks) {
-	    task_data->num_tasks = task_data->max_tasks;
-		free(task_data->tasks[0]->task);
-	    for (int i=0; i < task_data->max_tasks - 1; i++) {
-			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
-			task_data->tasks[i]->completed = task_data->tasks[i+1]->completed;
-		}
-	}
-	
-	task_data->tasks[task_data->num_tasks-1]->completed = false;
-	task_data->tasks[task_data->num_tasks-1]->task = (char*) malloc(actual_buf_len+1 * sizeof(char));
-	memset(task_data->tasks[task_data->num_tasks-1]->task, 0, actual_buf_len+1);
-	strncpy(task_data->tasks[task_data->num_tasks-1]->task, data->kb_buf, actual_buf_len);
+	((task_t*) data->add_data)->pending_idx = -1;
 }
 
 
 
 GtkWidget* tasks_widget() {
 	task_t* task_data = (task_t*) malloc(sizeof(task_t));
+	task_data->pending_idx = -1;
 	task_data->num_tasks = 0;
 	task_data->max_tasks = 7;
 	task_data->tasks = (task_ev_t**) malloc(task_data->max_tasks * sizeof(task_ev_t*));
-	for (int i=0; i < task_data->max_tasks; i++) { task_data->tasks[i] = (task_ev_t*) malloc(sizeof(task_ev_t)); memset(task_data->tasks[i], 0, sizeof(task_ev_t)); }
-
 	task_data->task_widgets = (GtkWidget**) malloc(task_data->max_tasks * sizeof(GtkWidget*));
 
 	// wrapper
@@ -94,6 +91,11 @@ GtkWidget* tasks_widget() {
 	PangoFontDescription* font_task = pango_font_description_from_string(FONT_16);
 
 	for (int i=0; i < task_data->max_tasks; i++) {
+        task_data->tasks[i] = (task_ev_t*) malloc(sizeof(task_ev_t)); 
+        memset(task_data->tasks[i], 0, sizeof(task_ev_t));
+        task_data->tasks[i]->task = (char*) malloc(256);
+        memset(task_data->tasks[i]->task, 0, 256);
+
 		struct task_onclick_data* ocdata = (struct task_onclick_data*) malloc(sizeof(struct task_onclick_data));
 		ocdata->task = task_data;
 		ocdata->idx = i;

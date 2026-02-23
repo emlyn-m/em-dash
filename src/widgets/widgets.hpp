@@ -149,6 +149,7 @@ typedef struct Task {
 typedef struct TaskData {
 	int num_tasks;
 	int max_tasks;
+	int pending_idx;
 	task_ev_t** tasks;
 	GtkWidget** task_widgets;
 } task_t;

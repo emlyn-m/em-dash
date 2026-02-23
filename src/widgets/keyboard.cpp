@@ -1,4 +1,5 @@
 #include "src/widgets/widgets.hpp"
+
 #include <gtk-2.0/gtk/gtk.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <pthread.h>
+
 
 static gboolean lipc_set_string_property(char *publisher, char *prop, char *value) {
 	char* lipc_set_prop_bin = (char*) "/usr/bin/lipc-set-prop";
@@ -94,6 +97,7 @@ void read_keyboard(kb_data_t* data) {
 						continue;
 					}
 
+					if (data->layer == 1) { data->layer = 0; }
 					if (pressed_key < 0x04) {
 						data->layer = pressed_key - 1;
 						continue;
@@ -109,20 +113,30 @@ void read_keyboard(kb_data_t* data) {
 	data->on_enter(data);
 }
 
+void* _keyboard_listener_async(void* data_vp) {
+   	kb_data* data = (kb_data*) data_vp;
+	data->last_showing = -1;
+	memset(data->kb_buf, 0, 1024);
+   
+	set_keyboard(TRUE);
+	read_keyboard(data);
+	set_keyboard(FALSE);
+	data->last_showing = time(NULL);
+	
+	return NULL;
+} 
+
 void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
-	kb_data* data = (kb_data*) data_vp;
+   	kb_data* data = (kb_data*) data_vp;
 	if ((data->last_showing < 0) || (time(NULL) - data->last_showing < data->min_frequency)) {
 		printf("\x1b[38;5;139m\x1b[1mDEBUG:\x1b[0m debounced keyboard button\n");
 		fflush(stdout);
 		return;
 	}
-	data->last_showing = -1;
-	memset(data->kb_buf, 0, 1024);
 
-	set_keyboard(TRUE);
-	read_keyboard(data);
-	set_keyboard(FALSE);
-	data->last_showing = time(NULL);
+   	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, _keyboard_listener_async, data);
+
 }
 
 void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double w, double h, char value) {

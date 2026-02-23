@@ -10,22 +10,22 @@
 #include <gtk-2.0/gtk/gtk.h>
 #include <pthread.h>
 
-void* _update_telem_async_devices(telem_t* telem) {
+void _update_telem_async_devices(telem_t* telem) {
    	const size_t DEVICE_BUFSIZE = 100000;
 
    	char device_req_cmdbuf[1024]; memset(device_req_cmdbuf, 0, 1024);
 	snprintf(device_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_DEVICE_ENDPOINT"));
 	printf(LOGFMT("using command \"%s\"\n", LOG_INF), device_req_cmdbuf); fflush(stdout);
 	FILE* device_fp = popen(device_req_cmdbuf, "r");
-	if (!device_fp) { fprintf(stderr, LOGFMT("failed to fetch devices\n", LOG_ERR)); fflush(stderr); return NULL; }
+	if (!device_fp) { fprintf(stderr, LOGFMT("failed to fetch devices\n", LOG_ERR)); fflush(stderr); return; }
 	char device_buf[DEVICE_BUFSIZE]; memset(device_buf, 0, DEVICE_BUFSIZE);
 	if ( std::fread(device_buf, sizeof(char), DEVICE_BUFSIZE, device_fp) == DEVICE_BUFSIZE ) {
 	    printf(LOGFMT("read filled device_buf - end: <%s>\n", LOG_ERR), device_buf + DEVICE_BUFSIZE - 10); fflush(stdout);
-	    return NULL;
+	    return;
 	};
 	int device_req_status = pclose(device_fp);
-	if (device_req_status == -1) { fprintf(stderr, LOGFMT("pclose error on device_req\n", LOG_ERR)); fflush(stderr); return NULL; }
-	if (WEXITSTATUS(device_req_status)) { fprintf(stderr, LOGFMT("device_req returned error %d\n", LOG_ERR), WEXITSTATUS(device_req_status)); fflush(stderr); return NULL; }
+	if (device_req_status == -1) { fprintf(stderr, LOGFMT("pclose error on device_req\n", LOG_ERR)); fflush(stderr); return; }
+	if (WEXITSTATUS(device_req_status)) { fprintf(stderr, LOGFMT("device_req returned error %d\n", LOG_ERR), WEXITSTATUS(device_req_status)); fflush(stderr); return; }
 	
 	cJSON* devices = cJSON_Parse(device_buf);
 	telem->n_devices = cJSON_GetArraySize(devices);
@@ -38,24 +38,23 @@ void* _update_telem_async_devices(telem_t* telem) {
 	    printf(LOGFMT("found device %s (%s): %s (%s)\n", LOG_DBG), telem->devices[i]->alias, telem->devices[i]->name, telem->devices[i]->online ? "online" : "offline", telem->devices[i]->online ? telem->devices[i]->ip : "-");
 	    fflush(stdout);
 	}
-	return NULL;
 }
 
-void* _update_telem_async_services(telem_t* telem) {
+void _update_telem_async_services(telem_t* telem) {
    	const size_t SERVICE_BUFSIZE = 100000;
        
       	char service_req_cmdbuf[1024]; memset(service_req_cmdbuf, 0, 1024);
 	snprintf(service_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_SERVICE_ENDPOINT"));
 	FILE* service_fp = popen(service_req_cmdbuf, "r");
-	if (!service_fp) { fprintf(stderr, LOGFMT("failed to fetch devices\n", LOG_ERR)); fflush(stderr); return NULL; }
+	if (!service_fp) { fprintf(stderr, LOGFMT("failed to fetch devices\n", LOG_ERR)); fflush(stderr); return; }
 	char service_buf[SERVICE_BUFSIZE]; memset(service_buf, 0, SERVICE_BUFSIZE);
 	if ( std::fread(service_buf, sizeof(char), SERVICE_BUFSIZE, service_fp) == SERVICE_BUFSIZE ) {
 	    printf(LOGFMT("read filled service_buf - end: <%s>\n", LOG_ERR), service_buf + SERVICE_BUFSIZE - 10); fflush(stdout);
-	    return NULL;
+	    return;
 	};
 	int service_req_status = pclose(service_fp);
-	if (service_req_status == -1) { fprintf(stderr, LOGFMT("pclose error on service_req\n", LOG_ERR)); fflush(stderr); return NULL; }
-	if (WEXITSTATUS(service_req_status)) { fprintf(stderr, "\x1b[38;5;138m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(service_req_status)); fflush(stderr); return NULL; }
+	if (service_req_status == -1) { fprintf(stderr, LOGFMT("pclose error on service_req\n", LOG_ERR)); fflush(stderr); return; }
+	if (WEXITSTATUS(service_req_status)) { fprintf(stderr, "\x1b[38;5;138m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(service_req_status)); fflush(stderr); return; }
    
 	cJSON* services = cJSON_Parse(service_buf);
 	telem->n_services = cJSON_GetArraySize(services);

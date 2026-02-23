@@ -64,6 +64,7 @@ void read_keyboard(kb_data_t* data) {
 	struct input_event ev;
 	ssize_t n_read;
 	char* kb_buf_ptr = data->kb_buf;
+	data->layer = 0;
 	while (1) {
 		n_read = read(input_fd, &ev, sizeof(ev));
 		if (n_read == (ssize_t) -1) {
@@ -76,12 +77,10 @@ void read_keyboard(kb_data_t* data) {
 				// abs-x
 				if ((ev.value < Y_MIN) || (ev.value > Y_MAX)) { data->y = -1; continue; }
 				data->y = (((double) ev.value) - Y_MIN) / (Y_MAX - Y_MIN);
-//				printf("\x1b[38;5;139m\x1b[1mINFO\x1b[0m ev_x %d (%lf)\n", ev.value, data->x);
 			} else if (ev.code == 54) {
 				// abs-y
 				if ((ev.value < X_MIN) || (ev.value > X_MAX)) { data->x = -1; continue; }
 				data->x = 1 - ((((double) ev.value) - X_MIN) / (X_MAX - X_MIN));
-//				printf("\x1b[38;5;139m\x1b[1mINFO\x1b[0m ev_y %d (%lf)\n", ev.value, data->y);
 			}
 		} else if (ev.type == EV_KEY) {
 			if (ev.code == 325) {
@@ -304,14 +303,14 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
 }
 
 char match_keycode(kb_lut_t* lut, int layer, double x, double y) {
-	if ( (x >= lut->x) && (x <= lut->x+lut->w) && (y >= lut->y) && (y <= lut->y+lut->h) ) {
+	if ( (layer == lut->layer) && (x >= lut->x) && (x <= lut->x+lut->w) && (y >= lut->y) && (y <= lut->y+lut->h) ) {
 	    return lut->value;
 	} else if (lut->next) {
 	    return match_keycode(lut->next, layer, x, y);
 	} else { return 0; }
 }
 
-GtkWidget* keyboard_widget(gboolean (*onpress)(kb_data_t* data), void (*onenter)(kb_data_t* data)) {
+GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t* data), void (*onenter)(kb_data_t* data)) {
 	kb_data_t* data = (kb_data*) malloc(sizeof(kb_data));
 	data->min_frequency = 0.1;
 	data->last_showing = 0;
@@ -320,6 +319,7 @@ GtkWidget* keyboard_widget(gboolean (*onpress)(kb_data_t* data), void (*onenter)
 	data->on_key_press = onpress;
 	data->on_enter = onenter;
 	data->lookup_table = NULL;
+	data->add_data = add_data;
 	generate_keycode_lut(&data->lookup_table);
 
 	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
@@ -331,9 +331,6 @@ GtkWidget* keyboard_widget(gboolean (*onpress)(kb_data_t* data), void (*onenter)
 	GTK_WIDGET_UNSET_FLAGS(GTK_EVENT_BOX(ev_box), GTK_CAN_FOCUS);
 	g_signal_connect(ev_box, "button-press-event", G_CALLBACK(keyboard_onpress_cb), data);
 	gtk_container_add(GTK_CONTAINER(align), ev_box);
-
-	GtkWidget* label = gtk_label_new("keyboard");
-	gtk_container_add(GTK_CONTAINER(ev_box), label);
 
 	gtk_box_pack_start(GTK_BOX(wrapper), align, TRUE, TRUE, 0);
 	return wrapper;

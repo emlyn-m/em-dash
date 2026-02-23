@@ -223,13 +223,11 @@ GtkWidget* telem_widget() {
 	gtk_box_pack_start(GTK_BOX(ip_info), ip_value, TRUE, TRUE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), ip_info, TRUE, TRUE, 0);
 
-	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) ip_update, data);
-	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) battery_update, data);
 	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) update_telem_async, data);
-	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) devices_update, data);
-	g_timeout_add(atol(getenv("NET_UPDATE_FREQUENCY")), (GSourceFunc) services_update, data);
-
-
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) ip_update, data);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) battery_update, data);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) devices_update, data);
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) services_update, data);
 
 	gtk_box_pack_start(GTK_BOX(wrapper), telem_stats, FALSE, FALSE, 5);
 	pango_font_description_free(font_desc_label);

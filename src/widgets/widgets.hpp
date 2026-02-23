@@ -16,6 +16,8 @@
 #define FONT_18 "Geist Mono, 9"
 #define FONT_20 "Geist Mono, 10"
 #define FONT_30 "Geist Mono, 15"
+#define FONT_40 "Geist Mono, Bold 20"
+
 #define FONT_BOLD_8  "Geist Mono, Bold 4"
 #define FONT_BOLD_10 "Geist Mono, Bold 5"
 #define FONT_BOLD_12 "Geist Mono, Bold 6"
@@ -145,9 +147,9 @@ typedef struct Task {
 	gboolean completed;
 } task_ev_t;
 typedef struct TaskData {
-	uint32_t num_tasks;
+	int num_tasks;
+	int max_tasks;
 	task_ev_t** tasks;
-	GtkWidget** task_checkboxes;
 	GtkWidget** task_widgets;
 } task_t;
 
@@ -170,6 +172,7 @@ typedef struct kb_lut {
 	struct kb_lut* next;
 } kb_lut_t;
 typedef struct kb_data {
+   	void* add_data;
 	long last_showing;
 	double min_frequency;
 	char* kb_buf;
@@ -195,7 +198,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut);
 char match_keycode(kb_lut_t* lut, int layer, double x, double y);
 void set_keyboard(gboolean show);
 void read_keyboard(kb_data_t* data);
-GtkWidget* keyboard_widget(gboolean (*onpress)(kb_data_t*), void (*onenter)(kb_data_t*));
+GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*), void (*onenter)(kb_data_t*));
 void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
 kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*));
 GtkWidget* model_init();

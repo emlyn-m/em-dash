@@ -1,60 +1,86 @@
-#include "./widgets.hpp"
+#include "src/log.hpp"
+#include "src/widgets/widgets.hpp"
+
 #include "gtk/gtk.h"
 #include <cstdlib>
+#include <cstring>
 
 
 gboolean tasks_update(void* data_p) {
 	task_t* data = (task_t*) data_p;
 
-	for (uint32_t i=0; i < data->num_tasks; i++) {
-		gtk_label_set_text(GTK_LABEL(data->task_checkboxes[i]), data->tasks[i]->completed ? "■" : "□");
-		gtk_label_set_text(GTK_LABEL(data->task_widgets[i]), data->tasks[i]->task);
+	for (int i=0; i < data->num_tasks; i++) {
+	    gtk_widget_set_visible(data->task_widgets[i], TRUE);
+	    char* task_markup = (char*) malloc(256); memset(task_markup, 0, 256);
+		snprintf(task_markup, 256, data->tasks[i]->completed ? "<s>%s</s>" : "%s", data->tasks[i]->task);
+		gtk_label_set_markup(GTK_LABEL(data->task_widgets[i]), task_markup);
 	}
+	for (int i=data->num_tasks; i < data->max_tasks; i++) { gtk_widget_set_visible(data->task_widgets[i], FALSE); }
 
 	return TRUE;
 }
 
-struct task_onclick_data { task_t* task; uint32_t idx; };
+struct task_onclick_data { task_t* task; int idx; };
 void update_task(GtkButton* button, GdkEvent* event, void* data_vp) {
 	struct task_onclick_data* data = (struct task_onclick_data*) data_vp;
 	data->task->tasks[data->idx]->completed = 1-(data->task->tasks[data->idx]->completed);
 	tasks_update(data->task);
+}
 
-	gtk_container_get_children(GTK_CONTAINER(button));
+gboolean keyboard_onpress(kb_data_t* data) {
+	char char_val = match_keycode(data->lookup_table, data->layer, data->x, data->y);
+	if (char_val == '\n') {
+		return FALSE; // newline - end of input, so exit keyboard
+	}
+
+	printf(LOGFMT("dressed char '%c' at coords %lf, %lf  layer %d\n", LOG_INF), char_val, data->x, data->y, data->layer);
+	fflush(stdout);
+
+	return TRUE;
+}
+
+void keyboard_onenter(kb_data_t* data) {
+	printf(LOGFMT("typed \"%s\"\n", LOG_INF), data->kb_buf);
+	fflush(stdout);
+	
+	int actual_buf_len = 0;
+	for (int i=0; i < strlen(data->kb_buf) - 1; i++) {
+	    if (data->kb_buf[i] >= 0x2e && data->kb_buf[i] <= 0x7e) { actual_buf_len++; }
+	};
+	
+	if (actual_buf_len <= 0) { 
+	    printf("%s", LOGFMT("empty - skipping!\n", LOG_DBG));
+	    return;
+	}
+	
+	task_t* task_data = (task_t*) data->add_data;
+	if (task_data->num_tasks++ >= task_data->max_tasks) {
+	    task_data->num_tasks = task_data->max_tasks;
+		free(task_data->tasks[0]->task);
+	    for (int i=0; i < task_data->max_tasks - 1; i++) {
+			printf(LOGFMT("moving %d to %d\n", LOG_DBG), i+1, i);
+			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
+			task_data->tasks[i]->completed = task_data->tasks[i+1]->completed;
+		}
+	}
+	
+	printf(LOGFMT("writing task to index %d\n", LOG_DBG), task_data->num_tasks-1); fflush(stdout);
+	task_data->tasks[task_data->num_tasks-1]->completed = false;
+	task_data->tasks[task_data->num_tasks-1]->task = (char*) malloc(actual_buf_len+1 * sizeof(char));
+	memset(task_data->tasks[task_data->num_tasks-1]->task, 0, actual_buf_len+1);
+	strncpy(task_data->tasks[task_data->num_tasks-1]->task, data->kb_buf, actual_buf_len);
 }
 
 
+
 GtkWidget* tasks_widget() {
-
 	task_t* task_data = (task_t*) malloc(sizeof(task_t));
-	task_data->num_tasks = 5;
-	char* t0 = (char*) malloc(3 * sizeof(char)); t0[0]='t';t0[1]='0';t0[2]='\0';
-	char* t1 = (char*) malloc(3 * sizeof(char)); t1[0]='t';t1[1]='1';t1[2]='\0';
-	char* t2 = (char*) malloc(3 * sizeof(char)); t2[0]='t';t2[1]='2';t2[2]='\0';
-	char* t3 = (char*) malloc(3 * sizeof(char)); t3[0]='t';t3[1]='3';t3[2]='\0';
-	char* t4 = (char*) malloc(3 * sizeof(char)); t4[0]='t';t4[1]='4';t4[2]='\0';
-	task_data->tasks = (task_ev_t**) malloc(task_data->num_tasks * sizeof(task_ev_t*));
+	task_data->num_tasks = 0;
+	task_data->max_tasks = 7;
+	task_data->tasks = (task_ev_t**) malloc(task_data->max_tasks * sizeof(task_ev_t*));
+	for (int i=0; i < task_data->max_tasks; i++) { task_data->tasks[i] = (task_ev_t*) malloc(sizeof(task_ev_t)); memset(task_data->tasks[i], 0, sizeof(task_ev_t)); }
 
-	task_data->tasks[0] = (task_ev_t*) malloc(sizeof(task_ev_t));
-	task_data->tasks[1] = (task_ev_t*) malloc(sizeof(task_ev_t));
-	task_data->tasks[2] = (task_ev_t*) malloc(sizeof(task_ev_t));
-	task_data->tasks[3] = (task_ev_t*) malloc(sizeof(task_ev_t));
-	task_data->tasks[4] = (task_ev_t*) malloc(sizeof(task_ev_t));
-
-	task_data->tasks[0]->completed = TRUE;
-	task_data->tasks[1]->completed = FALSE;
-	task_data->tasks[2]->completed = TRUE;
-	task_data->tasks[3]->completed = FALSE;
-	task_data->tasks[4]->completed = FALSE;
-
-	task_data->tasks[0]->task=t0;
-	task_data->tasks[1]->task=t1;
-	task_data->tasks[2]->task=t2;
-	task_data->tasks[4]->task=t4;
-	task_data->tasks[3]->task=t3;
-
-	task_data->task_checkboxes = (GtkWidget**) malloc(task_data->num_tasks * sizeof(GtkWidget*));
-	task_data->task_widgets = (GtkWidget**) malloc(task_data->num_tasks * sizeof(GtkWidget*));
+	task_data->task_widgets = (GtkWidget**) malloc(task_data->max_tasks * sizeof(GtkWidget*));
 
 	// wrapper
 	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
@@ -69,40 +95,34 @@ GtkWidget* tasks_widget() {
 
 	// tasks
 	GtkWidget* tasks_vbox = gtk_vbox_new(FALSE, 0);
-	PangoFontDescription* font_task = pango_font_description_from_string(FONT_12);
-	PangoFontDescription* font_checkbox = pango_font_description_from_string(FONT_30);
+	PangoFontDescription* font_task = pango_font_description_from_string(FONT_16);
 
-	for (uint32_t i=0; i < task_data->num_tasks; i++) {
-		GtkWidget* task_hbox = gtk_hbox_new(FALSE, 0);
-
-		GtkWidget* checkbox_ev_box = gtk_event_box_new();
-		gtk_widget_add_events(checkbox_ev_box, GDK_BUTTON_PRESS_MASK);
-		gtk_event_box_set_visible_window(GTK_EVENT_BOX(checkbox_ev_box), FALSE);
-		GTK_WIDGET_UNSET_FLAGS(GTK_EVENT_BOX(checkbox_ev_box), GTK_CAN_FOCUS);
-
+	for (int i=0; i < task_data->max_tasks; i++) {
 		struct task_onclick_data* ocdata = (struct task_onclick_data*) malloc(sizeof(struct task_onclick_data));
 		ocdata->task = task_data;
 		ocdata->idx = i;
 
-		g_signal_connect(checkbox_ev_box, "button-press-event", G_CALLBACK(update_task), (void*) ocdata);
-		GtkWidget* checkbox = gtk_label_new("");
-		gtk_container_add(GTK_CONTAINER(checkbox_ev_box), checkbox);
+		GtkWidget* evbox = gtk_event_box_new();
+		gtk_widget_add_events(evbox, GDK_BUTTON_PRESS_MASK);
+		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
+		GTK_WIDGET_UNSET_FLAGS(GTK_EVENT_BOX(evbox), GTK_CAN_FOCUS);
+		g_signal_connect(evbox, "button-press-event", G_CALLBACK(update_task), (void*) ocdata);
 
+		GtkWidget* task_hbox = gtk_hbox_new(false, 0);
 		GtkWidget* label = gtk_label_new("");
-
-		task_data->task_checkboxes[i] = checkbox;
 		task_data->task_widgets[i] = label;
-		gtk_widget_modify_font(checkbox, font_checkbox);
 		gtk_widget_modify_font(label, font_task);
-
-		gtk_box_pack_start(GTK_BOX(task_hbox), checkbox_ev_box, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(task_hbox), label, FALSE, FALSE, 10*SCALE);
-		gtk_box_pack_start(GTK_BOX(tasks_vbox), task_hbox, FALSE, FALSE, 0);
+		
+		gtk_box_pack_start(GTK_BOX(task_hbox), label, FALSE, FALSE, 0);
+		gtk_container_add(GTK_CONTAINER(evbox), task_hbox);
+		gtk_box_pack_start(GTK_BOX(tasks_vbox), evbox, FALSE, FALSE, 10*SCALE);
 	}
-
-	gtk_box_pack_start(GTK_BOX(wrapper), tasks_vbox, FALSE, FALSE, 10*SCALE);
 	pango_font_description_free(font_task);
-	pango_font_description_free(font_checkbox);
+	gtk_box_pack_start(GTK_BOX(wrapper), tasks_vbox, FALSE, FALSE, 10*SCALE);
+	
+	GtkWidget* keyboard_listener = keyboard_widget((void*) task_data, keyboard_onpress, keyboard_onenter);
+	gtk_box_pack_start(GTK_BOX(wrapper), keyboard_listener, TRUE, TRUE, 10*SCALE);
+	
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) tasks_update, task_data);
 

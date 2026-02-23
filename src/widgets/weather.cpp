@@ -21,8 +21,8 @@ gboolean wmo_compare(int code, const int codes[], int n_codes) {
 }
 
 gboolean update_weather_display(gpointer* weather_vp) {
-	const int WMO_SUNNY[1] = { 0 };
-	const int WMO_CLOUDY[3] = { 1, 2, 3 };
+	const int WMO_SUNNY[2] = { 0, 1 };
+	const int WMO_CLOUDY[2] = { 2, 3 };
 	const int WMO_RAINY[15] = { 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 };
 	const int WMO_THUNDER[3] = { 95, 96, 99 };
 
@@ -40,9 +40,9 @@ gboolean update_weather_display(gpointer* weather_vp) {
 	    const int icon_width = 30;
 	    const int icon_height = 30;
 
-	    if (wmo_compare(event->wmo_code, WMO_SUNNY, 1)) {
+	    if (wmo_compare(event->wmo_code, WMO_SUNNY, 2)) {
 	        set_image_src(GTK_IMAGE(event->widget_icon), sun, icon_width, icon_height);
-	    } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 3)) {
+	    } else if (wmo_compare(event->wmo_code, WMO_CLOUDY, 2)) {
 	        set_image_src(GTK_IMAGE(event->widget_icon), cloud, icon_width, icon_height);
 	    } else if (wmo_compare(event->wmo_code, WMO_RAINY, 15)) {
 	        set_image_src(GTK_IMAGE(event->widget_icon), rain, icon_width, icon_height);

@@ -1,3 +1,4 @@
+#include "src/images/val.h"
 #include "src/screens/table.hpp"
 #include "src/screens/screens.hpp"
 #include "src/widgets/widgets.hpp"
@@ -69,12 +70,17 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	GtkWidget* table = gtk_table_custom(15,10);
 
 	KindleSlider* slider = kindle_slider_new(NULL, NULL, &slider_brightness_callback);
-	gtk_table_add(table, 0, 2, 0, 9, slider->drawing_area);
-	gtk_table_add(table, 0, 2, 9, 10, label_widget((char*) "γ"));
-	gtk_table_add(table, 2, 5, 0, 2, button_widget((char*) "LED Strip", set_led1_handler, ctrl_data));
+	gtk_table_add(table, 0, 2, 0, 8, slider->drawing_area);
+	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
+	gtk_table_add(table, 0, 2, 8, 10, image_widget(&brightness_data->ref));
+	brightness_data->img = val;
+	brightness_data->size = 80;
+	brightness_data->flag = 0;
+	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, brightness_data);
 	
 	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "term",  exit_handler,   NULL));
+	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "LED Strip", set_led1_handler, ctrl_data));
 	gtk_table_add(table, 12, 15, 8, 10, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_life_handler,    ctrl_data));
-	gtk_table_add(table, 2, 12, 2, 10, model_init());
+	gtk_table_add(table, 2, 12, 0, 10, model_init());
 	return table;
 }

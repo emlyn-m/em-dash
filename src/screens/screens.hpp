@@ -18,3 +18,5 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
 GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
 GtkWidget* generate_lamp_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
+struct _img_src_dat { GtkWidget* ref; const unsigned char* img; int size; int flag; };
+gboolean _img_set_src_helper(void* data_vp);

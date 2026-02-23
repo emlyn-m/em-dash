@@ -40,7 +40,6 @@ gboolean keyboard_onpress(kb_data_t* data) {
 }
 
 void keyboard_onenter(kb_data_t* data) {
-	printf(LOGFMT("typed \"%s\"\n", LOG_INF), data->kb_buf);
 	fflush(stdout);
 	
 	int actual_buf_len = 0;
@@ -49,7 +48,6 @@ void keyboard_onenter(kb_data_t* data) {
 	};
 	
 	if (actual_buf_len <= 0) { 
-	    printf("%s", LOGFMT("empty - skipping!\n", LOG_DBG));
 	    return;
 	}
 	
@@ -58,13 +56,11 @@ void keyboard_onenter(kb_data_t* data) {
 	    task_data->num_tasks = task_data->max_tasks;
 		free(task_data->tasks[0]->task);
 	    for (int i=0; i < task_data->max_tasks - 1; i++) {
-			printf(LOGFMT("moving %d to %d\n", LOG_DBG), i+1, i);
 			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
 			task_data->tasks[i]->completed = task_data->tasks[i+1]->completed;
 		}
 	}
 	
-	printf(LOGFMT("writing task to index %d\n", LOG_DBG), task_data->num_tasks-1); fflush(stdout);
 	task_data->tasks[task_data->num_tasks-1]->completed = false;
 	task_data->tasks[task_data->num_tasks-1]->task = (char*) malloc(actual_buf_len+1 * sizeof(char));
 	memset(task_data->tasks[task_data->num_tasks-1]->task, 0, actual_buf_len+1);

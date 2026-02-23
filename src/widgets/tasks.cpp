@@ -40,18 +40,19 @@ gboolean keyboard_onpress(kb_data_t* data) {
 	if (task_data->pending_idx < 0) {
     	if (task_data->num_tasks++ >= task_data->max_tasks) {
     	    task_data->num_tasks = task_data->max_tasks;
-    		char* old_first_taskbuf = task_data->tasks[0]->task;
-    	    for (int i=0; i < task_data->max_tasks - 1; i++) {
-    			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
-    			task_data->tasks[i]->completed = task_data->tasks[i+1]->completed;
-    		}
-    		task_data->tasks[task_data->max_tasks - 1]->task = old_first_taskbuf; memset(task_data->tasks[task_data->max_tasks-1]->task, 0, 256);
-    	}
-        task_data->pending_idx = task_data->num_tasks - 1;
-    	task_data->tasks[task_data->pending_idx]->completed = false;
+        }
+  		char* old_last_taskbuf = task_data->tasks[task_data->max_tasks-1]->task;
+   	    for (int i=task_data->max_tasks - 1; i > 0; i--) {
+ 			task_data->tasks[i]->task = task_data->tasks[i-1]->task;
+ 			task_data->tasks[i]->completed = task_data->tasks[i-1]->completed;
+  		}
+  		task_data->tasks[0]->task = old_last_taskbuf; memset(task_data->tasks[0]->task, 0, 256);
+    	
+    	task_data->tasks[0]->completed = false;
+        task_data->pending_idx = 0;
 	}
 	
-    printf(LOGFMT("char %02x in position %d for idx %d/%d\n", LOG_DBG), char_val, strlen(task_data->tasks[task_data->pending_idx]->task), task_data->pending_idx, task_data->num_tasks);
+    printf(LOGFMT("char %02x in position %zu for idx %d/%d\n", LOG_DBG), char_val, strlen(task_data->tasks[0]->task), task_data->pending_idx, task_data->num_tasks);
     fflush(stdout);
 	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[task_data->pending_idx]->task) < 255) {
 	    task_data->tasks[task_data->pending_idx]->task[strlen(task_data->tasks[task_data->pending_idx]->task)] = char_val;

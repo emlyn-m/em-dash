@@ -59,10 +59,14 @@ gboolean ip_update(gpointer* data_p) {
     		gtk_label_set_text(GTK_LABEL(data->jitter_label), jitter_buf);
         }
 
-    	char ping_buf[32];
+    	char ping_buf[32] = { 0 };
     	snprintf(ping_buf, 31, "%ldms", data->ping_logs[data->num_pings - 1]);
     	gtk_label_set_text(GTK_LABEL(data->ping_label), ping_buf);
 	}
+	
+   	char wifi_buf[32] = { 0 };
+   	snprintf(wifi_buf, 31, "%ddB", data->wifi_strength);
+   	gtk_label_set_text(GTK_LABEL(data->wifi_strength_label), wifi_buf);
 
    	return TRUE;
 }
@@ -72,10 +76,13 @@ gboolean battery_update(gpointer* data_p) {
 
 	char battery_value[8]; memset(battery_value, 0, 8);
 	char* battery_end = battery_value + snprintf(battery_value, 4, "%d", data->battery);
-	if (data->charging) { battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1; }
+	if (data->current > 0) { battery_end[0] = 0xe2; battery_end[1] = 0x9a; battery_end[2] = 0xa1; }
 	else { battery_end[0] = '%'; }
-
 	gtk_label_set_text(GTK_LABEL(data->battery_label), battery_value);
+	
+	char current_buf[10] = { 0 };
+	snprintf(current_buf, 9, "%dmA", data->current);
+	gtk_label_set_text(GTK_LABEL(data->current_label), current_buf);
 
 	return TRUE;
 }
@@ -109,6 +116,7 @@ GtkWidget* telem_widget() {
 	data->service_name_widgets = (GtkWidget**) malloc(data->max_services * sizeof(GtkWidget*));
 	data->service_status_widgets = (GtkWidget**) malloc(data->max_services * sizeof(GtkWidget*));
 	data->battery = 0;
+	data->current = 0;
 	data->max_pings = 20;
 	data->num_pings = 0;
 	data->ping_logs = (unsigned long*) malloc(data->max_pings * sizeof(unsigned long));
@@ -192,7 +200,28 @@ GtkWidget* telem_widget() {
 	gtk_box_pack_end(GTK_BOX(battery_info), battery_value, FALSE, FALSE, 5*SCALE);
 	gtk_box_pack_start(GTK_BOX(telem_stats), battery_info, FALSE, FALSE, 0);
 
+	GtkWidget* current_info = gtk_hbox_new(false, 0);
+	GtkWidget* current_label = gtk_label_new("current");
+	GtkWidget* current_value = gtk_label_new("");
+	data->current_label = current_value;
+	gtk_widget_modify_font(current_label, font_desc_label);
+	gtk_widget_modify_font(current_value, font_desc_label);
+	gtk_box_pack_start(GTK_BOX(current_info), current_label, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_end(GTK_BOX(current_info), current_value, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_start(GTK_BOX(telem_stats), current_info, FALSE, FALSE, 0);
+
 	// ping label
+	GtkWidget* wifi_strength_info = gtk_hbox_new(false, 0);
+	GtkWidget* wifi_strength_label = gtk_label_new("wifi");
+	GtkWidget* wifi_strength_value = gtk_label_new("");
+	data->wifi_strength_label = wifi_strength_value;
+	gtk_widget_modify_font(wifi_strength_label, font_desc_label);
+	gtk_widget_modify_font(wifi_strength_value, font_desc_label);
+	gtk_box_pack_start(GTK_BOX(wifi_strength_info), wifi_strength_label, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_end(GTK_BOX(wifi_strength_info), wifi_strength_value, FALSE, FALSE, 5*SCALE);
+	gtk_box_pack_start(GTK_BOX(telem_stats), wifi_strength_info, FALSE, FALSE, 0);
+
+	
 	GtkWidget* ping_info = gtk_hbox_new(false, 0);
 	GtkWidget* ping_label = gtk_label_new("ping");
 	GtkWidget* ping_value = gtk_label_new("");

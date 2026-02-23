@@ -55,8 +55,9 @@ typedef struct TelemetryData {
 	time_t last_update;
 	time_t update_freq;
 	
-	gboolean charging;
+	int current;
 	unsigned int battery;
+	int wifi_strength;
 	unsigned long* ping_logs;
 	int ping_offset;
 	unsigned int num_pings;
@@ -69,6 +70,8 @@ typedef struct TelemetryData {
 	GtkWidget** service_name_widgets;
 	GtkWidget** service_status_widgets;
 	GtkWidget* battery_label;
+	GtkWidget* current_label;
+	GtkWidget* wifi_strength_label;
 	GtkWidget* ping_label;
 	GtkWidget* jitter_label;
 	GtkWidget* ip_label;

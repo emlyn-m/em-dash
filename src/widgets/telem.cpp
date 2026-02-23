@@ -1,5 +1,6 @@
-#include "./widgets.hpp"
-#include "../net/net.hpp"
+#include "src/log.hpp"
+#include "src/net/net.hpp"
+#include "src/widgets/widgets.hpp"
 
 #include "gtk/gtk.h"
 #include <cstdio>

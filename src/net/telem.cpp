@@ -13,6 +13,17 @@
 void* update_telem_async(void* data_vp) {
     telem_t* telem = (telem_t*) data_vp;
    	const size_t DEVICE_BUFSIZE = 100000;
+    
+   	time_t duration;
+	http_get((char*) "ipinfo.io", (char*) "ip", 80, &(telem->ip), &duration);
+	telem->num_pings = MIN(telem->num_pings+1, telem->max_pings);
+	telem->ping_offset = (telem->ping_offset + 1) % telem->num_pings;
+	telem->ping_logs[telem->ping_offset] = duration;
+	if (telem->num_pings >= 2) {
+	    telem->jitter += abs((float) (telem->ping_logs[telem->ping_offset]) - telem->ping_logs[(telem->ping_offset - 1) % telem->num_pings]);
+	}
+	printf(LOGFMT("ping of duration %ldms (%d total)\n", LOG_DBG), duration, telem->num_pings);
+
 
    	char device_req_cmdbuf[1024]; memset(device_req_cmdbuf, 0, 1024);
 	snprintf(device_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_DEVICE_ENDPOINT"));
@@ -65,19 +76,15 @@ void* update_telem_async(void* data_vp) {
 	    fflush(stdout);
 	}
 
-   	time_t duration;
-	http_get((char*) "ipinfo.io", (char*) "ip", 80, &(telem->ip), &duration);
-	telem->num_pings = MIN(telem->num_pings+1, telem->max_pings);
-	telem->ping_offset = (telem->ping_offset + 1) % telem->num_pings;
-	telem->ping_logs[telem->ping_offset] = duration;
-	if (telem->num_pings >= 2) {
-	    telem->jitter += abs((float) (telem->ping_logs[telem->ping_offset]) - telem->ping_logs[(telem->ping_offset - 1) % telem->num_pings]);
-	}
 
-   	FILE* read_battery_fp = popen("cat " STR(BATTERY_PATH), "r");
+	char battery_cmdbuf[64] = { 0 };
+	snprintf(battery_cmdbuf, 64, "cat %s", getenv("BATTERY_PATH"));
+   	FILE* read_battery_fp = popen(battery_cmdbuf, "r");
 	if (!read_battery_fp) { return NULL; }
 	fscanf(read_battery_fp, "%d", &(telem->battery));
-	FILE* read_current_fp = popen("cat " STR(CURRENT_PATH), "r");
+	char current_cmdbuf[64] = { 0 };
+	snprintf(current_cmdbuf, 64, "cat %s", getenv("CURRENT_PATH"));
+	FILE* read_current_fp = popen(current_cmdbuf, "r");
 	if (!read_current_fp) { return NULL; }
 	int current_now;
 	fscanf(read_current_fp, "%d", &current_now);
@@ -94,7 +101,6 @@ gboolean update_telem_async(gpointer* data_vp) {
 	if (now < (telem->last_update + telem->update_freq)) {
 	    return TRUE;  // skipping
 	}
-	telem->last_update = 2086733650;
 	printf(LOGFMT("begin telemetry network update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;

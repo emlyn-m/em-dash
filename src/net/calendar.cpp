@@ -168,7 +168,6 @@ gboolean update_events(gpointer* calendar_gp) {
 	    return TRUE;
 	}
 
-	cal->last_updated = 2086733650;
 	printf(LOGFMT("executing calendar update...\n", LOG_INF)); fflush(stdout);
 	fflush(stdout);
 	

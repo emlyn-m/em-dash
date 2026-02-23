@@ -95,7 +95,6 @@ gboolean update_weather(gpointer* data) {
 	    return TRUE;
 	}
 
-	weather_data->last_update = 2086733650;
 	printf(LOGFMT("beginning weather update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;

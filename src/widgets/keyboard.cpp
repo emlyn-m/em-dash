@@ -1,3 +1,4 @@
+#include "src/log.hpp"
 #include "src/widgets/widgets.hpp"
 
 #include <gtk-2.0/gtk/gtk.h>
@@ -54,7 +55,7 @@ void read_keyboard(kb_data_t* data) {
 	const int X_MIN = 0,   X_MAX = 1500;
 	const int Y_MIN = 660, Y_MAX = 1100;
 
-	printf("\x1b[38;5;139m\x1b[1mINFO:\x1b[0m reading kb\n");
+	printf("%s", LOGFMT("reading kb\n", LOG_DBG));
 	fflush(stdout);
 
 	int input_fd = open(dev, O_RDONLY);

@@ -12,7 +12,7 @@ gboolean tasks_update(void* data_p) {
 	for (int i=0; i < data->num_tasks; i++) {
 	    gtk_widget_set_visible(data->task_widgets[i], TRUE);
 	    char* task_markup = (char*) malloc(256); memset(task_markup, 0, 256);
-		snprintf(task_markup, 256, data->tasks[i]->completed ? "<s>%s</s>" : "%s", data->tasks[i]->task);
+		snprintf(task_markup, 256, data->tasks[i]->completed ? "<s> %s </s>" : "%s", data->tasks[i]->task);
 		gtk_label_set_markup(GTK_LABEL(data->task_widgets[i]), task_markup);
 	}
 	for (int i=data->num_tasks; i < data->max_tasks; i++) { gtk_widget_set_visible(data->task_widgets[i], FALSE); }
@@ -52,7 +52,6 @@ gboolean keyboard_onpress(kb_data_t* data) {
         task_data->pending_idx = 0;
 	}
 	
-    printf(LOGFMT("char %02x in position %zu for idx %d/%d\n", LOG_DBG), char_val, strlen(task_data->tasks[0]->task), task_data->pending_idx, task_data->num_tasks);
     fflush(stdout);
 	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[task_data->pending_idx]->task) < 255) {
 	    task_data->tasks[task_data->pending_idx]->task[strlen(task_data->tasks[task_data->pending_idx]->task)] = char_val;

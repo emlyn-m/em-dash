@@ -178,6 +178,7 @@ typedef struct kb_lut {
 	struct kb_lut* next;
 } kb_lut_t;
 typedef struct kb_data {
+    GtkWidget* ref;
    	void* add_data;
 	long last_showing;
 	double min_frequency;

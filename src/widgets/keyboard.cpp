@@ -35,6 +35,7 @@ void set_keyboard(gboolean show) {
 	if (show) { lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "open", (char*) "xyz.emlyn.kindle:abc:0"); }
 	else { 
 	    lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "close", (char*) "xyz.emlyn.kindle");
+	}
 //		// todo - delay this by 0.5 - 1s
 //		if (fork() == 0) {
 //		    usleep(500000);  // .5 second delay
@@ -43,7 +44,6 @@ void set_keyboard(gboolean show) {
 //            execlp("/mnt/us/libkh/bin/fbink", "fbink", "-s", "-f", NULL);
 //            _exit(0);
 //		}
-	}
 }
 
 void read_keyboard(kb_data_t* data) {
@@ -117,6 +117,12 @@ void read_keyboard(kb_data_t* data) {
 	data->on_enter(data);
 }
 
+void* _gtk_kb_redraw(void* data) { 
+    GtkWidget* ref = (GtkWidget*) data; 
+    fflush(stdout); usleep(500 * 1000);
+    gtk_widget_queue_draw(ref);
+    return NULL;
+}
 void* _keyboard_listener_async(void* data_vp) {
    	kb_data* data = (kb_data*) data_vp;
 	data->last_showing = -1;
@@ -125,6 +131,11 @@ void* _keyboard_listener_async(void* data_vp) {
 	set_keyboard(TRUE);
 	read_keyboard(data);
 	set_keyboard(FALSE);
+	
+    GtkWidget* toplevel = gtk_widget_get_toplevel(data->ref);
+    pthread_t _t;
+    pthread_create(&_t, NULL, _gtk_kb_redraw, (void*) toplevel);
+
 	data->last_showing = time(NULL);
 	
 	return NULL;
@@ -133,7 +144,7 @@ void* _keyboard_listener_async(void* data_vp) {
 void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
    	kb_data* data = (kb_data*) data_vp;
 	if ((data->last_showing < 0) || (time(NULL) - data->last_showing < data->min_frequency)) {
-		printf("\x1b[38;5;139m\x1b[1mDEBUG:\x1b[0m debounced keyboard button\n");
+		printf("%s", LOGFMT("debounced keyboard button\n", LOG_DBG));
 		fflush(stdout);
 		return;
 	}
@@ -146,7 +157,7 @@ void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
 void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double w, double h, char value) {
 //	printf("\x1b[38;5;139m\x1b[1mDEBUG:\x1b[0m loading key <%c> in range (%lf, %lf) to (%lf, %lf) on layer %d\n", value, x, y, x+w, y+h, layer);
 	kb_lut_t* lut = (kb_lut_t*) malloc(sizeof(kb_lut_t));
-	if (!lut) { fprintf(stderr, "\x1b[38;5;139m\x1b[1mERROR:\x1b[0m failed to alloc memory\n"); fflush(stderr); }
+	if (!lut) { fprintf(stderr, LOGFMT("failed to alloc memory\n", LOG_ERR)); fflush(stderr); }
 	if (*kb_lut) {
 		(*kb_lut)->next = lut;
 	} else { (*kb_lut) = lut; }
@@ -341,6 +352,7 @@ GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t* data, 
 	generate_keycode_lut(&data->lookup_table);
 
 	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
+	data->ref = wrapper;
 
 	GtkWidget* align = gtk_alignment_new(0.5, 0, 1, 1);
 	GtkWidget* ev_box = gtk_event_box_new();

@@ -36,22 +36,10 @@ void set_keyboard(gboolean show) {
 	else { 
 	    lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "close", (char*) "xyz.emlyn.kindle");
 	}
-//		// todo - delay this by 0.5 - 1s
-//		if (fork() == 0) {
-//		    usleep(500000);  // .5 second delay
-//			printf("slept!!\n"); fflush(stdout);
-//            // execlp("eips", "eips", "''", NULL);
-//            execlp("/mnt/us/libkh/bin/fbink", "fbink", "-s", "-f", NULL);
-//            _exit(0);
-//		}
 }
 
 void read_keyboard(kb_data_t* data) {
 	const char* dev = "/dev/input/by-path/platform-imx-i2c.1-event";
-//	const int X_MIN = 0, X_MAX = 1100;
-//	const int Y_MIN = 1000, Y_MAX = 1500;
-
-	// new boundry: 660 <= y' <= 1500, 0 <= x' <= 1500, where y' = x, x' = 1-y
 	const int X_MIN = 0,   X_MAX = 1450;
 	const int Y_MIN = 660, Y_MAX = 1075;
 
@@ -172,26 +160,31 @@ void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double
 	*kb_lut = lut;
 }
 
-//  	layout (layer 0)
-// 		   q w e r t y u i o p
-// 			a s d f g h j k l
-//		   sh z x c v b n m \b
-// 	   	  123 [    sp    ]. \n
-//
-// 		shift (layer 1)
-// todo!
-//
-// 		123 layer (layer 2)
-// 		   1 2 3 4 5 6 7 8 9 0
-// 		 	£ & ( ) " ' - + /
-//	 	  #~= @ ! ? : ; , … \b
-//  	  abc [    sp    ]. \n
-//
-//	    #~= layer (layer 3)
-// 	       # % ~ ^ [ ] { } | \
-// 		    . ™ ¬ ` < > _ * =
-// 		  123 © ® § ¢ ¥ € $ \b
-// 		  abc [    sp    ]. \n
+/*
+* 	layout (layer 0)
+*        q w e r t y u i o p
+*         a s d f g h j k l
+*        sh z x c v b n m \b
+*       123 [    sp    ]. \n
+*
+*	shift (layer 1)
+*        Q W E R T Y U I O P
+*         A S D F G H J K L
+*        sh Z X C V B N M \b
+*       123 [    sp    ]. \n
+*
+*	123 layer (layer 2)
+*	    1 2 3 4 5 6 7 8 9 0
+*		 £ & ( ) " ' - + /
+*	   #~= @ ! ? : ; , … \b
+*	   abc [    sp    ]. \n
+*
+*	#~= layer (layer 3)
+*	    # % ~ ^ [ ] { } | \
+*		 . ™ ¬ ` < > _ * =
+*	   123 © ® § ¢ ¥ € $ \b
+*	   abc [    sp    ]. \n
+*/
 
 void generate_keycode_lut(kb_lut_t** kb_lut) {
 	append_keycode_lut(kb_lut, 0, 0.02, 0   , 0.096, 0.25, 'q');

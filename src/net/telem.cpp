@@ -54,7 +54,7 @@ void _update_telem_async_services(telem_t* telem) {
 	};
 	int service_req_status = pclose(service_fp);
 	if (service_req_status == -1) { fprintf(stderr, LOGFMT("pclose error on service_req\n", LOG_ERR)); fflush(stderr); return; }
-	if (WEXITSTATUS(service_req_status)) { fprintf(stderr, "\x1b[38;5;138m\x1b[1mERR:\x1b[0m device_req returned error %d\n", WEXITSTATUS(service_req_status)); fflush(stderr); return; }
+	if (WEXITSTATUS(service_req_status)) { fprintf(stderr, LOGFMT("device_req returned error %d\n", LOG_ERR), WEXITSTATUS(service_req_status)); fflush(stderr); return; }
    
 	cJSON* services = cJSON_Parse(service_buf);
 	telem->n_services = cJSON_GetArraySize(services);

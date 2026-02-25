@@ -52,18 +52,28 @@ gboolean keyboard_onpress(kb_data_t* data, char char_val) {
 	}
 	
     fflush(stdout);
-	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[task_data->pending_idx]->task) < 255) {
-	    task_data->tasks[task_data->pending_idx]->task[strlen(task_data->tasks[task_data->pending_idx]->task)] = char_val;
-		tasks_update(task_data);
+	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[0]->task) < 255) {
+	    task_data->tasks[0]->task[strlen(task_data->tasks[0]->task)] = char_val;
 	} else if (char_val == '\b') {
-	    task_data->tasks[task_data->pending_idx]->task[MAX(0, strlen(task_data->tasks[task_data->pending_idx]->task)-1)] = 0;
+	    task_data->tasks[0]->task[MAX(0, strlen(task_data->tasks[0]->task)-1)] = 0;
 	}
+	tasks_update(task_data);
 
 	return TRUE;
 }
 
 void keyboard_onenter(kb_data_t* data) {
-	((task_t*) data->add_data)->pending_idx = -1;
+    task_t* task_data = (task_t*) data->add_data;
+	if (!strlen(task_data->tasks[0]->task)) {
+	    char* old_first_buf = task_data->tasks[0]->task;
+	    for (int i=0; i < task_data->num_tasks-1; i++) {
+			task_data->tasks[i]->task = task_data->tasks[i+1]->task;
+		}
+		memset(old_first_buf, 0, 256);
+		task_data->tasks[task_data->max_tasks-1]->task = old_first_buf;
+        task_data->num_tasks--;
+	}
+	task_data->pending_idx = -1;
 }
 
 

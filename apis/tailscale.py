@@ -170,6 +170,7 @@ async def fetch_services() -> Union[list[TSService], Err]:
 	# http - general case
 	async with aiohttp.ClientSession() as session:
 		ts_services = await asyncio.gather(*[execcheck(session, chk.url, chk.handler) for chk in status_checks], return_exceptions=True)
+	ts_services = list(filter(lambda s: s.__class__ == TSService, ts_services))
 
 	# non-netcat - special case
 	execcheck_mc = subprocess.run(['nc', '-vz', os.environ['MINECRAFT_HEALTH_ENDPOINT'], str(os.environ['MINECRAFT_HEALTH_PORT'])], capture_output=True, text=True)

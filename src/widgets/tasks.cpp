@@ -64,6 +64,7 @@ gboolean keyboard_onpress(kb_data_t* data, char char_val) {
 
 void keyboard_onenter(kb_data_t* data) {
     task_t* task_data = (task_t*) data->add_data;
+    if (task_data->pending_idx < 0) { return; }
 	if (!strlen(task_data->tasks[0]->task)) {
 	    char* old_first_buf = task_data->tasks[0]->task;
 	    for (int i=0; i < task_data->num_tasks-1; i++) {

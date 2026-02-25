@@ -186,7 +186,7 @@ typedef struct kb_data {
 	kb_lut_t* lookup_table;
 	double x;
 	double y;
-	gboolean(*on_key_press)(struct kb_data* data);
+	gboolean(*on_key_press)(struct kb_data* data, char key);
 	void(*on_enter)(struct kb_data* data);
 } kb_data_t;
 
@@ -204,7 +204,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut);
 char match_keycode(kb_lut_t* lut, int layer, double x, double y);
 void set_keyboard(gboolean show);
 void read_keyboard(kb_data_t* data);
-GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*), void (*onenter)(kb_data_t*));
+GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*, char), void (*onend)(kb_data_t*));
 void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
 kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*));
 GtkWidget* model_init();

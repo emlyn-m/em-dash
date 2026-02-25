@@ -27,8 +27,7 @@ void update_task(GtkButton* button, GdkEvent* event, void* data_vp) {
 	tasks_update(data->task);
 }
 
-gboolean keyboard_onpress(kb_data_t* data) {
-	char char_val = match_keycode(data->lookup_table, data->layer, data->x, data->y);
+gboolean keyboard_onpress(kb_data_t* data, char char_val) {
 	if (char_val == '\n') {
 		return FALSE; // newline - end of input, so exit keyboard
 	}

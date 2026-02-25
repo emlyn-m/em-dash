@@ -60,15 +60,15 @@ void read_keyboard(kb_data_t* data) {
 
 	int input_fd = open(dev, O_RDONLY);
 	if (input_fd == -1) {
-		printf("\x1b[38;5;139m\x1b[1mERR:\x1b[0m cannot open %s: %s\n", dev, strerror(errno));
+		printf(LOGFMT("cannot open %s: %s\n", LOG_ERR), dev, strerror(errno));
 		fflush(stdout);
 		return;
 	}
 
+	data->layer = 0;
 	struct input_event ev;
 	ssize_t n_read;
 	char* kb_buf_ptr = data->kb_buf;
-	data->layer = 0;
 	while (1) {
 		n_read = read(input_fd, &ev, sizeof(ev));
 		if (n_read == (ssize_t) -1) {
@@ -90,22 +90,25 @@ void read_keyboard(kb_data_t* data) {
 			if (ev.code == 325) {
 				// pressure event ( 0 down, 1 up )
 				if (ev.value == 1) {
+				    printf(LOGFMT("pressed at (%lf, %lf, %d)\n", LOG_DBG), data->x, data->y, data->layer);
 					char pressed_key = match_keycode(data->lookup_table, data->layer, data->x, data->y);
 
 					if (pressed_key == 0) {
-						printf("\x1b[38;5;139m\x1b[1mDEBUG\x1b[0m failed to match coords\n");
+						printf("%s", LOGFMT("failed to match coords\n", LOG_WRN));
 						fflush(stdout);
 						continue;
 					}
 
-					if (data->layer == 1) { data->layer = 0; }
-					if (pressed_key < 0x04) {
+					if (pressed_key < 0x05) {
+					    printf(LOGFMT("going to layer %d\n", LOG_DBG), pressed_key - 1);
 						data->layer = pressed_key - 1;
 						continue;
 					}
 
 					*(kb_buf_ptr++) = pressed_key;
-					if (!(data->on_key_press(data))) { break; }
+					if (!(data->on_key_press(data, pressed_key))) { break; }
+					
+					if ((pressed_key != 0x2) && (data->layer == 1)) { data->layer = 0; }
 				}
 			}
 		}
@@ -192,7 +195,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
     append_keycode_lut(kb_lut, 0, 0.7 , 0   , 0.1 , 0.25, 'i');
 	append_keycode_lut(kb_lut, 0, 0.8 , 0   , 0.1 , 0.25, 'o');
     append_keycode_lut(kb_lut, 0, 0.9 , 0   , 0.1 , 0.25, 'p');
-	append_keycode_lut(kb_lut, 0, 0.0 , 0.25, 0.15, 0.25, 'a');
+	append_keycode_lut(kb_lut, 0, 0.05, 0.25, 0.1 , 0.25, 'a');
 	append_keycode_lut(kb_lut, 0, 0.15, 0.25, 0.1 , 0.25, 's');
 	append_keycode_lut(kb_lut, 0, 0.25, 0.25, 0.1 , 0.25, 'd');
 	append_keycode_lut(kb_lut, 0, 0.35, 0.25, 0.1 , 0.25, 'f');
@@ -200,7 +203,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
 	append_keycode_lut(kb_lut, 0, 0.55, 0.25, 0.1 , 0.25, 'h');
 	append_keycode_lut(kb_lut, 0, 0.65, 0.25, 0.1 , 0.25, 'j');
 	append_keycode_lut(kb_lut, 0, 0.75, 0.25, 0.1 , 0.25, 'k');
-	append_keycode_lut(kb_lut, 0, 0.85, 0.25, 0.15, 0.25, 'l');
+	append_keycode_lut(kb_lut, 0, 0.85, 0.25, 0.1 , 0.25, 'l');
 	append_keycode_lut(kb_lut, 0, 0   , 0.5 , 0.15, 0.25, 0x2); // lshift - goto layer 1
 	append_keycode_lut(kb_lut, 0, 0.15, 0.5 , 0.1 , 0.25, 'z');
 	append_keycode_lut(kb_lut, 0, 0.25, 0.5 , 0.1 , 0.25, 'x');
@@ -225,7 +228,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
     append_keycode_lut(kb_lut, 1, 0.7 , 0   , 0.1 , 0.25, 'I');
     append_keycode_lut(kb_lut, 1, 0.8 , 0   , 0.1 , 0.25, 'O');
     append_keycode_lut(kb_lut, 1, 0.9 , 0   , 0.1 , 0.25, 'P');
-    append_keycode_lut(kb_lut, 1, 0.0 , 0.25, 0.15, 0.25, 'A');
+    append_keycode_lut(kb_lut, 1, 0.05, 0.25, 0.1 , 0.25, 'A');
     append_keycode_lut(kb_lut, 1, 0.15, 0.25, 0.1 , 0.25, 'S');
     append_keycode_lut(kb_lut, 1, 0.25, 0.25, 0.1 , 0.25, 'D');
     append_keycode_lut(kb_lut, 1, 0.35, 0.25, 0.1 , 0.25, 'F');
@@ -233,7 +236,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
     append_keycode_lut(kb_lut, 1, 0.55, 0.25, 0.1 , 0.25, 'H');
     append_keycode_lut(kb_lut, 1, 0.65, 0.25, 0.1 , 0.25, 'J');
     append_keycode_lut(kb_lut, 1, 0.75, 0.25, 0.1 , 0.25, 'K');
-    append_keycode_lut(kb_lut, 1, 0.85, 0.25, 0.15, 0.25, 'L');
+    append_keycode_lut(kb_lut, 1, 0.85, 0.25, 0.1 , 0.25, 'L');
     append_keycode_lut(kb_lut, 1, 0   , 0.5 , 0.15, 0.25, 0x1); // lshift off - goto layer 0
     append_keycode_lut(kb_lut, 1, 0.15, 0.5 , 0.1 , 0.25, 'Z');
     append_keycode_lut(kb_lut, 1, 0.25, 0.5 , 0.1 , 0.25, 'X');
@@ -325,7 +328,7 @@ char match_keycode(kb_lut_t* lut, int layer, double x, double y) {
 	} else { return 0; }
 }
 
-GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t* data), void (*onenter)(kb_data_t* data)) {
+GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t* data, char key), void (*onenter)(kb_data_t* data)) {
 	kb_data_t* data = (kb_data*) malloc(sizeof(kb_data));
 	data->min_frequency = 0.1;
 	data->last_showing = 0;

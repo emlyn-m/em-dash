@@ -38,7 +38,6 @@ void set_brightness(GtkButton* _b, GdkEvent* _e, void* brightness) {
 	float brightness_mult;
 	memcpy(&brightness_mult, &brightness, sizeof(float));
 	int target_brightness = (int) (brightness_mult * BRIGHTNESS_SCALE);
-	printf("%d\n", target_brightness); fflush(stdout);
 	snprintf(brightness_s, 31, "%d", target_brightness);
 	FILE* bfile = fopen(BRIGHTNESS_SYSFILE, "w");
 	fwrite(brightness_s, sizeof(char), 31, bfile);

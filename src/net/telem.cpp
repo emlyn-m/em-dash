@@ -69,10 +69,31 @@ void _update_telem_async_services(telem_t* telem) {
 
 void* update_telem_async(void* data_vp) {
     telem_t* telem = (telem_t*) data_vp;
-	
-    _update_telem_async_devices(telem);
-    _update_telem_async_services(telem);
+	    
+   	char battery_cmdbuf[64] = { 0 };
+	snprintf(battery_cmdbuf, 64, "cat %s", getenv("BATTERY_PATH"));
+   	FILE* read_battery_fp = popen(battery_cmdbuf, "r");
+	if (read_battery_fp) {
+	    fscanf(read_battery_fp, "%d", &(telem->battery));
+		printf(LOGFMT("read battery %d\n", LOG_DBG), telem->battery);
+	}
 
+	char current_cmdbuf[64] = { 0 };
+	snprintf(current_cmdbuf, 64, "cat %s", getenv("CURRENT_PATH"));
+	FILE* read_current_fp = popen(current_cmdbuf, "r");
+	if (read_current_fp) {
+	    fscanf(read_current_fp, "%d", &(telem->current));
+		printf(LOGFMT("read current %d\n", LOG_DBG), telem->current);
+	}
+	
+	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
+	if (read_wifi_fp) {
+	    fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength));
+		printf("read wifi %d\n", telem->wifi_strength);
+	}
+	
+	_update_telem_async_devices(telem);
+    _update_telem_async_services(telem);
 	
 	time_t duration;
     http_get((char*) "ipinfo.io", (char*) "ip", 80, &(telem->ip), &duration);
@@ -83,28 +104,9 @@ void* update_telem_async(void* data_vp) {
         telem->jitter += abs((float) (telem->ping_logs[telem->ping_offset]) - telem->ping_logs[(telem->ping_offset - 1) % telem->num_pings]);
     }
     printf(LOGFMT("ping of duration %ldms (%d total)\n", LOG_DBG), duration, telem->num_pings);
-    
-   	char battery_cmdbuf[64] = { 0 };
-	snprintf(battery_cmdbuf, 64, "cat %s", getenv("BATTERY_PATH"));
-   	FILE* read_battery_fp = popen(battery_cmdbuf, "r");
-	if (read_battery_fp) {
-	    fscanf(read_battery_fp, "%d", &(telem->battery));
-	}
-
-	char current_cmdbuf[64] = { 0 };
-	snprintf(current_cmdbuf, 64, "cat %s", getenv("CURRENT_PATH"));
-	FILE* read_current_fp = popen(current_cmdbuf, "r");
-	if (read_current_fp) {
-	    fscanf(read_current_fp, "%d", &(telem->current));
-	}
-	
-	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
-	if (read_wifi_fp) {
-	    fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength));
-	}
 
 	
-	telem->last_update = time(NULL);
+	// telem->last_update = time(NULL);  // don't do this - we want frequent pings
 	return NULL;
 }
 

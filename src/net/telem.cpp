@@ -139,7 +139,6 @@ gboolean update_telem_async_net(gpointer* data_vp) {
 	telem_t* telem = (telem_t*) data_vp;
 	time_t now = time(NULL);
 	if (now < (telem->last_update_net + telem->update_freq_net)) {
-	    printf("skipping\n");
 	    return TRUE;  // skipping
 	}
 	telem->last_update_net = now;

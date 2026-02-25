@@ -56,6 +56,8 @@ gboolean keyboard_onpress(kb_data_t* data) {
 	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[task_data->pending_idx]->task) < 255) {
 	    task_data->tasks[task_data->pending_idx]->task[strlen(task_data->tasks[task_data->pending_idx]->task)] = char_val;
 		tasks_update(task_data);
+	} else if (char_val == '\b') {
+	    task_data->tasks[task_data->pending_idx]->task[MAX(0, strlen(task_data->tasks[task_data->pending_idx]->task)-1)] = 0;
 	}
 
 	return TRUE;

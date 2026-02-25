@@ -132,8 +132,10 @@ gboolean pending_events_update(gpointer* data_p) {
 	  	);
 
 		gtk_label_set_text(GTK_LABEL(data->events_time_widgets[i+widget_offset]), time_buf);
-		char event_title_buf[11]; memcpy(event_title_buf, event->title, 7);
-		event_title_buf[7] = '.'; event_title_buf[8] = '.'; event_title_buf[9] = '.';  event_title_buf[10] = 0;
+		char event_title_buf[11];
+		if (snprintf(event_title_buf, 7, "%s", event->title) > 10) {
+		    event_title_buf[7] = '.'; event_title_buf[8] = '.'; event_title_buf[9] = '.';  event_title_buf[10] = 0;
+		}
 		gtk_label_set_text(GTK_LABEL(data->events_title_widgets[i+widget_offset]), event_title_buf);
 
 		if (event == data->active_event) {

@@ -143,7 +143,7 @@ void* update_events_async(void* data_vp) {
 	    if (cal->events[i]->title != NULL) { free(cal->events[i]->title); }  // this seems to be crashing...
    
 	    char* event_title_tmp = cJSON_GetObjectItem(event_obj, "summary")->valuestring;
-	    cal->events[i]->title = (char*) malloc(strlen(event_title_tmp) + 1);
+	    cal->events[i]->title = (char*) malloc(strlen(event_title_tmp) + 1); memset(cal->events[i]->title, 0, strlen(event_title_tmp)+1);
 	    strcpy(cal->events[i]->title, event_title_tmp);
    
 	    cal->events[i]->start_time = parse_gcal_datetime(cJSON_GetObjectItem(event_obj, "start"));

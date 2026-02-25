@@ -89,9 +89,16 @@ void* update_telem_async(void* data_vp) {
 	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
 	if (read_wifi_fp) {
 	    fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength));
-		printf("read wifi %d\n", telem->wifi_strength);
+		printf(LOGFMT("read wifi %d\n", LOG_DBG), telem->wifi_strength);
 	}
 	
+	telem->last_update = time(NULL);
+	return NULL;
+}
+
+void* _update_telem_async_net(void* data_vp) {
+    telem_t* telem = (telem_t*) data_vp;
+	    	
 	_update_telem_async_devices(telem);
     _update_telem_async_services(telem);
 	
@@ -106,9 +113,10 @@ void* update_telem_async(void* data_vp) {
     printf(LOGFMT("ping of duration %ldms (%d total)\n", LOG_DBG), duration, telem->num_pings);
 
 	
-	// telem->last_update = time(NULL);  // don't do this - we want frequent pings
+	telem->last_update = time(NULL);
 	return NULL;
 }
+
 
 gboolean update_telem_async(gpointer* data_vp) {
 
@@ -118,10 +126,27 @@ gboolean update_telem_async(gpointer* data_vp) {
 	    return TRUE;  // skipping
 	}
 	telem->last_update = now;
-	printf(LOGFMT("begin telemetry network update\n", LOG_INF)); fflush(stdout);
+	printf(LOGFMT("begin telemetry async update\n", LOG_INF)); fflush(stdout);
 	
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_telem_async, data_vp);
+
+	printf(LOGFMT("end telemetry async update\n", LOG_INF)); fflush(stdout);
+	return TRUE;
+}
+
+gboolean update_telem_async_net(gpointer* data_vp) {
+	telem_t* telem = (telem_t*) data_vp;
+	time_t now = time(NULL);
+	if (now < (telem->last_update_net + telem->update_freq_net)) {
+	    printf("skipping\n");
+	    return TRUE;  // skipping
+	}
+	telem->last_update_net = now;
+	printf(LOGFMT("begin telemetry network update\n", LOG_INF)); fflush(stdout);
+	
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, _update_telem_async_net, data_vp);
 
 	printf(LOGFMT("end telemetry network update\n", LOG_INF)); fflush(stdout);
 	return TRUE;

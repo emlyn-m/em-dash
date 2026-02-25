@@ -54,6 +54,8 @@ typedef struct TelemetryData {
 	
 	time_t last_update;
 	time_t update_freq;
+	time_t last_update_net;
+	time_t update_freq_net;
 	
 	int current;
 	unsigned int battery;

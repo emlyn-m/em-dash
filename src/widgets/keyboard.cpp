@@ -263,15 +263,15 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
     append_keycode_lut(kb_lut, 1, 0.85, 0.75, 0.15, 0.25, '\n');
 
 	append_keycode_lut(kb_lut, 2, 0   , 0   , 0.1 , 0.25, '1');
-	append_keycode_lut(kb_lut, 2, 0.2 , 0   , 0.1 , 0.25, '2');
-	append_keycode_lut(kb_lut, 2, 0.3 , 0   , 0.1 , 0.25, '3');
-    append_keycode_lut(kb_lut, 2, 0.4 , 0   , 0.1 , 0.25, '4');
-	append_keycode_lut(kb_lut, 2, 0.5 , 0   , 0.1 , 0.25, '5');
-    append_keycode_lut(kb_lut, 2, 0.6 , 0   , 0.1 , 0.25, '6');
-	append_keycode_lut(kb_lut, 2, 0.7 , 0   , 0.1 , 0.25, '7');
-    append_keycode_lut(kb_lut, 2, 0.8 , 0   , 0.1 , 0.25, '8');
-	append_keycode_lut(kb_lut, 2, 0.9 , 0   , 0.1 , 0.25, '9');
-    append_keycode_lut(kb_lut, 2, 1.0 , 0   , 0.1 , 0.25, '0');
+	append_keycode_lut(kb_lut, 2, 0.1 , 0   , 0.1 , 0.25, '2');
+	append_keycode_lut(kb_lut, 2, 0.2 , 0   , 0.1 , 0.25, '3');
+    append_keycode_lut(kb_lut, 2, 0.3 , 0   , 0.1 , 0.25, '4');
+	append_keycode_lut(kb_lut, 2, 0.4 , 0   , 0.1 , 0.25, '5');
+    append_keycode_lut(kb_lut, 2, 0.5 , 0   , 0.1 , 0.25, '6');
+	append_keycode_lut(kb_lut, 2, 0.6 , 0   , 0.1 , 0.25, '7');
+    append_keycode_lut(kb_lut, 2, 0.7 , 0   , 0.1 , 0.25, '8');
+	append_keycode_lut(kb_lut, 2, 0.8 , 0   , 0.1 , 0.25, '9');
+    append_keycode_lut(kb_lut, 2, 0.9 , 0   , 0.1 , 0.25, '0');
 	append_keycode_lut(kb_lut, 2, 0   , 0.25, 0.15, 0.25, '$');
 	append_keycode_lut(kb_lut, 2, 0.15, 0.25, 0.1 , 0.25, '&');
 	append_keycode_lut(kb_lut, 2, 0.25, 0.25, 0.1 , 0.25, '(');

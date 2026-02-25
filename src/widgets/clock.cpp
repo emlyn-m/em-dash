@@ -24,7 +24,7 @@ gboolean clock_update(void* data_p) {
 	snprintf(time_buf, 32, "%d:%02d", hours, mins);
 
 	char ampm_buf[3]; memset(ampm_buf, '\0', 3);
-	if (tm_struct.tm_hour > 12) { snprintf(ampm_buf, 3, "am");
+	if (tm_struct.tm_hour < 12) { snprintf(ampm_buf, 3, "am");
 	} else { snprintf(ampm_buf, 3, "pm"); }
 
 

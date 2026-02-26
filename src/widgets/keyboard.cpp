@@ -1,5 +1,6 @@
 #include "src/log.hpp"
 #include "src/widgets/widgets.hpp"
+#include "src/widgets/keyboard.hpp"
 
 #include <gtk-2.0/gtk/gtk.h>
 #include <stdlib.h>
@@ -160,165 +161,172 @@ void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double
 	*kb_lut = lut;
 }
 
-/*
-* 	layout (layer 0)
-*        q w e r t y u i o p
-*         a s d f g h j k l
-*        sh z x c v b n m \b
-*       123 [    sp    ]. \n
-*
-*	shift (layer 1)
-*        Q W E R T Y U I O P
-*         A S D F G H J K L
-*        sh Z X C V B N M \b
-*       123 [    sp    ]. \n
-*
-*	123 layer (layer 2)
-*	    1 2 3 4 5 6 7 8 9 0
-*		 £ & ( ) " ' - + /
-*	   #~= @ ! ? : ; , … \b
-*	   abc [    sp    ]. \n
-*
-*	#~= layer (layer 3)
-*	    # % ~ ^ [ ] { } | \
-*		 . ™ ¬ ` < > _ * =
-*	   123 © ® § ¢ ¥ € $ \b
-*	   abc [    sp    ]. \n
-*/
-
 void generate_keycode_lut(kb_lut_t** kb_lut) {
 	append_keycode_lut(kb_lut, 0, 0.02, 0   , 0.096, 0.25, 'q');
 	kb_lut_t* lut = *kb_lut;
-	append_keycode_lut(kb_lut, 0, 0.12, 0   , 0.096, 0.25, 'w');
-	append_keycode_lut(kb_lut, 0, 0.21, 0   , 0.096, 0.25, 'e');
-    append_keycode_lut(kb_lut, 0, 0.30, 0   , 0.096, 0.25, 'r');
-    append_keycode_lut(kb_lut, 0, 0.40, 0   , 0.096, 0.25, 't');
-    append_keycode_lut(kb_lut, 0, 0.50, 0   , 0.096, 0.25, 'y');
-    append_keycode_lut(kb_lut, 0, 0.60, 0   , 0.096, 0.25, 'u');
-    append_keycode_lut(kb_lut, 0, 0.69, 0   , 0.096, 0.25, 'i');
-    append_keycode_lut(kb_lut, 0, 0.79, 0   , 0.096, 0.25, 'o');
-    append_keycode_lut(kb_lut, 0, 0.88, 0   , 0.096, 0.25, 'p');
-    append_keycode_lut(kb_lut, 0, 0.07, 0.25, 0.096, 0.25, 'a');
-    append_keycode_lut(kb_lut, 0, 0.17, 0.25, 0.096, 0.25, 's');
-    append_keycode_lut(kb_lut, 0, 0.26, 0.25, 0.096, 0.25, 'd');
-    append_keycode_lut(kb_lut, 0, 0.36, 0.25, 0.096, 0.25, 'f');
-    append_keycode_lut(kb_lut, 0, 0.45, 0.25, 0.096, 0.25, 'g');
-    append_keycode_lut(kb_lut, 0, 0.55, 0.25, 0.096, 0.25, 'h');
-    append_keycode_lut(kb_lut, 0, 0.64, 0.25, 0.096, 0.25, 'j');
-    append_keycode_lut(kb_lut, 0, 0.74, 0.25, 0.096, 0.25, 'k');
-    append_keycode_lut(kb_lut, 0, 0.83, 0.25, 0.096, 0.25, 'l');
-    append_keycode_lut(kb_lut, 0, 0.02, 0.5 , 0.144, 0.25, 0x2); // lshift - goto layer 1
-    append_keycode_lut(kb_lut, 0, 0.17, 0.5 , 0.096, 0.25, 'z');
-    append_keycode_lut(kb_lut, 0, 0.26, 0.5 , 0.096, 0.25, 'x');
-    append_keycode_lut(kb_lut, 0, 0.36, 0.5 , 0.096, 0.25, 'c');
-    append_keycode_lut(kb_lut, 0, 0.45, 0.5 , 0.096, 0.25, 'v');
-    append_keycode_lut(kb_lut, 0, 0.55, 0.5 , 0.096, 0.25, 'b');
-    append_keycode_lut(kb_lut, 0, 0.64, 0.5 , 0.096, 0.25, 'n');
-    append_keycode_lut(kb_lut, 0, 0.74, 0.5 , 0.096, 0.25, 'm');
-    append_keycode_lut(kb_lut, 0, 0.83, 0.5 , 0.144, 0.25, '\b');
-    append_keycode_lut(kb_lut, 0, 0.02, 0.75, 0.144, 0.25, 0x3); // goto layer 2
-    append_keycode_lut(kb_lut, 0, 0.17, 0.75, 0.57 , 0.25, ' ');
-    append_keycode_lut(kb_lut, 0, 0.74, 0.75, 0.096, 0.25, '.');
-    append_keycode_lut(kb_lut, 0, 0.83, 0.75, 0.144, 0.25, '\n');
+	append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.12, 0   , 0.096, 0.25, 'w');
+	append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.21, 0   , 0.096, 0.25, 'e');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.30, 0   , 0.096, 0.25, 'r');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.40, 0   , 0.096, 0.25, 't');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.50, 0   , 0.096, 0.25, 'y');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.60, 0   , 0.096, 0.25, 'u');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.69, 0   , 0.096, 0.25, 'i');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.79, 0   , 0.096, 0.25, 'o');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.88, 0   , 0.096, 0.25, 'p');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.07, 0.25, 0.096, 0.25, 'a');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.17, 0.25, 0.096, 0.25, 's');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.26, 0.25, 0.096, 0.25, 'd');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.36, 0.25, 0.096, 0.25, 'f');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.45, 0.25, 0.096, 0.25, 'g');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.55, 0.25, 0.096, 0.25, 'h');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.64, 0.25, 0.096, 0.25, 'j');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.74, 0.25, 0.096, 0.25, 'k');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.83, 0.25, 0.096, 0.25, 'l');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.02, 0.5 , 0.144, 0.25, GOTO_KB_SHFT);
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.17, 0.5 , 0.096, 0.25, 'z');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.26, 0.5 , 0.096, 0.25, 'x');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.36, 0.5 , 0.096, 0.25, 'c');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.45, 0.5 , 0.096, 0.25, 'v');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.55, 0.5 , 0.096, 0.25, 'b');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.64, 0.5 , 0.096, 0.25, 'n');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.74, 0.5 , 0.096, 0.25, 'm');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.83, 0.5 , 0.144, 0.25, '\b');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.02, 0.75, 0.144, 0.25, GOTO_KB_NUMS);
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.17, 0.75, 0.57 , 0.25, ' ');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.74, 0.75, 0.096, 0.25, '.');
+    append_keycode_lut(kb_lut, KB_LAYER_NORM, 0.83, 0.75, 0.144, 0.25, '\n');
 
-   	append_keycode_lut(kb_lut, 1, 0.02, 0   , 0.096, 0.25, 'Q');
-    append_keycode_lut(kb_lut, 1, 0.12, 0   , 0.096, 0.25, 'W');
-	append_keycode_lut(kb_lut, 1, 0.21, 0   , 0.096, 0.25, 'E');
-	append_keycode_lut(kb_lut, 1, 0.30, 0   , 0.096, 0.25, 'R');
-	append_keycode_lut(kb_lut, 1, 0.40, 0   , 0.096, 0.25, 'T');
-	append_keycode_lut(kb_lut, 1, 0.50, 0   , 0.096, 0.25, 'Y');
-	append_keycode_lut(kb_lut, 1, 0.60, 0   , 0.096, 0.25, 'U');
-	append_keycode_lut(kb_lut, 1, 0.69, 0   , 0.096, 0.25, 'I');
-	append_keycode_lut(kb_lut, 1, 0.79, 0   , 0.096, 0.25, 'O');
-	append_keycode_lut(kb_lut, 1, 0.88, 0   , 0.096, 0.25, 'P');
-	append_keycode_lut(kb_lut, 1, 0.07, 0.25, 0.096, 0.25, 'A');
-	append_keycode_lut(kb_lut, 1, 0.17, 0.25, 0.096, 0.25, 'S');
-	append_keycode_lut(kb_lut, 1, 0.26, 0.25, 0.096, 0.25, 'D');
-	append_keycode_lut(kb_lut, 1, 0.36, 0.25, 0.096, 0.25, 'F');
-	append_keycode_lut(kb_lut, 1, 0.45, 0.25, 0.096, 0.25, 'G');
-	append_keycode_lut(kb_lut, 1, 0.55, 0.25, 0.096, 0.25, 'H');
-	append_keycode_lut(kb_lut, 1, 0.64, 0.25, 0.096, 0.25, 'J');
-	append_keycode_lut(kb_lut, 1, 0.74, 0.25, 0.096, 0.25, 'K');
-	append_keycode_lut(kb_lut, 1, 0.83, 0.25, 0.096, 0.25, 'L');
-	append_keycode_lut(kb_lut, 1, 0.02, 0.5 , 0.144, 0.25, 0x0); // todo: goto capslock mode
-	append_keycode_lut(kb_lut, 1, 0.17, 0.5 , 0.096, 0.25, 'Z');
-	append_keycode_lut(kb_lut, 1, 0.26, 0.5 , 0.096, 0.25, 'X');
-	append_keycode_lut(kb_lut, 1, 0.36, 0.5 , 0.096, 0.25, 'C');
-	append_keycode_lut(kb_lut, 1, 0.45, 0.5 , 0.096, 0.25, 'V');
-	append_keycode_lut(kb_lut, 1, 0.55, 0.5 , 0.096, 0.25, 'B');
-	append_keycode_lut(kb_lut, 1, 0.64, 0.5 , 0.096, 0.25, 'N');
-	append_keycode_lut(kb_lut, 1, 0.74, 0.5 , 0.096, 0.25, 'M');
-	append_keycode_lut(kb_lut, 1, 0.83, 0.5 , 0.144, 0.25, '\b');
-	append_keycode_lut(kb_lut, 1, 0.02, 0.75, 0.144, 0.25, 0x3); // goto layer 2
-	append_keycode_lut(kb_lut, 1, 0.17, 0.75, 0.57 , 0.25, ' ');
-	append_keycode_lut(kb_lut, 1, 0.74, 0.75, 0.096, 0.25, '.');
-	append_keycode_lut(kb_lut, 1, 0.83, 0.75, 0.144, 0.25, '\n');
+   	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.02, 0   , 0.096, 0.25, 'Q');
+    append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.12, 0   , 0.096, 0.25, 'W');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.21, 0   , 0.096, 0.25, 'E');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.30, 0   , 0.096, 0.25, 'R');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.40, 0   , 0.096, 0.25, 'T');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.50, 0   , 0.096, 0.25, 'Y');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.60, 0   , 0.096, 0.25, 'U');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.69, 0   , 0.096, 0.25, 'I');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.79, 0   , 0.096, 0.25, 'O');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.88, 0   , 0.096, 0.25, 'P');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.07, 0.25, 0.096, 0.25, 'A');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.17, 0.25, 0.096, 0.25, 'S');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.26, 0.25, 0.096, 0.25, 'D');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.36, 0.25, 0.096, 0.25, 'F');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.45, 0.25, 0.096, 0.25, 'G');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.55, 0.25, 0.096, 0.25, 'H');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.64, 0.25, 0.096, 0.25, 'J');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.74, 0.25, 0.096, 0.25, 'K');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.83, 0.25, 0.096, 0.25, 'L');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.02, 0.5 , 0.144, 0.25, GOTO_KB_CAPS);
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.17, 0.5 , 0.096, 0.25, 'Z');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.26, 0.5 , 0.096, 0.25, 'X');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.36, 0.5 , 0.096, 0.25, 'C');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.45, 0.5 , 0.096, 0.25, 'V');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.55, 0.5 , 0.096, 0.25, 'B');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.64, 0.5 , 0.096, 0.25, 'N');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.74, 0.5 , 0.096, 0.25, 'M');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.83, 0.5 , 0.144, 0.25, '\b');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.02, 0.75, 0.144, 0.25, GOTO_KB_NUMS);
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.17, 0.75, 0.57 , 0.25, ' ');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.74, 0.75, 0.096, 0.25, '.');
+	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.83, 0.75, 0.144, 0.25, '\n');
+	
+	append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.02, 0   , 0.096, 0.25, 'Q');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.12, 0   , 0.096, 0.25, 'W');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.21, 0   , 0.096, 0.25, 'E');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.30, 0   , 0.096, 0.25, 'R');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.40, 0   , 0.096, 0.25, 'T');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.50, 0   , 0.096, 0.25, 'Y');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.60, 0   , 0.096, 0.25, 'U');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.69, 0   , 0.096, 0.25, 'I');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.79, 0   , 0.096, 0.25, 'O');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.88, 0   , 0.096, 0.25, 'P');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.07, 0.25, 0.096, 0.25, 'A');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.17, 0.25, 0.096, 0.25, 'S');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.26, 0.25, 0.096, 0.25, 'D');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.36, 0.25, 0.096, 0.25, 'F');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.45, 0.25, 0.096, 0.25, 'G');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.55, 0.25, 0.096, 0.25, 'H');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.64, 0.25, 0.096, 0.25, 'J');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.74, 0.25, 0.096, 0.25, 'K');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.83, 0.25, 0.096, 0.25, 'L');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.02, 0.5 , 0.144, 0.25, GOTO_KB_NORM);
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.17, 0.5 , 0.096, 0.25, 'Z');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.26, 0.5 , 0.096, 0.25, 'X');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.36, 0.5 , 0.096, 0.25, 'C');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.45, 0.5 , 0.096, 0.25, 'V');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.55, 0.5 , 0.096, 0.25, 'B');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.64, 0.5 , 0.096, 0.25, 'N');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.74, 0.5 , 0.096, 0.25, 'M');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.83, 0.5 , 0.144, 0.25, '\b');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.02, 0.75, 0.144, 0.25, GOTO_KB_NUMS);
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.17, 0.75, 0.57 , 0.25, ' ');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.74, 0.75, 0.096, 0.25, '.');
+    append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.83, 0.75, 0.144, 0.25, '\n');
 
-   	append_keycode_lut(kb_lut, 2, 0.02, 0   , 0.096, 0.25, '1');
-    append_keycode_lut(kb_lut, 2, 0.12, 0   , 0.096, 0.25, '2');
-    append_keycode_lut(kb_lut, 2, 0.21, 0   , 0.096, 0.25, '3');
-    append_keycode_lut(kb_lut, 2, 0.30, 0   , 0.096, 0.25, '4');
-    append_keycode_lut(kb_lut, 2, 0.40, 0   , 0.096, 0.25, '5');
-    append_keycode_lut(kb_lut, 2, 0.50, 0   , 0.096, 0.25, '6');
-    append_keycode_lut(kb_lut, 2, 0.60, 0   , 0.096, 0.25, '7');
-    append_keycode_lut(kb_lut, 2, 0.69, 0   , 0.096, 0.25, '8');
-    append_keycode_lut(kb_lut, 2, 0.79, 0   , 0.096, 0.25, '9');
-    append_keycode_lut(kb_lut, 2, 0.88, 0   , 0.096, 0.25, '0');
-    append_keycode_lut(kb_lut, 2, 0.07, 0.25, 0.096, 0.25, 0x0);  // £
-    append_keycode_lut(kb_lut, 2, 0.17, 0.25, 0.096, 0.25, '&');
-    append_keycode_lut(kb_lut, 2, 0.26, 0.25, 0.096, 0.25, '(');
-    append_keycode_lut(kb_lut, 2, 0.36, 0.25, 0.096, 0.25, ')');
-    append_keycode_lut(kb_lut, 2, 0.45, 0.25, 0.096, 0.25, '"');
-    append_keycode_lut(kb_lut, 2, 0.55, 0.25, 0.096, 0.25, '\'');
-    append_keycode_lut(kb_lut, 2, 0.64, 0.25, 0.096, 0.25, '-');
-    append_keycode_lut(kb_lut, 2, 0.74, 0.25, 0.096, 0.25, '+');
-    append_keycode_lut(kb_lut, 2, 0.83, 0.25, 0.096, 0.25, '/');
-    append_keycode_lut(kb_lut, 2, 0.02, 0.5 , 0.144, 0.25, 0x4); // goto layer 3
-    append_keycode_lut(kb_lut, 2, 0.17, 0.5 , 0.096, 0.25, '@');
-    append_keycode_lut(kb_lut, 2, 0.26, 0.5 , 0.096, 0.25, '!');
-    append_keycode_lut(kb_lut, 2, 0.36, 0.5 , 0.096, 0.25, '?');
-    append_keycode_lut(kb_lut, 2, 0.45, 0.5 , 0.096, 0.25, ':');
-    append_keycode_lut(kb_lut, 2, 0.55, 0.5 , 0.096, 0.25, ';');
-    append_keycode_lut(kb_lut, 2, 0.64, 0.5 , 0.096, 0.25, ',');
-    append_keycode_lut(kb_lut, 2, 0.74, 0.5 , 0.096, 0.25, 0x0);  // …
-    append_keycode_lut(kb_lut, 2, 0.83, 0.5 , 0.144, 0.25, '\b');
-    append_keycode_lut(kb_lut, 2, 0.02, 0.75, 0.144, 0.25, 0x1); // goto layer 0
-    append_keycode_lut(kb_lut, 2, 0.17, 0.75, 0.57 , 0.25, ' ');
-    append_keycode_lut(kb_lut, 2, 0.74, 0.75, 0.096, 0.25, '.');
-    append_keycode_lut(kb_lut, 2, 0.83, 0.75, 0.144, 0.25, '\n');
+   	append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.02, 0   , 0.096, 0.25, '1');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.12, 0   , 0.096, 0.25, '2');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.21, 0   , 0.096, 0.25, '3');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.30, 0   , 0.096, 0.25, '4');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.40, 0   , 0.096, 0.25, '5');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.50, 0   , 0.096, 0.25, '6');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.60, 0   , 0.096, 0.25, '7');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.69, 0   , 0.096, 0.25, '8');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.79, 0   , 0.096, 0.25, '9');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.88, 0   , 0.096, 0.25, '0');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.07, 0.25, 0.096, 0.25, 0x0);  // £
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.17, 0.25, 0.096, 0.25, '&');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.26, 0.25, 0.096, 0.25, '(');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.36, 0.25, 0.096, 0.25, ')');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.45, 0.25, 0.096, 0.25, '"');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.55, 0.25, 0.096, 0.25, '\'');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.64, 0.25, 0.096, 0.25, '-');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.74, 0.25, 0.096, 0.25, '+');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.83, 0.25, 0.096, 0.25, '/');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.02, 0.5 , 0.144, 0.25, GOTO_KB_SPCL);
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.17, 0.5 , 0.096, 0.25, '@');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.26, 0.5 , 0.096, 0.25, '!');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.36, 0.5 , 0.096, 0.25, '?');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.45, 0.5 , 0.096, 0.25, ':');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.55, 0.5 , 0.096, 0.25, ';');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.64, 0.5 , 0.096, 0.25, ',');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.74, 0.5 , 0.096, 0.25, 0x0);  // …
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.83, 0.5 , 0.144, 0.25, '\b');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.02, 0.75, 0.144, 0.25, GOTO_KB_NORM);
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.17, 0.75, 0.57 , 0.25, ' ');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.74, 0.75, 0.096, 0.25, '.');
+    append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.83, 0.75, 0.144, 0.25, '\n');
     
-   	append_keycode_lut(kb_lut, 3, 0.02, 0   , 0.096, 0.25, '#');
-    append_keycode_lut(kb_lut, 3, 0.12, 0   , 0.096, 0.25, '%');
-	append_keycode_lut(kb_lut, 3, 0.21, 0   , 0.096, 0.25, '~');
-	append_keycode_lut(kb_lut, 3, 0.30, 0   , 0.096, 0.25, '^');
-	append_keycode_lut(kb_lut, 3, 0.40, 0   , 0.096, 0.25, '[');
-	append_keycode_lut(kb_lut, 3, 0.50, 0   , 0.096, 0.25, ']');
-	append_keycode_lut(kb_lut, 3, 0.60, 0   , 0.096, 0.25, '{');
-	append_keycode_lut(kb_lut, 3, 0.69, 0   , 0.096, 0.25, '}');
-	append_keycode_lut(kb_lut, 3, 0.79, 0   , 0.096, 0.25, '|');
-	append_keycode_lut(kb_lut, 3, 0.88, 0   , 0.096, 0.25, '\\');
-	append_keycode_lut(kb_lut, 3, 0.07, 0.25, 0.096, 0.25, '.');
-	append_keycode_lut(kb_lut, 3, 0.17, 0.25, 0.096, 0.25, 0x0);  // ™
-	append_keycode_lut(kb_lut, 3, 0.26, 0.25, 0.096, 0.25, 0x0);  // ¬
-	append_keycode_lut(kb_lut, 3, 0.36, 0.25, 0.096, 0.25, '`');
-	append_keycode_lut(kb_lut, 3, 0.45, 0.25, 0.096, 0.25, '<');
-	append_keycode_lut(kb_lut, 3, 0.55, 0.25, 0.096, 0.25, '>');
-	append_keycode_lut(kb_lut, 3, 0.64, 0.25, 0.096, 0.25, '_');
-	append_keycode_lut(kb_lut, 3, 0.74, 0.25, 0.096, 0.25, '*');
-	append_keycode_lut(kb_lut, 3, 0.83, 0.25, 0.096, 0.25, '=');
-	append_keycode_lut(kb_lut, 3, 0.02, 0.5 , 0.144, 0.25, 0x3); // goto layer 2
-	append_keycode_lut(kb_lut, 3, 0.17, 0.5 , 0.096, 0.25, 0x0);  // ©
-	append_keycode_lut(kb_lut, 3, 0.26, 0.5 , 0.096, 0.25, 0x0);  // ®
-	append_keycode_lut(kb_lut, 3, 0.36, 0.5 , 0.096, 0.25, 0x0);  // §
-	append_keycode_lut(kb_lut, 3, 0.45, 0.5 , 0.096, 0.25, 0x0);  // ¢
-	append_keycode_lut(kb_lut, 3, 0.55, 0.5 , 0.096, 0.25, 0x0);  // ¥
-	append_keycode_lut(kb_lut, 3, 0.64, 0.5 , 0.096, 0.25, 0x0);  // €
-	append_keycode_lut(kb_lut, 3, 0.74, 0.5 , 0.096, 0.25, '$');
-	append_keycode_lut(kb_lut, 3, 0.83, 0.5 , 0.144, 0.25, '\b');
-	append_keycode_lut(kb_lut, 3, 0.02, 0.75, 0.144, 0.25, 0x1); // goto layer 0
-	append_keycode_lut(kb_lut, 3, 0.17, 0.75, 0.57 , 0.25, ' ');
-	append_keycode_lut(kb_lut, 3, 0.74, 0.75, 0.096, 0.25, '.');
-	append_keycode_lut(kb_lut, 3, 0.83, 0.75, 0.144, 0.25, '\n');
+   	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.02, 0   , 0.096, 0.25, '#');
+    append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.12, 0   , 0.096, 0.25, '%');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.21, 0   , 0.096, 0.25, '~');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.30, 0   , 0.096, 0.25, '^');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.40, 0   , 0.096, 0.25, '[');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.50, 0   , 0.096, 0.25, ']');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.60, 0   , 0.096, 0.25, '{');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.69, 0   , 0.096, 0.25, '}');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.79, 0   , 0.096, 0.25, '|');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.88, 0   , 0.096, 0.25, '\\');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.07, 0.25, 0.096, 0.25, '.');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.17, 0.25, 0.096, 0.25, 0x0);  // ™
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.26, 0.25, 0.096, 0.25, 0x0);  // ¬
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.36, 0.25, 0.096, 0.25, '`');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.45, 0.25, 0.096, 0.25, '<');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.55, 0.25, 0.096, 0.25, '>');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.64, 0.25, 0.096, 0.25, '_');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.74, 0.25, 0.096, 0.25, '*');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.83, 0.25, 0.096, 0.25, '=');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.02, 0.5 , 0.144, 0.25, GOTO_KB_NUMS); // goto layer 2
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.17, 0.5 , 0.096, 0.25, 0x0);  // ©
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.26, 0.5 , 0.096, 0.25, 0x0);  // ®
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.36, 0.5 , 0.096, 0.25, 0x0);  // §
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.45, 0.5 , 0.096, 0.25, 0x0);  // ¢
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.55, 0.5 , 0.096, 0.25, 0x0);  // ¥
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.64, 0.5 , 0.096, 0.25, 0x0);  // €
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.74, 0.5 , 0.096, 0.25, '$');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.83, 0.5 , 0.144, 0.25, '\b');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.02, 0.75, 0.144, 0.25, GOTO_KB_NORM); // goto layer 0
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.17, 0.75, 0.57 , 0.25, ' ');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.74, 0.75, 0.096, 0.25, '.');
+	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.83, 0.75, 0.144, 0.25, '\n');
 
     *kb_lut = lut;
 }

@@ -54,8 +54,8 @@ void slider_brightness_callback(float progress, void* _v) {
 }
 void* _slider_brightness_fetch(void* data) {
     kindle_slider_t* slider = (kindle_slider_t*) data;
-    float brightness = get_brightness();
-    slider->value = brightness;
+    // float brightness = get_brightness();
+    // slider->value = brightness;
     
     return NULL;
 }

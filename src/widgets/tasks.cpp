@@ -32,7 +32,7 @@ gboolean keyboard_onpress(kb_data_t* data, char char_val) {
 		return FALSE; // newline - end of input, so exit keyboard
 	}
 
-	printf(LOGFMT("dressed char '%c' at coords %lf, %lf  layer %d\n", LOG_INF), char_val, data->x, data->y, data->layer);
+	LOG(PRI_INF, "dressed char '%c' at coords %lf, %lf  layer %d\n", char_val, data->x, data->y, data->layer);
 	fflush(stdout);
 	
 	task_t* task_data = (task_t*) data->add_data;

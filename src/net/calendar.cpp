@@ -55,7 +55,7 @@ void* update_events_async(void* data_vp) {
     
    	if (ctime > cal->token_exp) {
    
-	    printf(LOGFMT("expired token, regenerating...\n", LOG_INF));
+	    LOG(PRI_INF, "expired token, regenerating...\n");
 	    fflush(stdout);
    
 	    if (!cal->token_buf) {
@@ -65,11 +65,11 @@ void* update_events_async(void* data_vp) {
    
 	    int token_result = generate_gcal_jwt((char*) getenv("GOOGLE_SERVICE_EMAIL"), (char*) getenv("GOOGLE_PRIVKEY"), TOKEN_BUFSIZE, cal->token_buf);
 	    if (token_result) {
-	        fprintf(stderr, LOGFMT("failed to generate jwt\n", LOG_ERR)); fflush(stderr);
+	        LOG(PRI_ERR, "failed to generate jwt\n"); fflush(stdout);
 	        _exit(0);
 	    } // error!!
    
-	    printf(LOGFMT("successfully generated jwt\n", LOG_INF)); fflush(stdout);
+	    LOG(PRI_INF, "successfully generated jwt\n"); fflush(stdout);
    
 	    const uint32_t token_redeem_bufsize = 2048;
 	    char* token_redeem_payload = (char*) malloc(token_redeem_bufsize * sizeof(char));
@@ -81,10 +81,10 @@ void* update_events_async(void* data_vp) {
 	    FILE* token_redeem_fp = popen(token_redeem_payload, "r");
 	    free(token_redeem_payload);
 	    if (!token_redeem_fp) { /* failed to exec -  yikes! */
-	        fprintf(stderr, LOGFMT("failed to exec token redeem\n", LOG_ERR)); fflush(stderr);
+	        LOG(PRI_ERR, "failed to exec token redeem\n"); fflush(stdout);
 	        _exit(0);
 	    }
-	    printf(LOGFMT("redeemed google oauth token\n", LOG_INF)); fflush(stdout);
+	    LOG(PRI_INF, "redeemed google oauth token\n"); fflush(stdout);
    
 	    const uint32_t token_resp_bufsize = 2048;
 	    char* token_resp_buf = (char*) malloc(token_resp_bufsize * sizeof(char));
@@ -103,7 +103,7 @@ void* update_events_async(void* data_vp) {
 	    cJSON_free(token_resp_j);
 	}
    
-	printf(LOGFMT("existing valid token found\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "existing valid token found\n"); fflush(stdout);
    
 	time_t tlo_t;
 	time_t thi_t;
@@ -126,7 +126,7 @@ void* update_events_async(void* data_vp) {
 	char events_req_cmdbuf[2048];
 	snprintf(events_req_cmdbuf, 2048, "curl -sH 'Authorization: Bearer %s' '%s'", cal->token_buf, events_req_url);
 	FILE* events_req_fp = popen(events_req_cmdbuf, "r");
-	if (!events_req_fp) { fprintf(stderr, LOGFMT("failed to exec events fetch\n", LOG_ERR)); _exit(0); }
+	if (!events_req_fp) { LOG(PRI_ERR, "failed to exec events fetch\n"); _exit(0); }
    
 	const uint32_t EVENTS_BUF_SIZE = 1000000; // todo: wow i really dont even know if this'll be long enough;
 	char events_buf[EVENTS_BUF_SIZE];
@@ -152,7 +152,7 @@ void* update_events_async(void* data_vp) {
 	    cal->events[i]->end_time = parse_gcal_datetime(cJSON_GetObjectItem(event_obj, "end"));  // we need way better logic for handling the 'date' format on this
 	    if (!cal->events[i]->end_time) { cal->events[i]->end_time = thi_t; }  // surely neither of these should happen BUT just in case :)
    
-	    printf(LOGFMT("found event %s (%ld - %ld)\n", LOG_INF), cal->events[i]->title, cal->events[i]->start_time, cal->events[i]->end_time); fflush(stdout);
+	    LOG(PRI_INF, "found event %s (%ld - %ld)\n", cal->events[i]->title, cal->events[i]->start_time, cal->events[i]->end_time); fflush(stdout);
 	}
    
 	cal->num_events = cJSON_GetArraySize(event_lst);
@@ -169,13 +169,13 @@ gboolean update_events(gpointer* calendar_gp) {
 	}
 	cal->last_updated = ctime;
 
-	printf(LOGFMT("executing calendar update...\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "executing calendar update...\n"); fflush(stdout);
 	fflush(stdout);
 	
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_events_async, calendar_gp);
 
 
-	printf(LOGFMT("calendar update complete\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "calendar update complete\n"); fflush(stdout);
 	return TRUE;
 }

@@ -49,7 +49,7 @@ void read_keyboard(kb_data_t* data) {
 
 	int input_fd = open(dev, O_RDONLY);
 	if (input_fd == -1) {
-		printf(LOGFMT("cannot open %s: %s\n", LOG_ERR), dev, strerror(errno));
+		LOG(PRI_ERR, "cannot open %s: %s\n", dev, strerror(errno));
 		fflush(stdout);
 		return;
 	}
@@ -79,7 +79,7 @@ void read_keyboard(kb_data_t* data) {
 			if (ev.code == 325) {
 				// pressure event ( 0 down, 1 up )
 				if (ev.value == 1) {
-				    printf(LOGFMT("pressed at (%lf, %lf, %d)\n", LOG_DBG), data->x, data->y, data->layer);
+				    LOG(PRI_DBG, "pressed at (%lf, %lf, %d)\n", data->x, data->y, data->layer);
 					char pressed_key = match_keycode(data->lookup_table, data->layer, data->x, data->y);
 
 					if (pressed_key == 0) {
@@ -89,7 +89,7 @@ void read_keyboard(kb_data_t* data) {
 					}
 
 					if (pressed_key < 0x05) {
-					    printf(LOGFMT("going to layer %d\n", LOG_DBG), pressed_key - 1);
+					    LOG(PRI_DBG, "going to layer %d\n", pressed_key - 1);
 						data->layer = pressed_key - 1;
 						continue;
 					}

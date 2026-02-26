@@ -34,20 +34,20 @@ void* update_weather_async(void* data_vp) {
    
 	char* weather_req_cmdbuf = (char*) malloc(1024 * sizeof(char));
 	snprintf(weather_req_cmdbuf, 1024, getenv("WEATHER_API_CMD"), getenv("WEATHER_LATITUDE"), getenv("WEATHER_LONGITUDE"), getenv("WEATHER_TIMEZONE"), date_low, date_high);
-	printf(LOGFMT("using fetch command \"%s\"\n", LOG_INF), weather_req_cmdbuf); fflush(stdout);
+	LOG(PRI_INF, "using fetch command \"%s\"\n", weather_req_cmdbuf); fflush(stdout);
 	FILE* weather_fp = popen(weather_req_cmdbuf, "r");
 	free(weather_req_cmdbuf);
 	if (!weather_fp) {
 	    fprintf(stderr, LOGFMT("failed to fetch weather\n", LOG_ERR)); fflush(stderr);
 	    return NULL;
 	}
-	printf(LOGFMT("fetched weather\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "fetched weather\n"); fflush(stdout);
    
    
 	const size_t WEATHER_SIZE = 100000;
 	char* weather_buf = (char*) malloc(WEATHER_SIZE * sizeof(char)); memset(weather_buf, 0, WEATHER_SIZE);
 	if ( fread(weather_buf, sizeof(char), WEATHER_SIZE, weather_fp) == WEATHER_SIZE ) {
-	    printf(LOGFMT("read filled buffer of weather_req - end: <%s>\n", LOG_ERR), weather_buf + WEATHER_SIZE - 10); fflush(stdout);
+	    LOG(PRI_ERR, "read filled buffer of weather_req - end: <%s>\n", weather_buf + WEATHER_SIZE - 10); fflush(stdout);
 	    free(weather_buf);
 	    return NULL;
 	};
@@ -75,7 +75,7 @@ void* update_weather_async(void* data_vp) {
 	    weather_data->events[event_idx]->rain_prob = cJSON_GetArrayItem(rain_probs, time_offset)->valuedouble;
 	    weather_data->events[event_idx]->wmo_code = cJSON_GetArrayItem(wmo_codes, time_offset)->valueint;
    
-	    printf(LOGFMT("weather event %d: time=%ld, temp=%lf*C, p_precip=%lf, wmo=%d\n", LOG_INF), event_idx, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
+	    LOG(PRI_INF, "weather event %d: time=%ld, temp=%lf*C, p_precip=%lf, wmo=%d\n", event_idx, weather_data->events[event_idx]->time, weather_data->events[event_idx]->temp_c, weather_data->events[event_idx]->rain_prob / 100.0, weather_data->events[event_idx]->wmo_code);
 	    fflush(stdout);
 	    time_offset++;
 	    event_idx++;
@@ -96,12 +96,12 @@ gboolean update_weather(gpointer* data) {
 	}
 	weather_data->last_update = ctime;
 
-	printf(LOGFMT("beginning weather update\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "beginning weather update\n"); fflush(stdout);
 	
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_weather_async, data);
 
-	printf(LOGFMT("weather update complete\n", LOG_INF)); fflush(stdout);
+	LOG(PRI_INF, "weather update complete\n"); fflush(stdout);
 
 	return TRUE;
 }

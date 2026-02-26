@@ -1,11 +1,13 @@
-#include <gtk-2.0/gtk/gtk.h>
-#include <gtk-2.0/gdk/gdk.h>
+#include "src/log.hpp"
+#include "src/screens/screens.hpp"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include "glib-object.h"
+#include <gtk-2.0/gtk/gtk.h>
+#include <gtk-2.0/gdk/gdk.h>
 
-#include "screens/screens.hpp"
 
 #define CELL_ROWCOUNT 5
 #define CELL_COLCOUNT 5
@@ -14,6 +16,8 @@
 
 int main(int argc, char* argv[]) {
 
+    log_init();
+    
 	GtkWidget *window;
 	gtk_init (&argc, &argv);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

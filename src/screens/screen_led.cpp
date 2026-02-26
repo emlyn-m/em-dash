@@ -86,9 +86,9 @@ void* _spawn_led_strip_thread(void* args_vp) {
     if (status) {
         if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR)); }
         else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR)); }
-        else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR), status); }
+        else { LOG(PRI_ERR, "error code %d in tuya_recv_msg!\n", status); }
     } else {
-        printf(LOGFMT("rx msg %d\n", LOG_INF), msg.seqno);
+        LOG(PRI_INF, "rx msg %d\n", msg.seqno);
         printf("      command=%d\n", msg.command);
         printf("      retcode=%d\n", msg.retcode);
         if (msg.payload && msg.payload_len > 0) {
@@ -105,10 +105,10 @@ void* _spawn_led_strip_thread(void* args_vp) {
         if (status) {
             if (status == ERR_SOCK_FAIL) { printf("\n%s", LOGFMT("socket fail!\n", LOG_ERR)); break; }
             else if (status == ERR_SOCK_CLOSE) { printf("\n%s", LOGFMT("socket closed!\n", LOG_ERR)); break; }
-            else { printf(LOGFMT("error code %d in tuya_recv_msg!\n", LOG_ERR), status); break; }
+            else { LOG(PRI_ERR, "error code %d in tuya_recv_msg!\n", status); break; }
         }
         if (msg.command == COMMAND_STATUS) {
-            printf(LOGFMT("rx msg %d\n", LOG_INF), msg.seqno);
+            LOG(PRI_INF, "rx msg %d\n", msg.seqno);
             printf("      command=%d\n", msg.command);
             printf("      retcode=%d\n", msg.retcode);
             if (msg.payload && msg.payload_len > 0) {

@@ -4,6 +4,7 @@ gtk_dep = dependency('gtk+-2.0')
 thread_dep = dependency('threads')
 
 sources = files(
+    './src/log.cpp',
     './src/main.cpp',
 	'./src/net/alerts.cpp',
 	'./src/net/cJSON.cpp',

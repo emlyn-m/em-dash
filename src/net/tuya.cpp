@@ -55,7 +55,6 @@ int _tuya_socket_open(tuya_led_t* led) {
     serv_addr.sin_port = htons(TUYA_PORT);
     int flag = 1;
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
-    LOG(PRI_DBG, "set tcp_nodelay flag\n");
 
     if ((status = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) { close(sock); return ERR_SOCK_FAIL; }
     LOG(PRI_DBG, "connection success!\n");

@@ -33,6 +33,7 @@ void _log_internal(const int prio, const int prio_c, const char* prio_s, const c
 		
         va_start(ap, fmt);
         data->records[data->record_ptr].pri = prio;
+        data->records[data->record_ptr].pri_color = prio_c;
 		data->records[data->record_ptr].prefix =  prio_s;
 		vsnprintf(data->records[data->record_ptr].buf, data->record_bufsize, fmt, ap);
 		data->records[data->record_ptr].buf[strcspn(data->records[data->record_ptr].buf, "\n")] = 0;

@@ -17,6 +17,7 @@
 struct _log_record {
     int _set;
     int pri;
+    int pri_color;
     const char* prefix;
     char* buf;
 };

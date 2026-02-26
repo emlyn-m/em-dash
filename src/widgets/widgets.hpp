@@ -191,6 +191,7 @@ typedef struct kb_data {
 	void(*on_enter)(struct kb_data* data);
 } kb_data_t;
 
+void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data);
 
 GtkWidget* time_widget();
 GtkWidget* telem_widget();

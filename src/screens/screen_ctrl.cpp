@@ -73,22 +73,6 @@ void set_led1_handler(GtkButton* _button, GdkEvent* _event, void* data_v) {
     set_screen(_button, _event, data_v);
 }
 
-void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
-    struct _log_record logs[MAX_RECORDS] = { {0} };
-    int nlogs = fetch_n_logs(MAX_RECORDS, logs);
-    
-    size_t logbuf_size = 200*nlogs;
-    char* logbuf = (char*) malloc(logbuf_size); memset(logbuf, 0, logbuf_size);
-    char* logbuf_wp = logbuf + snprintf(logbuf, 10, "echo -e \'");
-    for (int i=0; i < nlogs; i++) { logbuf_wp += snprintf(logbuf_wp, logbuf_size-(logbuf_wp - logbuf) - 34, "%s %s\n", logs[i].prefix, logs[i].buf); }
-    for (int i=10; i < (int) (logbuf_wp - logbuf); i++) {
-        if (logbuf[i] == '\'') { logbuf[i] = '`'; }
-    }
-    snprintf(logbuf_wp, 34, "\' | nc %s %ld", getenv("LOG_IP"), atol(getenv("LOG_PORT")));
-    popen(logbuf, "r");
-    free(logbuf);
-}
-
 GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) ) {
 	set_screen_data_t* ctrl_data = (set_screen_data_t*) malloc(sizeof(set_screen_data_t));
 	ctrl_data->stack = stack;

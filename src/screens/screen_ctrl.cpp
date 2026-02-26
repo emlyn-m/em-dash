@@ -1,3 +1,4 @@
+#include "src/log.hpp"
 #include "src/images/val.h"
 #include "src/screens/table.hpp"
 #include "src/screens/screens.hpp"
@@ -72,6 +73,22 @@ void set_led1_handler(GtkButton* _button, GdkEvent* _event, void* data_v) {
     set_screen(_button, _event, data_v);
 }
 
+void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
+    struct _log_record logs[MAX_RECORDS] = { {0} };
+    int nlogs = fetch_n_logs(MAX_RECORDS, logs);
+    
+    size_t logbuf_size = 200*nlogs;
+    char* logbuf = (char*) malloc(logbuf_size); memset(logbuf, 0, logbuf_size);
+    char* logbuf_wp = logbuf + snprintf(logbuf, 10, "echo -e \'");
+    for (int i=0; i < nlogs; i++) { logbuf_wp += snprintf(logbuf_wp, logbuf_size-(logbuf_wp - logbuf) - 34, "%s %s\n", logs[i].prefix, logs[i].buf); }
+    for (int i=10; i < (int) (logbuf_wp - logbuf); i++) {
+        if (logbuf[i] == '\'') { logbuf[i] = '`'; }
+    }
+    snprintf(logbuf_wp, 34, "\' | nc %s %ld", getenv("LOG_IP"), atol(getenv("LOG_PORT")));
+    popen(logbuf, "r");
+    free(logbuf);
+}
+
 GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) ) {
 	set_screen_data_t* ctrl_data = (set_screen_data_t*) malloc(sizeof(set_screen_data_t));
 	ctrl_data->stack = stack;
@@ -81,13 +98,14 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	KindleSlider* slider = kindle_slider_new(NULL, NULL, &slider_brightness_callback);
 	pthread_t _t;
 	pthread_create(&_t, NULL, _slider_brightness_fetch, (void*) slider);
-	gtk_table_add(table, 0, 2, 0, 8, slider->drawing_area);
+	gtk_table_add(table, 0, 2, 0, 6, slider->drawing_area);
 	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
-	gtk_table_add(table, 0, 2, 8, 10, image_widget(&brightness_data->ref));
+	gtk_table_add(table, 0, 2, 6, 8, image_widget(&brightness_data->ref));
 	brightness_data->img = val;
 	brightness_data->size = 80;
 	brightness_data->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, brightness_data);
+	gtk_table_add(table, 0, 2, 8, 10, button_widget((char*) "dumplog", dumplog_handler, NULL));
 	
 	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "<SIGTERM>",  exit_handler,   NULL));
 	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "led.strip0", set_led1_handler, ctrl_data));

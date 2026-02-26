@@ -295,8 +295,8 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
         }
         header_len = recv(led->sock, output_buf, min_len, 0);
     }
-    if (header_len < 0) { printf("%s", LOGFMT("rx header failed!\n", LOG_DBG)); return ERR_SOCK_FAIL; }
-    else if (header_len == 0) { printf("%s", LOGFMT("rx closed\n", LOG_DBG)); return ERR_SOCK_CLOSE; }
+    if (header_len < 0) { LOG(PRI_DBG, "rx header failed!\n"); return ERR_SOCK_FAIL; }
+    else if (header_len == 0) { LOG(PRI_DBG, "rx closed\n"); return ERR_SOCK_CLOSE; }
     
     _tuya_header_t header = _tuya_header_parse(output_buf, (size_t) header_len);
     uint32_t remaining = header.total_len - header_len;
@@ -312,8 +312,8 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     
     LOG(PRI_DBG, "rx remaining (expecting %u bytes)... ", header.total_len - header_len); fflush(stdout);
     size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
-    if (body_rx < 0) { printf("\n%s", LOGFMT("failed!\n", LOG_WRN)); return ERR_SOCK_FAIL; }
-    else if (body_rx == 0) { printf("\n%s", LOGFMT("closed!\n", LOG_WRN)); return ERR_SOCK_CLOSE; }
+    if (body_rx < 0) { LOG(PRI_WRN, "\nfailed!\n"); return ERR_SOCK_FAIL; }
+    else if (body_rx == 0) { LOG(PRI_WRN, "\nclosed!\n"); return ERR_SOCK_CLOSE; }
     printf("%zu bytes: ", body_rx);
     for (size_t i=0; i < body_rx; i++) { printf("%02x", (unsigned char) (output_buf + header_len)[i]); }
     printf("\n");

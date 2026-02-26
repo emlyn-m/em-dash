@@ -209,3 +209,4 @@ GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*, char)
 void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
 kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*));
 GtkWidget* model_init();
+GtkWidget* log_widget();

@@ -30,7 +30,8 @@ sources = files(
 	'./src/widgets/image.cpp',
 	'./src/widgets/label.cpp',
 	'./src/widgets/tasks.cpp',
-	'./src/widgets/weather.cpp'
+	'./src/widgets/weather.cpp',
+	'./src/widgets/logs.cpp'
 )
 
 include_dirs = include_directories()

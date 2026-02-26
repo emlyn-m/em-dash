@@ -1,15 +1,5 @@
 #include <cstdio>
 
-#define LOG_DBG "dbg"
-#define LOG_INF "inf"
-#define LOG_WRN "wrn"
-#define LOG_ERR "err"
-#define LOG_DBG_C "030"
-#define LOG_INF_C "139"
-#define LOG_WRN_C "208"
-#define LOG_ERR_C "162"
-#define LOGFMT(FMT, LVL_NAME) "\x1b[1m\x1b[38;5;" LVL_NAME##_C "m" LVL_NAME "\x1b[0m " FMT
-
 #define PRI_DBG 0
 #define PRI_INF 1
 #define PRI_WRN 2
@@ -23,9 +13,10 @@
 #define PRI_WRN_S "wrn"
 #define PRI_ERR_S "err"
 
-
+#define MAX_RECORDS 30
 struct _log_record {
     int _set;
+    int pri;
     const char* prefix;
     char* buf;
 };

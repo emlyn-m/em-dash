@@ -38,7 +38,7 @@ void* update_weather_async(void* data_vp) {
 	FILE* weather_fp = popen(weather_req_cmdbuf, "r");
 	free(weather_req_cmdbuf);
 	if (!weather_fp) {
-	    fprintf(stderr, LOGFMT("failed to fetch weather\n", LOG_ERR)); fflush(stderr);
+	    LOG(PRI_ERR, "failed to fetch weather\n"); fflush(stdout);
 	    return NULL;
 	}
 	LOG(PRI_INF, "fetched weather\n"); fflush(stdout);
@@ -59,8 +59,8 @@ void* update_weather_async(void* data_vp) {
 	cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
    
 	if (!(weather && hourly && temps && rain_probs && weather_times)) {
-	    fprintf(stderr, LOGFMT("parse weather, json <%s>\n", LOG_ERR), weather_buf);
-	    fflush(stderr);
+	    LOG(PRI_ERR, "parse weather, json <%s>\n", weather_buf);
+	    fflush(stdout);
 	    return NULL;
 	}
    

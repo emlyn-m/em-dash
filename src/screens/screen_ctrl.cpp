@@ -13,9 +13,7 @@
 #include <unistd.h>
 
 
-// #define BRIGHTNESS_SYSFILE "/sys/class/backlight/intel_backlight/brightness"
-// #define BRIGHTNESS_SYSFILE "./test"
-// #define BRIGHTNESS_SCALE 96000
+#define DISABLE_BRIGHTNESS 0
 #define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"
 // #define BRIGHTNESS_SCALE 4095
 #define BRIGHTNESS_SCALE 200
@@ -26,6 +24,7 @@ void exit_handler(GtkButton* _b, GdkEvent* _e, void* _d) {
 }
 
 float get_brightness() {
+    if (DISABLE_BRIGHTNESS) { return 0; }
 	FILE* bfile = fopen(BRIGHTNESS_SYSFILE, "r");
 	char brightness[32];
 	fgets(brightness, 31, bfile);
@@ -35,6 +34,7 @@ float get_brightness() {
 }
 
 void set_brightness(GtkButton* _b, GdkEvent* _e, void* brightness) {
+    if (DISABLE_BRIGHTNESS) { return; }
 	char brightness_s[32];
 	memset(brightness_s, 0, 32);
 
@@ -54,8 +54,8 @@ void slider_brightness_callback(float progress, void* _v) {
 }
 void* _slider_brightness_fetch(void* data) {
     kindle_slider_t* slider = (kindle_slider_t*) data;
-    // float brightness = get_brightness();
-    // slider->value = brightness;
+    float brightness = get_brightness();
+    slider->value = brightness;
     
     return NULL;
 }
@@ -89,9 +89,9 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	brightness_data->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, brightness_data);
 	
-	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "term",  exit_handler,   NULL));
-	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "LED Strip", set_led1_handler, ctrl_data));
+	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "<SIGTERM>",  exit_handler,   NULL));
+	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "led.strip0", set_led1_handler, ctrl_data));
 	gtk_table_add(table, 12, 15, 8, 10, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_life_handler,    ctrl_data));
-	gtk_table_add(table, 2, 12, 0, 10, model_init());
+	gtk_table_add(table, 2, 12, 0, 10, log_widget());
 	return table;
 }

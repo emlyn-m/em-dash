@@ -44,7 +44,7 @@ void read_keyboard(kb_data_t* data) {
 	const int X_MIN = 0,   X_MAX = 1450;
 	const int Y_MIN = 660, Y_MAX = 1075;
 
-	printf("%s", LOGFMT("reading kb\n", LOG_DBG));
+	LOG(PRI_DBG, "reading kb\n");
 	fflush(stdout);
 
 	int input_fd = open(dev, O_RDONLY);
@@ -83,7 +83,7 @@ void read_keyboard(kb_data_t* data) {
 					char pressed_key = match_keycode(data->lookup_table, data->layer, data->x, data->y);
 
 					if (pressed_key == 0) {
-						printf("%s", LOGFMT("failed to match coords\n", LOG_WRN));
+						LOG(PRI_WRN, "failed to match coords\n");
 						fflush(stdout);
 						continue;
 					}
@@ -133,7 +133,7 @@ void* _keyboard_listener_async(void* data_vp) {
 void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
    	kb_data* data = (kb_data*) data_vp;
 	if ((data->last_showing < 0) || (time(NULL) - data->last_showing < data->min_frequency)) {
-		printf("%s", LOGFMT("debounced keyboard button\n", LOG_DBG));
+		LOG(PRI_DBG, "debounced keyboard button\n");
 		fflush(stdout);
 		return;
 	}
@@ -146,7 +146,7 @@ void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
 void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double w, double h, char value) {
 //	printf("\x1b[38;5;139m\x1b[1mDEBUG:\x1b[0m loading key <%c> in range (%lf, %lf) to (%lf, %lf) on layer %d\n", value, x, y, x+w, y+h, layer);
 	kb_lut_t* lut = (kb_lut_t*) malloc(sizeof(kb_lut_t));
-	if (!lut) { fprintf(stderr, LOGFMT("failed to alloc memory\n", LOG_ERR)); fflush(stderr); }
+	if (!lut) { LOG(PRI_ERR, "failed to alloc memory\n"); fflush(stdout); }
 	if (*kb_lut) {
 		(*kb_lut)->next = lut;
 	} else { (*kb_lut) = lut; }

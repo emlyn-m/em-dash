@@ -18,7 +18,7 @@
 
 void tuya_led_new(
     tuya_led_t* led,
-    char* id, 
+    char* id,
     char* name,
     uint32_t ip,
     unsigned char* key
@@ -27,12 +27,12 @@ void tuya_led_new(
     led->name = name;
     led->ip = ip;
     led->key = key;
-    
+
     led->power = 0;
     led->hue = 0;
     led->sat = 0;
     led->val = 0;
-    
+
     led->seqno = 1;
     led->sock = 0;
     srand(time(0));
@@ -106,17 +106,17 @@ int _popen_crypt(unsigned char* pt_buf, int pt_len, unsigned char* key, unsigned
     LOG(PRI_DBG, "cmd: <%s>\n", cmdbuf);
     FILE* enc_fp = popen(cmdbuf, "r");
     if (!enc_fp) { return 0; }
-    
+
     char ct_hexbuf[512]; memset(ct_hexbuf, 0, 2*pt_len+1);
     int ct_hlen = fread(ct_hexbuf, 1, 512, enc_fp);
     pclose(enc_fp);
-    if (ct_hlen <= 0) { 
+    if (ct_hlen <= 0) {
         LOG(PRI_WRN, "_popen_crypt read 0 bytes\n");
         return 0;
     } else {
         LOG(PRI_DBG, "_popen_crypt read %d bytes: ", ct_hlen);
     }
-    
+
     for (int i=0; i < ct_hlen - 1; i+=2) {
         sscanf(ct_hexbuf+i, "%02hhx", &(ct_buf[i / 2]));
         printf("%02hhx", ct_buf[i / 2]);
@@ -145,7 +145,7 @@ void _unpack_u32_be(uint8_t* buf, uint32_t* value) {
 
 unsigned char* _tuya_payload_encode(tuya_led_t* led, uint32_t command, unsigned char* payload, unsigned char* header, uint32_t* msg_size) {
     int encrypt = 1;
-    
+
     int true_msg_size = *msg_size;
     unsigned char *ct_buf, *padded;
     if (encrypt) {
@@ -167,8 +167,8 @@ unsigned char* _tuya_payload_encode(tuya_led_t* led, uint32_t command, unsigned 
     else { ct_len = true_msg_size; memcpy(ct_buf, payload, true_msg_size); }
     if (header) { ct_len += 15; }
 
-    *msg_size = 16 + ct_len + 8;  // 16 byte header, 8 byte tail 
-    
+    *msg_size = 16 + ct_len + 8;  // 16 byte header, 8 byte tail
+
     uint8_t* msg_buf = (uint8_t*) malloc(*msg_size);
     if (!msg_buf) { return NULL; }
     _pack_u32_be(PREFIX_55AA_VALUE, msg_buf);
@@ -200,7 +200,7 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
     uint32_t msg_size = snprintf((char*) payload, 256, "{\"gwId\":\"%s\",\"devId\":\"%s\",\"uid\":\"%s\",\"t\":\"%d\"", led->id, led->id, led->id, (int) time(NULL));
     if (dps) { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, ",\"dps\":%s}",  dps ? dps : "{}"); }
     else { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, "}"); }
-    
+
     LOG(PRI_DBG, "header (%zu bytes): %s\n", strlen((char*) payload), payload);
     unsigned char header_buf[VERSION_HEADER_SIZE] = { 0 };
     unsigned char* header = header_buf;
@@ -208,11 +208,11 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
     else { header = NULL; }
     uint8_t* encoded = _tuya_payload_encode(led, command, payload, header, &msg_size);
     if (!encoded) { return ERR_ENCODE_FAIL; }
-    
+
     LOG(PRI_DBG, "encoded (%d bytes): ", msg_size);
     for (size_t i=0; i < msg_size; i++) { printf("%02x", encoded[i]); }
     printf("\n");
-    
+
     int success = send(led->sock, encoded, msg_size, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && success <= 0) {
@@ -224,7 +224,7 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
         success = send(led->sock, encoded, msg_size, 0);
     }
     if (success < 0) { return ERR_SOCK_FAIL; }
-    
+
     LOG(PRI_INF, "sent %d bytes\n", success);
     free(encoded);
     return 0;
@@ -242,12 +242,12 @@ _tuya_header_t _tuya_header_parse(unsigned char* header_buf, size_t header_size)
     uint32_t prefix; _unpack_u32_be(header_buf, &prefix);
     if (prefix != PREFIX_55AA_VALUE) { LOG(PRI_WRN, "unknown prefix %d\n", prefix); }
     else { LOG(PRI_DBG, "received 55AA prefix\n"); }
-    
+
     _unpack_u32_be(header_buf+4, &header.seqno);
     _unpack_u32_be(header_buf+8, &header.command);
     _unpack_u32_be(header_buf+12, &header.payload_len);
     header.total_len = header_len + header.payload_len;
-        
+
     return header;
 }
 
@@ -265,7 +265,7 @@ void _tuya_payload_decode(tuya_led_t* led, uint32_t expected_command, unsigned c
 
     if (retcode_len) { _unpack_u32_be(encoded+header_len, &(msg->retcode)); }
     else { msg->retcode = -1; }
-    
+
     unsigned char padded[ct_len]; memset(padded, 0, ct_len);
     LOG(PRI_DBG, "using range %zu to %zu of payload size %zu\n", ct_offset, ct_offset + ct_len, msg->payload_len);
     memcpy(ct, encoded + ct_offset, ct_len);
@@ -273,7 +273,7 @@ void _tuya_payload_decode(tuya_led_t* led, uint32_t expected_command, unsigned c
         msg->payload_len = 0;
         return;
     };
-    
+
     msg->payload_len = _unpad(padded, msg->payload, ct_len);
 }
 
@@ -283,7 +283,7 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     printf("\n");
     unsigned char output_buf[BUFSIZE]; memset(output_buf, 0, BUFSIZE);
     const uint32_t min_len = 16 + 4;
-    
+
     int header_len = recv(led->sock, output_buf, min_len, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && header_len <= 0) {
@@ -296,7 +296,7 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     }
     if (header_len < 0) { LOG(PRI_DBG, "rx header failed!\n"); return ERR_SOCK_FAIL; }
     else if (header_len == 0) { LOG(PRI_DBG, "rx closed\n"); return ERR_SOCK_CLOSE; }
-    
+
     _tuya_header_t header = _tuya_header_parse(output_buf, (size_t) header_len);
     uint32_t remaining = header.total_len - header_len;
     if (remaining <= 0) { return 0; }
@@ -308,7 +308,7 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     LOG(PRI_DBG, "rx %d byte initial: ", header_len);
     for (int i=0; i < header_len; i++) { printf("%02x", (unsigned char) output_buf[i]); }
     printf("\n");
-    
+
     LOG(PRI_DBG, "rx remaining (expecting %u bytes)... ", header.total_len - header_len); fflush(stdout);
     size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
     if (body_rx < 0) { LOG(PRI_WRN, "\nfailed!\n"); return ERR_SOCK_FAIL; }
@@ -316,7 +316,7 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     printf("%zu bytes: ", body_rx);
     for (size_t i=0; i < body_rx; i++) { printf("%02x", (unsigned char) (output_buf + header_len)[i]); }
     printf("\n");
-    
+
     if (msg) {
         msg->payload_len = header.payload_len;
         _tuya_payload_decode(led, expected_command, output_buf, msg);

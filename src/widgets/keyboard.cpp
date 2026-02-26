@@ -34,7 +34,7 @@ static gboolean lipc_set_string_property(char *publisher, char *prop, char *valu
 
 void set_keyboard(gboolean show) {
 	if (show) { lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "open", (char*) "xyz.emlyn.kindle:abc:0"); }
-	else { 
+	else {
 	    lipc_set_string_property((char*) "com.lab126.keyboard", (char*) "close", (char*) "xyz.emlyn.kindle");
 	}
 }
@@ -96,7 +96,7 @@ void read_keyboard(kb_data_t* data) {
 
 					*(kb_buf_ptr++) = pressed_key;
 					if (!(data->on_key_press(data, pressed_key))) { break; }
-					
+
 					if ((pressed_key != 0x2) && (data->layer == 1)) { data->layer = 0; }
 				}
 			}
@@ -106,8 +106,8 @@ void read_keyboard(kb_data_t* data) {
 	data->on_enter(data);
 }
 
-void* _gtk_kb_redraw(void* data) { 
-    GtkWidget* ref = (GtkWidget*) data; 
+void* _gtk_kb_redraw(void* data) {
+    GtkWidget* ref = (GtkWidget*) data;
     fflush(stdout); usleep(500 * 1000);
     gtk_widget_queue_draw(ref);
     return NULL;
@@ -116,19 +116,19 @@ void* _keyboard_listener_async(void* data_vp) {
    	kb_data* data = (kb_data*) data_vp;
 	data->last_showing = -1;
 	memset(data->kb_buf, 0, 1024);
-   
+
 	set_keyboard(TRUE);
 	read_keyboard(data);
 	set_keyboard(FALSE);
-	
+
     GtkWidget* toplevel = gtk_widget_get_toplevel(data->ref);
     pthread_t _t;
     pthread_create(&_t, NULL, _gtk_kb_redraw, (void*) toplevel);
 
 	data->last_showing = time(NULL);
-	
+
 	return NULL;
-} 
+}
 
 void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
    	kb_data* data = (kb_data*) data_vp;
@@ -228,7 +228,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
 	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.17, 0.75, 0.57 , 0.25, ' ');
 	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.74, 0.75, 0.096, 0.25, '.');
 	append_keycode_lut(kb_lut, KB_LAYER_SHFT, 0.83, 0.75, 0.144, 0.25, '\n');
-	
+
 	append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.02, 0   , 0.096, 0.25, 'Q');
     append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.12, 0   , 0.096, 0.25, 'W');
     append_keycode_lut(kb_lut, KB_LAYER_CAPS, 0.21, 0   , 0.096, 0.25, 'E');
@@ -294,7 +294,7 @@ void generate_keycode_lut(kb_lut_t** kb_lut) {
     append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.17, 0.75, 0.57 , 0.25, ' ');
     append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.74, 0.75, 0.096, 0.25, '.');
     append_keycode_lut(kb_lut, KB_LAYER_NUMS, 0.83, 0.75, 0.144, 0.25, '\n');
-    
+
    	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.02, 0   , 0.096, 0.25, '#');
     append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.12, 0   , 0.096, 0.25, '%');
 	append_keycode_lut(kb_lut, KB_LAYER_SPCL, 0.21, 0   , 0.096, 0.25, '~');

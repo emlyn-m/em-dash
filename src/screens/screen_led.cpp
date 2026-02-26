@@ -60,24 +60,24 @@ void _update_values_from_buf(char* buf, struct _spawn_slider_args* args) {
     cJSON* values_j = cJSON_Parse(buf);
     cJSON* dps = cJSON_GetObjectItem(values_j, "dps");
     if (!dps) { cJSON_free(values_j); return; }
-    
+
     cJSON *dp20, *dp24;
     if ((dp20 = cJSON_GetObjectItem(dps, "20"))) {
         args->led->power = dp20->valueint;
     }
     if ((dp24 = cJSON_GetObjectItem(dps, "24"))) {
         sscanf(dp24->valuestring, "%04x%04x%04x", &(args->led->hue), &(args->led->sat), &(args->led->val));
-        args->sliders[0]->value = ((float) args->led->hue) / 359.0; gtk_widget_queue_draw(args->sliders[0]->drawing_area); 
-        args->sliders[1]->value = ((float) args->led->sat) / 1000.0; gtk_widget_queue_draw(args->sliders[1]->drawing_area); 
-        args->sliders[2]->value = ((float) args->led->val) / 1000.0; gtk_widget_queue_draw(args->sliders[2]->drawing_area); 
+        args->sliders[0]->value = ((float) args->led->hue) / 359.0; gtk_widget_queue_draw(args->sliders[0]->drawing_area);
+        args->sliders[1]->value = ((float) args->led->sat) / 1000.0; gtk_widget_queue_draw(args->sliders[1]->drawing_area);
+        args->sliders[2]->value = ((float) args->led->val) / 1000.0; gtk_widget_queue_draw(args->sliders[2]->drawing_area);
     }
-    
+
     cJSON_free(values_j);
 }
 void* _spawn_led_strip_thread(void* args_vp) {
     struct _spawn_slider_args* args = (struct _spawn_slider_args*) args_vp;
     tuya_led_t* led = args->led;
-    
+
     tuya_cmd_send(led, COMMAND_QUERY, NULL);
     int status;
     uint32_t expected_cmd = COMMAND_QUERY;
@@ -99,7 +99,7 @@ void* _spawn_led_strip_thread(void* args_vp) {
         }
     }
     tuya_msg_free(&msg);
-    
+
     while (1) {
         status = tuya_msg_recv(led, 0, &msg);
         if (status) {
@@ -118,9 +118,9 @@ void* _spawn_led_strip_thread(void* args_vp) {
                 _update_values_from_buf((char*) msg.payload, args);
             }
         }
-        
+
         tuya_msg_free(&msg);
-        
+
     }
     return NULL;
 }
@@ -137,7 +137,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	ctrl_data->stack = stack;
 	tuya_led_t* led = (tuya_led_t*) malloc(sizeof(tuya_led_t));
 	tuya_led_new(led, getenv("LED_STRIP_ID"), getenv("LED_STRIP_NAME"), inet_addr(getenv("LED_STRIP_IP")), (unsigned char*) getenv("LED_STRIP_KEY"));
-	
+
 	GtkWidget* table = gtk_table_custom(7,9);
 
 	struct _tuya_power_btn_args* pb_args = (struct _tuya_power_btn_args*) malloc(sizeof(struct _tuya_power_btn_args));
@@ -155,7 +155,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	gtk_container_add(GTK_CONTAINER(ev_box), pb_args->widget);
 	g_signal_connect(ev_box, "button-press-event", G_CALLBACK(led_power_callback), led);
 	gtk_box_pack_start(GTK_BOX(wrapper), ev_box, TRUE, TRUE, 5*SCALE);
-	
+
 	gtk_table_add(table, 0, 1, 0, 1, wrapper);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) power_button_update, pb_args);
 	GtkWidget* labelbox = gtk_hbox_new(FALSE, 0);
@@ -165,7 +165,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	pango_font_description_free(font_desc_label);
 	gtk_box_pack_start(GTK_BOX(labelbox), label, FALSE, FALSE, 20);
 	gtk_table_add(table, 1, 7, 0, 1, labelbox);
-	
+
 	gtk_table_add(table, 7, 9, 0, 1, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_ctrl_handler,    ctrl_data));
 
 	kindle_slider_t* hue_slider = kindle_slider_new(led, NULL, &led_hue_callback);
@@ -176,7 +176,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	hue_dat->size = 40;
 	hue_dat->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, hue_dat);
-	
+
 	kindle_slider_t* sat_slider = kindle_slider_new(led, NULL, &led_sat_callback);
 	gtk_table_add(table, 1, 2, 1, 6, sat_slider->drawing_area);
 	struct _img_src_dat* sat_dat = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
@@ -194,7 +194,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	val_dat->size = 40;
 	val_dat->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, val_dat);
-	
+
 	pthread_t _thread_id;
 	struct _spawn_slider_args* args = (struct _spawn_slider_args*) malloc(sizeof(struct _spawn_slider_args));
 	args->led = led;

@@ -19,7 +19,7 @@ void* update_alerts_async(void* data_vp) {
    	time_t now = time(NULL);
    	const size_t ALERT_BUFSIZE = 100000;
     alert_t* alert_data = (alert_t*) data_vp;
-    
+
    	char alert_req_cmdbuf[1024]; memset(alert_req_cmdbuf, 0, 1024);
 	snprintf(alert_req_cmdbuf, 1024, "curl -s '%s'", getenv("ALERT_ENDPOINT"));
 	FILE* alert_fp = popen(alert_req_cmdbuf, "r");
@@ -32,8 +32,8 @@ void* update_alerts_async(void* data_vp) {
 	int alert_req_status = pclose(alert_fp);
 	if (alert_req_status == -1) { LOG(PRI_ERR, "pclose error on alert_req\n"); fflush(stdout); return NULL; }
 	if (WEXITSTATUS(alert_req_status)) { LOG(PRI_ERR, "alert_req returned error %d\n", WEXITSTATUS(alert_req_status)); fflush(stdout); return NULL; }
-   
-   
+
+
 	cJSON* alerts = cJSON_Parse(alert_buf);
 	unsigned int rx_alert_count = cJSON_GetArraySize(alerts);
 	alert_data->num_alerts = std::min(alert_data->max_alerts, rx_alert_count);
@@ -41,7 +41,7 @@ void* update_alerts_async(void* data_vp) {
 	for (guint i=0; i < alert_data->num_alerts; i++) {
 		alert_ev_t* alert_obj = alert_data->alerts[i];
 		cJSON* alert_jobj = cJSON_GetArrayItem(alerts, i);
-   
+
 		strncpy(alert_obj->category, CATEGORY_NAMES[cJSON_GetObjectItem(alert_jobj, "msg_class")->valueint], 31);
 	    strncpy(alert_obj->msg, cJSON_GetObjectItem(alert_jobj, "msg_body")->valuestring, 2047);
 	    alert_obj->time = cJSON_GetObjectItem(alert_jobj, "msg_timestamp")->valueint;
@@ -49,7 +49,7 @@ void* update_alerts_async(void* data_vp) {
 	    LOG(PRI_DBG, "found %s alert \"%s\" (sev %d, sent at %ld)\n", alert_obj->category, alert_obj->msg, alert_obj->severity, (unsigned long) alert_obj->time);
 	    fflush(stdout);
 	}
-	
+
 	alert_data->last_update = now;
 	return NULL;
 }
@@ -60,13 +60,13 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	if (now < (alert_data->last_update + alert_data->update_freq)) {
 	    return TRUE;  // too new - skipping
 	}
-	
+
 	alert_data->last_update = now;
 	LOG(PRI_INF, "begin alert network update\n"); fflush(stdout);
-	
+
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_alerts_async, data_vp);
 
-	
+
 	return TRUE;
 }

@@ -5,9 +5,9 @@
 #pragma align 4 (val)
 #endif
 #ifdef __GNUC__
-static const guint8 val[] __attribute__ ((__aligned__ (4))) = 
+static const guint8 val[] __attribute__ ((__aligned__ (4))) =
 #else
-static const guint8 val[] = 
+static const guint8 val[] =
 #endif
 { ""
   /* Pixbuf magic (0x47646b50) */

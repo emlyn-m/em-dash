@@ -20,7 +20,7 @@
 #define BRIGHTNESS_SCALE 200
 
 
-void exit_handler(GtkButton* _b, GdkEvent* _e, void* _d) { 
+void exit_handler(GtkButton* _b, GdkEvent* _e, void* _d) {
     exit(0);
 }
 
@@ -57,7 +57,7 @@ void* _slider_brightness_fetch(void* data) {
     kindle_slider_t* slider = (kindle_slider_t*) data;
     float brightness = get_brightness();
     slider->value = brightness;
-    
+
     return NULL;
 }
 
@@ -86,11 +86,11 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
 	gtk_table_add(table, 0, 2, 6, 8, image_widget(&brightness_data->ref));
 	brightness_data->img = val;
-	brightness_data->size = 80;
+	brightness_data->size = 40;
 	brightness_data->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, brightness_data);
 	gtk_table_add(table, 0, 2, 8, 10, button_widget((char*) "dumplog", dumplog_handler, NULL));
-	
+
 	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "<SIGTERM>",  exit_handler,   NULL));
 	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "led.strip0", set_led1_handler, ctrl_data));
 	gtk_table_add(table, 12, 15, 8, 10, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_life_handler,    ctrl_data));

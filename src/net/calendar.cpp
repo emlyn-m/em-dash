@@ -52,25 +52,25 @@ void* update_events_async(void* data_vp) {
     const uint32_t TOKEN_BUFSIZE = 2048;
    	unsigned long ctime = time(NULL);
     calendar_t* cal = (calendar_t*) data_vp;
-    
+
    	if (ctime > cal->token_exp) {
-   
+
 	    LOG(PRI_INF, "expired token, regenerating...\n");
 	    fflush(stdout);
-   
+
 	    if (!cal->token_buf) {
 	        cal->token_buf = (char*) malloc(TOKEN_BUFSIZE * sizeof(char));
 	        memset(cal->token_buf, 0, TOKEN_BUFSIZE);
 	    }
-   
+
 	    int token_result = generate_gcal_jwt((char*) getenv("GOOGLE_SERVICE_EMAIL"), (char*) getenv("GOOGLE_PRIVKEY"), TOKEN_BUFSIZE, cal->token_buf);
 	    if (token_result) {
 	        LOG(PRI_ERR, "failed to generate jwt\n"); fflush(stdout);
 	        _exit(0);
 	    } // error!!
-   
+
 	    LOG(PRI_INF, "successfully generated jwt\n"); fflush(stdout);
-   
+
 	    const uint32_t token_redeem_bufsize = 2048;
 	    char* token_redeem_payload = (char*) malloc(token_redeem_bufsize * sizeof(char));
 	    snprintf(
@@ -85,26 +85,26 @@ void* update_events_async(void* data_vp) {
 	        _exit(0);
 	    }
 	    LOG(PRI_INF, "redeemed google oauth token\n"); fflush(stdout);
-   
+
 	    const uint32_t token_resp_bufsize = 2048;
 	    char* token_resp_buf = (char*) malloc(token_resp_bufsize * sizeof(char));
 	    fgets(token_resp_buf, token_resp_bufsize, token_redeem_fp);
-   
-   
+
+
 	    cJSON* token_resp_j = cJSON_Parse(token_resp_buf);
 	    free(token_resp_buf);
-   
+
 	    int token_expiry = cJSON_GetObjectItem(token_resp_j, "expires_in")->valueint;
 	    char* token_value = cJSON_GetObjectItem(token_resp_j, "access_token")->valuestring;
-   
+
 	    cal->token_exp = ctime + token_expiry;
 	    strcpy(cal->token_buf, token_value);
-   
+
 	    cJSON_free(token_resp_j);
 	}
-   
+
 	LOG(PRI_INF, "existing valid token found\n"); fflush(stdout);
-   
+
 	time_t tlo_t;
 	time_t thi_t;
 	time(&tlo_t); time(&thi_t);
@@ -115,46 +115,46 @@ void* update_events_async(void* data_vp) {
 	char timestamp_hi[64];
 	strftime(timestamp_lo, 64, "%Y-%m-%dT00:00:00Z", &tlo);
 	strftime(timestamp_hi, 64, "%Y-%m-%dT00:00:00Z", &thi);
-   
+
 	char events_req_url[512];
 	snprintf(
 	    events_req_url, 512,
 	    getenv("GOOGLE_EVENTS_URL"), getenv("GOOGLE_CALENDAR_ID"), MAX_CAL_EVENTS,
 	    timestamp_lo, timestamp_hi
 	);
-   
+
 	char events_req_cmdbuf[2048];
 	snprintf(events_req_cmdbuf, 2048, "curl -sH 'Authorization: Bearer %s' '%s'", cal->token_buf, events_req_url);
 	FILE* events_req_fp = popen(events_req_cmdbuf, "r");
 	if (!events_req_fp) { LOG(PRI_ERR, "failed to exec events fetch\n"); _exit(0); }
-   
+
 	const uint32_t EVENTS_BUF_SIZE = 1000000; // todo: wow i really dont even know if this'll be long enough;
 	char events_buf[EVENTS_BUF_SIZE];
 	memset(events_buf, 0, EVENTS_BUF_SIZE);
 	fread(events_buf, sizeof(char), EVENTS_BUF_SIZE, events_req_fp);
-   
+
 	cJSON* event_lst = cJSON_GetObjectItem(cJSON_Parse(events_buf), "items");
-   
+
 	for (int i=0; i < cJSON_GetArraySize(event_lst); i++) {
 	    cJSON* event_obj = cJSON_GetArrayItem(event_lst, i);
-   
+
 	    if (!cal->events[i]) { cal->events[i] = (cal_event_t*) malloc(sizeof(cal_event_t)); cal->events[i]->title = NULL; }
 	    cal->events[i]->id = i;
 	    if (cal->events[i]->title != NULL) { free(cal->events[i]->title); }  // this seems to be crashing...
-   
+
 	    char* event_title_tmp = cJSON_GetObjectItem(event_obj, "summary")->valuestring;
 	    cal->events[i]->title = (char*) malloc(strlen(event_title_tmp) + 1); memset(cal->events[i]->title, 0, strlen(event_title_tmp)+1);
 	    strcpy(cal->events[i]->title, event_title_tmp);
-   
+
 	    cal->events[i]->start_time = parse_gcal_datetime(cJSON_GetObjectItem(event_obj, "start"));
 	    if (!cal->events[i]->start_time) { cal->events[i]->start_time = tlo_t; }  // surely neither of these should happen BUT just in case :)
-   
+
 	    cal->events[i]->end_time = parse_gcal_datetime(cJSON_GetObjectItem(event_obj, "end"));  // we need way better logic for handling the 'date' format on this
 	    if (!cal->events[i]->end_time) { cal->events[i]->end_time = thi_t; }  // surely neither of these should happen BUT just in case :)
-   
+
 	    LOG(PRI_INF, "found event %s (%ld - %ld)\n", cal->events[i]->title, cal->events[i]->start_time, cal->events[i]->end_time); fflush(stdout);
 	}
-   
+
 	cal->num_events = cJSON_GetArraySize(event_lst);
 	cal->last_updated = time(NULL);
 	return NULL;
@@ -171,7 +171,7 @@ gboolean update_events(gpointer* calendar_gp) {
 
 	LOG(PRI_INF, "executing calendar update...\n"); fflush(stdout);
 	fflush(stdout);
-	
+
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_events_async, calendar_gp);
 

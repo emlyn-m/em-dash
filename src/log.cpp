@@ -30,7 +30,7 @@ void _log_internal(const int prio, const int prio_c, const char* prio_s, const c
 	    vprintf(fmt_modified, ap);
 		free(fmt_modified);
 		va_end(ap);
-		
+
         va_start(ap, fmt);
         data->records[data->record_ptr].pri = prio;
         data->records[data->record_ptr].pri_color = prio_c;
@@ -53,7 +53,7 @@ int fetch_n_logs(int n, struct _log_record* buf) {
             memcpy(buf[fetched].buf, data->records[i].buf, data->record_bufsize);
             fetched++;
         }
-        
+
         i = ((i-1) % data->max_records + data->max_records) % data->max_records;
     }
     return fetched;

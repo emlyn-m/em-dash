@@ -5,9 +5,9 @@
 #pragma align 4 (cloud)
 #endif
 #ifdef __GNUC__
-static const guint8 cloud[] __attribute__ ((__aligned__ (4))) = 
+static const guint8 cloud[] __attribute__ ((__aligned__ (4))) =
 #else
-static const guint8 cloud[] = 
+static const guint8 cloud[] =
 #endif
 { ""
   /* Pixbuf magic (0x47646b50) */

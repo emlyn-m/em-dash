@@ -34,7 +34,7 @@ gboolean keyboard_onpress(kb_data_t* data, char char_val) {
 
 	LOG(PRI_INF, "dressed char '%c' at coords %lf, %lf  layer %d\n", char_val, data->x, data->y, data->layer);
 	fflush(stdout);
-	
+
 	task_t* task_data = (task_t*) data->add_data;
 	if (task_data->pending_idx < 0) {
     	if (task_data->num_tasks++ >= task_data->max_tasks) {
@@ -46,11 +46,11 @@ gboolean keyboard_onpress(kb_data_t* data, char char_val) {
  			task_data->tasks[i]->completed = task_data->tasks[i-1]->completed;
   		}
   		task_data->tasks[0]->task = old_last_taskbuf; memset(task_data->tasks[0]->task, 0, 256);
-    	
+
     	task_data->tasks[0]->completed = false;
         task_data->pending_idx = 0;
 	}
-	
+
     fflush(stdout);
 	if (char_val >= 0x20 && char_val <= 0x7e && strlen(task_data->tasks[0]->task) < 255) {
 	    task_data->tasks[0]->task[strlen(task_data->tasks[0]->task)] = char_val;
@@ -103,7 +103,7 @@ GtkWidget* tasks_widget() {
 	PangoFontDescription* font_task = pango_font_description_from_string(FONT_16);
 
 	for (int i=0; i < task_data->max_tasks; i++) {
-        task_data->tasks[i] = (task_ev_t*) malloc(sizeof(task_ev_t)); 
+        task_data->tasks[i] = (task_ev_t*) malloc(sizeof(task_ev_t));
         memset(task_data->tasks[i], 0, sizeof(task_ev_t));
         task_data->tasks[i]->task = (char*) malloc(256);
         memset(task_data->tasks[i]->task, 0, 256);
@@ -122,17 +122,17 @@ GtkWidget* tasks_widget() {
 		GtkWidget* label = gtk_label_new("");
 		task_data->task_widgets[i] = label;
 		gtk_widget_modify_font(label, font_task);
-		
+
 		gtk_box_pack_start(GTK_BOX(task_hbox), label, FALSE, FALSE, 0);
 		gtk_container_add(GTK_CONTAINER(evbox), task_hbox);
 		gtk_box_pack_start(GTK_BOX(tasks_vbox), evbox, FALSE, FALSE, 10*SCALE);
 	}
 	pango_font_description_free(font_task);
 	gtk_box_pack_start(GTK_BOX(wrapper), tasks_vbox, FALSE, FALSE, 10*SCALE);
-	
+
 	GtkWidget* keyboard_listener = keyboard_widget((void*) task_data, keyboard_onpress, keyboard_onenter);
 	gtk_box_pack_start(GTK_BOX(wrapper), keyboard_listener, TRUE, TRUE, 10*SCALE);
-	
+
 	gtk_container_set_border_width(GTK_CONTAINER(wrapper), 20*SCALE);
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) tasks_update, task_data);
 

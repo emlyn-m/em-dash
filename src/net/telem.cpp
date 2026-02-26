@@ -26,7 +26,7 @@ void _update_telem_async_devices(telem_t* telem) {
 	int device_req_status = pclose(device_fp);
 	if (device_req_status == -1) { LOG(PRI_ERR, "pclose error on device_req\n"); fflush(stdout); return; }
 	if (WEXITSTATUS(device_req_status)) { LOG(PRI_ERR, "device_req returned error %d\n", WEXITSTATUS(device_req_status)); fflush(stdout); return; }
-	
+
 	cJSON* devices = cJSON_Parse(device_buf);
 	telem->n_devices = cJSON_GetArraySize(devices);
 	LOG(PRI_INF, "found %d devices\n", telem->n_devices); fflush(stdout);
@@ -42,7 +42,7 @@ void _update_telem_async_devices(telem_t* telem) {
 
 void _update_telem_async_services(telem_t* telem) {
    	const size_t SERVICE_BUFSIZE = 100000;
-       
+
       	char service_req_cmdbuf[1024]; memset(service_req_cmdbuf, 0, 1024);
 	snprintf(service_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_SERVICE_ENDPOINT"));
 	FILE* service_fp = popen(service_req_cmdbuf, "r");
@@ -55,7 +55,7 @@ void _update_telem_async_services(telem_t* telem) {
 	int service_req_status = pclose(service_fp);
 	if (service_req_status == -1) { LOG(PRI_ERR, "pclose error on service_req\n"); fflush(stdout); return; }
 	if (WEXITSTATUS(service_req_status)) { LOG(PRI_ERR, "device_req returned error %d\n", WEXITSTATUS(service_req_status)); fflush(stdout); return; }
-   
+
 	cJSON* services = cJSON_Parse(service_buf);
 	telem->n_services = cJSON_GetArraySize(services);
 	LOG(PRI_INF, "found %d services\n", telem->n_services); fflush(stdout);
@@ -69,7 +69,7 @@ void _update_telem_async_services(telem_t* telem) {
 
 void* update_telem_async(void* data_vp) {
     telem_t* telem = (telem_t*) data_vp;
-	    
+
    	char battery_cmdbuf[64] = { 0 };
 	snprintf(battery_cmdbuf, 64, "cat %s", getenv("BATTERY_PATH"));
    	FILE* read_battery_fp = popen(battery_cmdbuf, "r");
@@ -85,23 +85,23 @@ void* update_telem_async(void* data_vp) {
 	    fscanf(read_current_fp, "%d", &(telem->current));
 		LOG(PRI_DBG, "read current %d\n", telem->current);
 	}
-	
+
 	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
 	if (read_wifi_fp) {
 	    fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength));
 		LOG(PRI_DBG, "read wifi %d\n", telem->wifi_strength);
 	}
-	
+
 	telem->last_update = time(NULL);
 	return NULL;
 }
 
 void* _update_telem_async_net(void* data_vp) {
     telem_t* telem = (telem_t*) data_vp;
-	    	
+
 	_update_telem_async_devices(telem);
     _update_telem_async_services(telem);
-	
+
 	time_t duration;
     http_get((char*) "ipinfo.io", (char*) "ip", 80, &(telem->ip), &duration);
     telem->num_pings = MIN(telem->num_pings+1, telem->max_pings);
@@ -112,7 +112,7 @@ void* _update_telem_async_net(void* data_vp) {
     }
     LOG(PRI_DBG, "ping of duration %ldms (%d total)\n", duration, telem->num_pings);
 
-	
+
 	telem->last_update = time(NULL);
 	return NULL;
 }
@@ -127,7 +127,7 @@ gboolean update_telem_async(gpointer* data_vp) {
 	}
 	telem->last_update = now;
 	LOG(PRI_DBG, "begin telemetry async update\n"); fflush(stdout);
-	
+
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_telem_async, data_vp);
 
@@ -143,7 +143,7 @@ gboolean update_telem_async_net(gpointer* data_vp) {
 	}
 	telem->last_update_net = now;
 	LOG(PRI_DBG, "begin telemetry network update\n"); fflush(stdout);
-	
+
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, _update_telem_async_net, data_vp);
 

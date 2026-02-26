@@ -10,7 +10,7 @@ gboolean _update_log_display(void* data_vp) {
     GtkWidget** views = (GtkWidget**) data_vp;
     struct _log_record logs[MAX_RECORDS] = { {0} };
     int nlogs = fetch_n_logs(MAX_RECORDS, logs);
-    
+
    	for (int i=0; i < nlogs; i++) {
 	    gtk_widget_set_visible(views[i], TRUE);
 	    char* task_markup = (char*) malloc(256); memset(task_markup, 0, 256);
@@ -18,14 +18,14 @@ gboolean _update_log_display(void* data_vp) {
 		gtk_label_set_markup(GTK_LABEL(views[i]), task_markup);
 	}
 	for (int i=nlogs; i < MAX_RECORDS; i++) { gtk_widget_set_visible(views[i], FALSE); }
-    
+
     return TRUE;
 }
 
 void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
     struct _log_record logs[MAX_RECORDS] = { {0} };
     int nlogs = fetch_n_logs(MAX_RECORDS, logs);
-    
+
     size_t logbuf_size = 200*nlogs;
     char* logbuf = (char*) malloc(logbuf_size); memset(logbuf, 0, logbuf_size);
     char* logbuf_wp = logbuf + snprintf(logbuf, 10, "echo -e \'");
@@ -40,7 +40,7 @@ void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
 
 GtkWidget* log_widget() {
 	GtkWidget* wrapper = gtk_vbox_new(FALSE, 0);
-	
+
 	GtkWidget* log_hbox = gtk_hbox_new(false, 0);
 	GtkWidget* title = gtk_label_new("logs");
 	PangoFontDescription* font_title = pango_font_description_from_string(FONT_BOLD_16);

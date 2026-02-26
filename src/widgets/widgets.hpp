@@ -51,12 +51,12 @@ typedef struct TelemetryData {
 	guint8 n_services;
 	device_t** devices;
 	service_t** services;
-	
+
 	time_t last_update;
 	time_t update_freq;
 	time_t last_update_net;
 	time_t update_freq_net;
-	
+
 	int current;
 	unsigned int battery;
 	int wifi_strength;
@@ -139,10 +139,10 @@ typedef struct AlertData {
 	uint32_t max_alerts;
 	uint32_t num_alerts;
 	alert_ev_t** alerts;
-	
+
 	time_t last_update;
 	time_t update_freq;
-	
+
 	GtkWidget** alert_meta_widgets;
 	GtkWidget** alert_widgets;
 } alert_t;

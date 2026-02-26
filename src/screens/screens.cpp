@@ -7,8 +7,8 @@
 #include <gtk-2.0/gdk/gdk.h>
 
 
-gboolean _img_set_src_helper(void* data_vp) { 
-    struct _img_src_dat* dat = (struct _img_src_dat*) data_vp; 
+gboolean _img_set_src_helper(void* data_vp) {
+    struct _img_src_dat* dat = (struct _img_src_dat*) data_vp;
     set_image_src(GTK_IMAGE(dat->ref), dat->img, dat->size, dat->size);
     if (dat->flag == 3) {
         free(dat);

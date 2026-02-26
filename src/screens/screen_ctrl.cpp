@@ -77,23 +77,28 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	set_screen_data_t* ctrl_data = (set_screen_data_t*) malloc(sizeof(set_screen_data_t));
 	ctrl_data->stack = stack;
 
-	GtkWidget* table = gtk_table_custom(15,10);
+	GtkWidget* table = gtk_table_custom(15,20);
 
+	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
+	gtk_table_add(table, 0, 2, 0, 3, image_widget(&brightness_data->ref));
 	KindleSlider* slider = kindle_slider_new(NULL, NULL, &slider_brightness_callback);
 	pthread_t _t;
 	pthread_create(&_t, NULL, _slider_brightness_fetch, (void*) slider);
-	gtk_table_add(table, 0, 2, 0, 6, slider->drawing_area);
-	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
-	gtk_table_add(table, 0, 2, 6, 8, image_widget(&brightness_data->ref));
+	gtk_table_add(table, 0, 2, 3, 16, slider->drawing_area);
 	brightness_data->img = val;
 	brightness_data->size = 40;
 	brightness_data->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, brightness_data);
-	gtk_table_add(table, 0, 2, 8, 10, button_widget((char*) "dumplog", dumplog_handler, NULL));
+	char dumpbuf[32];
+	char* ip = getenv("LOG_IP");
+	int ip_offset = strlen(ip) - 1, flag = 0;
+	while (!(ip[--ip_offset] == '.' && flag)) { if (ip[ip_offset] == '.') { flag = 1; } }
+	snprintf(dumpbuf, 32, "<b>logdump</b>\n%s\n:%ld", ip+ip_offset, atol(getenv("LOG_PORT")));
+	gtk_table_add(table, 0, 2, 16, 20, button_widget(dumpbuf, dumplog_handler, NULL));
 
-	gtk_table_add(table, 12, 15, 0, 2, button_widget((char*) "<SIGTERM>",  exit_handler,   NULL));
-	gtk_table_add(table, 12, 15, 2, 4, button_widget((char*) "led.strip0", set_led1_handler, ctrl_data));
-	gtk_table_add(table, 12, 15, 8, 10, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_life_handler,    ctrl_data));
-	gtk_table_add(table, 2, 12, 0, 10, log_widget());
+	gtk_table_add(table, 12, 15, 0, 4, button_widget((char*) "&lt;SIGTERM&gt;",  exit_handler,   NULL));
+	gtk_table_add(table, 12, 15, 4, 8, button_widget((char*) "led.strip0", set_led1_handler, ctrl_data));
+	gtk_table_add(table, 12, 15, 16, 20, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_life_handler,    ctrl_data));
+	gtk_table_add(table, 2, 12, 0, 20, log_widget());
 	return table;
 }

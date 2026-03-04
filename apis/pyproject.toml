@@ -4,4 +4,8 @@ version = "0.1.0"
 description = "APIs for Kindle Dash"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "aiohttp>=3.13.3",
+    "fastapi[standard]>=0.135.1",
+    "slixmpp>=1.13.2",
+]

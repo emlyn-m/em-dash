@@ -82,8 +82,9 @@ GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*
 	struct _img_src_dat* brightness_data = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
 	gtk_table_add(table, 0, 2, 0, 3, image_widget(&brightness_data->ref));
 	KindleSlider* slider = kindle_slider_new(NULL, NULL, &slider_brightness_callback);
-	pthread_t _t;
-	pthread_create(&_t, NULL, _slider_brightness_fetch, (void*) slider);
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, _slider_brightness_fetch, (void*) slider);
+	pthread_detach(thread_id);
 	gtk_table_add(table, 0, 2, 3, 16, slider->drawing_area);
 	brightness_data->img = val;
 	brightness_data->size = 40;

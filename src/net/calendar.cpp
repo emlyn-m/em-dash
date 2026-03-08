@@ -194,6 +194,7 @@ gboolean update_events(gpointer* calendar_gp) {
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_events_async, calendar_gp);
+	pthread_detach(thread_id);
 
 
 	LOG(PRI_INF, "calendar update complete\n"); fflush(stdout);

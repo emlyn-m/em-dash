@@ -101,6 +101,7 @@ gboolean update_weather(gpointer* data) {
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_weather_async, data);
+	pthread_detach(thread_id);
 
 	LOG(PRI_INF, "weather update complete\n"); fflush(stdout);
 

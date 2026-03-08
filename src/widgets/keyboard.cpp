@@ -122,8 +122,9 @@ void* _keyboard_listener_async(void* data_vp) {
 	set_keyboard(FALSE);
 
     GtkWidget* toplevel = gtk_widget_get_toplevel(data->ref);
-    pthread_t _t;
-    pthread_create(&_t, NULL, _gtk_kb_redraw, (void*) toplevel);
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, _gtk_kb_redraw, (void*) toplevel);
+    pthread_detach(thread_id);
 
 	data->last_showing = time(NULL);
 
@@ -140,6 +141,7 @@ void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
 
    	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, _keyboard_listener_async, data);
+	pthread_detach(thread_id);
 
 }
 

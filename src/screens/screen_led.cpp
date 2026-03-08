@@ -32,11 +32,12 @@ void _tuya_color_set(tuya_led_t* led, uint32_t hue, uint32_t sat, uint32_t val) 
     char* cmdbuf = (char*) malloc(32 * sizeof(char)); memset(cmdbuf, 0, 32);
     led->hue = hue; led->sat = sat; led->val = val;
     snprintf(cmdbuf, 32, "{\"24\": \"%04x%04x%04x\"}", led->hue, led->sat, led->val);
-    pthread_t _thread_id;
     struct _tuya_send_args* args = (struct _tuya_send_args*) malloc(sizeof(struct _tuya_send_args));
     args->led = led;
     args->cmdbuf = cmdbuf;
-    pthread_create(&_thread_id, NULL, _tuya_send_thread_helper, args);
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, _tuya_send_thread_helper, args);
+    pthread_detach(thread_id);
 }
 
 void led_power_callback(GtkButton* _button, GdkEvent* _event, void* led_vp) {
@@ -44,11 +45,12 @@ void led_power_callback(GtkButton* _button, GdkEvent* _event, void* led_vp) {
     led->power = 1-led->power;
     char* cmdbuf = (char*) malloc(32 * sizeof(char)); memset(cmdbuf, 0, 32);
     snprintf(cmdbuf, 32, "{\"20\": %s}", led->power ? "true" : "false");
-    pthread_t _thread_id;
     struct _tuya_send_args* args = (struct _tuya_send_args*) malloc(sizeof(struct _tuya_send_args));
     args->led = led;
     args->cmdbuf = cmdbuf;
-    pthread_create(&_thread_id, NULL, _tuya_send_thread_helper, args);
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, _tuya_send_thread_helper, args);
+    pthread_detach(thread_id);
 }
 
 void led_hue_callback(float progress, void* led_vp) { tuya_led_t* led = (tuya_led_t*) led_vp; _tuya_color_set(led, progress * 359.0, led->sat, led->val); }
@@ -195,14 +197,15 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	val_dat->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, val_dat);
 
-	pthread_t _thread_id;
 	struct _spawn_slider_args* args = (struct _spawn_slider_args*) malloc(sizeof(struct _spawn_slider_args));
 	args->led = led;
 	args->sliders = (kindle_slider_t**) malloc(3 * sizeof(kindle_slider_t*));
 	args->sliders[0] = hue_slider;
 	args->sliders[1] = sat_slider;
 	args->sliders[2] = val_slider;
-    pthread_create(&_thread_id, NULL, _spawn_led_strip_thread, args);
+	pthread_t thread_id;
+    pthread_create(&thread_id, NULL, _spawn_led_strip_thread, args);
+    pthread_detach(thread_id);
 
 	gtk_table_add(table, 3, 9, 1, 7, model_init());
 	return table;

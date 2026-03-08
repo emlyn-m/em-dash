@@ -137,6 +137,7 @@ gboolean update_telem_async(gpointer* data_vp) {
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_telem_async, data_vp);
+	pthread_detach(thread_id);
 
 	LOG(PRI_DBG, "end telemetry async update\n"); fflush(stdout);
 	return TRUE;
@@ -153,6 +154,7 @@ gboolean update_telem_async_net(gpointer* data_vp) {
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, _update_telem_async_net, data_vp);
+	pthread_detach(thread_id);
 
 	LOG(PRI_DBG, "end telemetry network update\n"); fflush(stdout);
 	return TRUE;

@@ -73,6 +73,7 @@ gboolean update_alerts_net(gpointer* data_vp) {
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_alerts_async, data_vp);
+	pthread_detach(thread_id);
 
 
 	return TRUE;

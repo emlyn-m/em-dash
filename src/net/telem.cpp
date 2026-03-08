@@ -88,8 +88,12 @@ void* update_telem_async(void* data_vp) {
 
 	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
 	if (read_wifi_fp) {
-	    fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength));
-		LOG(PRI_DBG, "read wifi %d\n", telem->wifi_strength);
+	    if (fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength)) > 0) {
+			LOG(PRI_DBG, "read wifi %d\n", telem->wifi_strength);
+		} else {
+		    LOG(PRI_WRN, "wifi disconnected!\n");
+			telem->wifi_strength = 1;
+		}
 	}
 
 	telem->last_update = time(NULL);

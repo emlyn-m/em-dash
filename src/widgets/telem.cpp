@@ -66,7 +66,7 @@ gboolean ip_update(gpointer* data_p) {
 
 	if (data->wifi_strength <= 0) { 
        	char wifi_buf[32] = { 0 };
-       	snprintf(wifi_buf, 31, "%ddB", data->wifi_strength);
+       	snprintf(wifi_buf, 31, "%ddBm", data->wifi_strength);
        	gtk_label_set_text(GTK_LABEL(data->wifi_strength_label), wifi_buf);
 	} else {
 	    gtk_label_set_text(GTK_LABEL(data->wifi_strength_label), "-");

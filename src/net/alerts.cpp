@@ -8,13 +8,6 @@
 #include <gtk-2.0/gtk/gtk.h>
 #include <pthread.h>
 
-const char* CATEGORY_NAMES[4] = {
-	"class_0",
-	"class_1",
-	"class_2",
-	"class_3"
-};
-
 void* update_alerts_async(void* data_vp) {
    	time_t now = time(NULL);
    	const size_t ALERT_BUFSIZE = 100000;
@@ -49,7 +42,7 @@ void* update_alerts_async(void* data_vp) {
 		if (!msg_class_j || !msg_body_j || !msg_timestamp_j || !msg_sev_j) {
 		    LOG(PRI_WRN, "alert missing required fields, skipping\n"); fflush(stdout); continue;
 		}
-		strncpy(alert_obj->category, CATEGORY_NAMES[msg_class_j->valueint], 31);
+		strncpy(alert_obj->category, msg_class_j->valuestring, 31);
 	    strncpy(alert_obj->msg, msg_body_j->valuestring, 2047);
 	    alert_obj->time = msg_timestamp_j->valueint;
 		alert_obj->severity = msg_sev_j->valueint;

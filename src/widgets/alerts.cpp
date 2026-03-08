@@ -4,6 +4,16 @@
 #include "gtk/gtk.h"
 #include <cstdlib>
 
+const char* SEV_LABELS[7] = {
+    "fatal!",
+    "err",
+    "sev2",
+    "wrn",
+    "inf",
+    "sev5",
+    "dbg"
+}; // 2, 5 SHOULD be unused!
+
 gboolean alerts_update(gpointer* data_p) {
 	alert_t* data = (alert_t*) data_p;
 
@@ -13,7 +23,8 @@ gboolean alerts_update(gpointer* data_p) {
 	    gtk_widget_set_visible(data->alert_meta_widgets[i], TRUE);
 
 		char* meta_buf = (char*) malloc(30 * sizeof(char));
-		snprintf(meta_buf, 30, "%s;sev%d", alert->category, alert->severity);
+		const char* sev_label = (alert->severity >= 0 && alert->severity <= 6) ? SEV_LABELS[alert->severity] : "sev?";
+		snprintf(meta_buf, 30, "%s;%s", alert->category, sev_label);
 		gtk_label_set_text(GTK_LABEL(data->alert_meta_widgets[i]), meta_buf);
 		gtk_label_set_text(GTK_LABEL(data->alert_widgets[i]), alert->msg);
 		free(meta_buf);

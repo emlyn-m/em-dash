@@ -9,13 +9,14 @@ import re
 import os
 
 from pydantic import BaseModel
+from pydantic_core._pydantic_core import ValidationError
 import logging
 
 
 class Message(BaseModel):
 	msg_timestamp: int
-	msg_class: int
 	msg_sev: int
+	msg_class: str
 	msg_body: str
 
 
@@ -56,20 +57,27 @@ class Listener(slixmpp.ClientXMPP):
 
 	async def on_message(self, msg):
 		msg_body = re.search( '<body>(.*)</body>', str(msg) ).group(1)
-		msg_content = json.loads( msg_body.replace('&quot;', '"') )
+		try:
+			msg_content = json.loads( msg_body.replace('&quot;', '"') )
+		except json.decoder.JSONDecodeError:
+			print(f'json parse failed, skipping message (raw: {msg_body})')
+			return
+
 		msg_timestamp = msg_content['timestamp']
 		msg_class = msg_content['class']
 		msg_sev = msg_content['sev']
 		msg_body = msg_content['body']
 
 		#print(f'     \x1b[48;5;030m INFO \x1b[0m  Received a class {msg_class} msg (sev={msg_sev}) \'{msg_body}\' (sent at {msg_timestamp})')
-		await self.msg_queue.put(Message(
-			msg_timestamp=msg_timestamp,
-			msg_class=msg_class,
-			msg_sev=msg_sev,
-			msg_body=msg_body
-		))
-
+		try:
+			await self.msg_queue.put(Message(
+				msg_timestamp=msg_timestamp,
+				msg_class=msg_class,
+				msg_sev=msg_sev,
+				msg_body=msg_body
+			))
+		except ValidationError:
+		    pass
 
 @asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):

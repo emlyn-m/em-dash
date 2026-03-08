@@ -66,7 +66,7 @@ void* update_events_async(void* data_vp) {
 	    int token_result = generate_gcal_jwt((char*) getenv("GOOGLE_SERVICE_EMAIL"), (char*) getenv("GOOGLE_PRIVKEY"), TOKEN_BUFSIZE, cal->token_buf);
 	    if (token_result) {
 	        LOG(PRI_ERR, "failed to generate jwt\n"); fflush(stdout);
-	        _exit(0);
+	        return NULL;
 	    } // error!!
 
 	    LOG(PRI_INF, "successfully generated jwt\n"); fflush(stdout);
@@ -82,14 +82,18 @@ void* update_events_async(void* data_vp) {
 	    free(token_redeem_payload);
 	    if (!token_redeem_fp) { /* failed to exec -  yikes! */
 	        LOG(PRI_ERR, "failed to exec token redeem\n"); fflush(stdout);
-	        _exit(0);
+	        return NULL;
 	    }
 	    LOG(PRI_INF, "redeemed google oauth token\n"); fflush(stdout);
 
 	    const uint32_t token_resp_bufsize = 2048;
 	    char* token_resp_buf = (char*) malloc(token_resp_bufsize * sizeof(char));
 	    fgets(token_resp_buf, token_resp_bufsize, token_redeem_fp);
-
+		int token_redeem_status = pclose(token_redeem_fp);
+		if (token_redeem_status) {
+		    LOG(PRI_ERR, "token redeem exit_code=%d\n", token_redeem_status); fflush(stdout);
+			return NULL;
+		}
 
 	    cJSON* token_resp_j = cJSON_Parse(token_resp_buf);
 	    free(token_resp_buf);
@@ -126,12 +130,17 @@ void* update_events_async(void* data_vp) {
 	char events_req_cmdbuf[2048];
 	snprintf(events_req_cmdbuf, 2048, "curl -sH 'Authorization: Bearer %s' '%s'", cal->token_buf, events_req_url);
 	FILE* events_req_fp = popen(events_req_cmdbuf, "r");
-	if (!events_req_fp) { LOG(PRI_ERR, "failed to exec events fetch\n"); _exit(0); }
+	if (!events_req_fp) { LOG(PRI_ERR, "failed to exec events fetch\n"); return NULL; }
 
 	const uint32_t EVENTS_BUF_SIZE = 1000000; // todo: wow i really dont even know if this'll be long enough;
 	char events_buf[EVENTS_BUF_SIZE];
 	memset(events_buf, 0, EVENTS_BUF_SIZE);
 	fread(events_buf, sizeof(char), EVENTS_BUF_SIZE, events_req_fp);
+	int events_req_exitcode = pclose(events_req_fp);
+	if (events_req_exitcode) {
+	    LOG(PRI_ERR, "events_req exitcode=%d\n", events_req_exitcode);
+		return NULL;
+	}
 
 	cJSON* event_lst = cJSON_GetObjectItem(cJSON_Parse(events_buf), "items");
 

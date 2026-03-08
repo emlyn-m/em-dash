@@ -58,15 +58,16 @@ void* update_weather_async(void* data_vp) {
 	cJSON* wmo_codes = cJSON_GetObjectItem(hourly, "weather_code");
 	cJSON* weather_times = cJSON_GetObjectItem(hourly, "time");
 
-	if (!(weather && hourly && temps && rain_probs && weather_times)) {
+	if (!(weather && hourly && temps && rain_probs && wmo_codes && weather_times)) {
 	    LOG(PRI_ERR, "parse weather, json <%s>\n", weather_buf);
 	    fflush(stdout);
 	    return NULL;
 	}
 
 	int time_offset = 0;
+	int weather_times_size = cJSON_GetArraySize(weather_times);
 
-	while ( parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset+1)->valuestring) < ctime ) { time_offset++; }
+	while ( time_offset + 1 < weather_times_size && parse_time_offset(cJSON_GetArrayItem(weather_times, time_offset+1)->valuestring) < ctime ) { time_offset++; }
 	uint32_t event_idx = 0;
 	while (event_idx < weather_data->num_weather_events) {
 

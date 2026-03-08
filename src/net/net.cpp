@@ -30,6 +30,7 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (connect(sockfd,res->ai_addr,res->ai_addrlen)) {
 	    LOG(PRI_ERR, "error in connect\n"); fflush(stdout);
+	    close(sockfd);
 	    return 1;
 	};
 
@@ -42,9 +43,13 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
 	const uint32_t read_buf_maxsize = 4096;
 	char buf[read_buf_maxsize]; memset(buf, 0, read_buf_maxsize);
 
-	if (!recv(sockfd, buf, read_buf_maxsize, 0)) {
+	ssize_t recv_len = recv(sockfd, buf, read_buf_maxsize, 0);
+	if (recv_len < 0) {
+	    LOG(PRI_ERR, "recv error\n"); fflush(stdout);
+	    close(sockfd); return 1;
+	} else if (recv_len == 0) {
 	    LOG(PRI_ERR, "read 0 bytes :(\n"); fflush(stdout);
-	};
+	}
 	time_t time_end = std::time(NULL);
 	*pingp = (time_end - time_start);
 

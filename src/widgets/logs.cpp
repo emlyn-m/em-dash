@@ -29,7 +29,7 @@ void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
     size_t logbuf_size = 200*nlogs;
     char* logbuf = (char*) malloc(logbuf_size); memset(logbuf, 0, logbuf_size);
     char* logbuf_wp = logbuf + snprintf(logbuf, 10, "echo -e \'");
-    for (int i=0; i < nlogs; i++) { logbuf_wp += snprintf(logbuf_wp, logbuf_size-(logbuf_wp - logbuf) - 34, "\x1b[1m\x1b[38;5;%dm %s \x1b[0m %s\n", logs[i].pri_color, logs[i].prefix, logs[i].buf); }
+    for (int i=0; i < nlogs; i++) { logbuf_wp += snprintf(logbuf_wp, (size_t) MAX(0, (ptrdiff_t)logbuf_size - (logbuf_wp - logbuf) - 34), "\x1b[1m\x1b[38;5;%dm %s \x1b[0m %s\n", logs[i].pri_color, logs[i].prefix, logs[i].buf); }
     for (int i=10; i < (int) (logbuf_wp - logbuf); i++) {
         if (logbuf[i] == '\'') { logbuf[i] = '`'; }
     }

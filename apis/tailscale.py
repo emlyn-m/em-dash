@@ -147,7 +147,7 @@ async def execcheck(session: aiohttp.ClientSession, url: str, handler: Callable[
 	try:
 		async with session.get(url, ssl=ssl.SSLContext()) as rsp:
 			service = handler(rsp, await rsp.text())
-	except aiohttp.client_exceptions.ClientConnectorDNSError, aiohttp.client_exceptions.InvalidUrlClientError:
+	except (aiohttp.client_exceptions.ClientConnectorDNSError, aiohttp.client_exceptions.InvalidUrlClientError):
 		service = handler(None, '')
 
 	#print(f'     \x1b[48;5;030m INFO \x1b[0m  Found service {service.name} - {service.status} per {url} {f"({service.details})" if service.details else ""}')

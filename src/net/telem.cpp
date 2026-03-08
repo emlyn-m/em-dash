@@ -76,6 +76,7 @@ void* update_telem_async(void* data_vp) {
 	if (read_battery_fp) {
 	    fscanf(read_battery_fp, "%d", &(telem->battery));
 		LOG(PRI_DBG, "read battery %d\n", telem->battery);
+		pclose(read_battery_fp);
 	}
 
 	char current_cmdbuf[64] = { 0 };
@@ -84,6 +85,7 @@ void* update_telem_async(void* data_vp) {
 	if (read_current_fp) {
 	    fscanf(read_current_fp, "%d", &(telem->current));
 		LOG(PRI_DBG, "read current %d\n", telem->current);
+		pclose(read_current_fp);
 	}
 
 	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
@@ -94,6 +96,7 @@ void* update_telem_async(void* data_vp) {
 		    LOG(PRI_WRN, "wifi disconnected!\n");
 			telem->wifi_strength = 1;
 		}
+		pclose(read_wifi_fp);
 	}
 
 	telem->last_update = time(NULL);

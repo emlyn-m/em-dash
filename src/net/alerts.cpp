@@ -42,10 +42,17 @@ void* update_alerts_async(void* data_vp) {
 		alert_ev_t* alert_obj = alert_data->alerts[i];
 		cJSON* alert_jobj = cJSON_GetArrayItem(alerts, i);
 
-		strncpy(alert_obj->category, CATEGORY_NAMES[cJSON_GetObjectItem(alert_jobj, "msg_class")->valueint], 31);
-	    strncpy(alert_obj->msg, cJSON_GetObjectItem(alert_jobj, "msg_body")->valuestring, 2047);
-	    alert_obj->time = cJSON_GetObjectItem(alert_jobj, "msg_timestamp")->valueint;
-		alert_obj->severity = cJSON_GetObjectItem(alert_jobj, "msg_sev")->valueint;
+		cJSON* msg_class_j     = cJSON_GetObjectItem(alert_jobj, "msg_class");
+		cJSON* msg_body_j      = cJSON_GetObjectItem(alert_jobj, "msg_body");
+		cJSON* msg_timestamp_j = cJSON_GetObjectItem(alert_jobj, "msg_timestamp");
+		cJSON* msg_sev_j       = cJSON_GetObjectItem(alert_jobj, "msg_sev");
+		if (!msg_class_j || !msg_body_j || !msg_timestamp_j || !msg_sev_j) {
+		    LOG(PRI_WRN, "alert missing required fields, skipping\n"); fflush(stdout); continue;
+		}
+		strncpy(alert_obj->category, CATEGORY_NAMES[msg_class_j->valueint], 31);
+	    strncpy(alert_obj->msg, msg_body_j->valuestring, 2047);
+	    alert_obj->time = msg_timestamp_j->valueint;
+		alert_obj->severity = msg_sev_j->valueint;
 	    LOG(PRI_DBG, "found %s alert \"%s\" (sev %d, sent at %ld)\n", alert_obj->category, alert_obj->msg, alert_obj->severity, (unsigned long) alert_obj->time);
 	    fflush(stdout);
 	}

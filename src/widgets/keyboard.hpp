@@ -36,3 +36,7 @@
 #define GOTO_KB_CAPS KB_LAYER_CAPS+1
 #define GOTO_KB_NUMS KB_LAYER_NUMS+1
 #define GOTO_KB_SPCL KB_LAYER_SPCL+1
+
+// Kindle PW3 touchscreen EV_ABS axis codes (not in SDK headers)
+#define KINDLE_ABS_X 53
+#define KINDLE_ABS_Y 54

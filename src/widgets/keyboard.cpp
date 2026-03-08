@@ -66,11 +66,11 @@ void read_keyboard(kb_data_t* data) {
 		} else if (n_read != sizeof(ev)) { errno = EIO; continue; }
 
 		if (ev.type == EV_ABS) {
-			if (ev.code == 53) {
+			if (ev.code == KINDLE_ABS_X) {
 				// abs-x
 				if ((ev.value < Y_MIN) || (ev.value > Y_MAX)) { data->y = -1; continue; }
 				data->y = (((double) ev.value) - Y_MIN) / (Y_MAX - Y_MIN);
-			} else if (ev.code == 54) {
+			} else if (ev.code == KINDLE_ABS_Y) {
 				// abs-y
 				if ((ev.value < X_MIN) || (ev.value > X_MAX)) { data->x = -1; continue; }
 				data->x = 1 - ((((double) ev.value) - X_MIN) / (X_MAX - X_MIN));

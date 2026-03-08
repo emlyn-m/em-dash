@@ -82,14 +82,16 @@ async def lifespan(app: fastapi.FastAPI):
 	app.state.xmpp_listener = xmpp_listener
 	app.state.msg_archive = []
 
+	listener_task = None
 	yield
 
 	print('     \x1b[48;5;030m INFO \x1b[0m  saying goodnight')
-	listener_task.cancel()
-	try:
-		await listener_task
-	except asyncio.CancelledError:
-		pass
+	if listener_task is not None:
+		listener_task.cancel()
+		try:
+			await listener_task
+		except asyncio.CancelledError:
+			pass
 	xmpp_listener.disconnect()
 router = fastapi.APIRouter()
 

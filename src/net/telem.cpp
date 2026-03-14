@@ -21,6 +21,7 @@ void _update_telem_async_devices(telem_t* telem) {
 	char device_buf[DEVICE_BUFSIZE]; memset(device_buf, 0, DEVICE_BUFSIZE);
 	if ( std::fread(device_buf, sizeof(char), DEVICE_BUFSIZE, device_fp) == DEVICE_BUFSIZE ) {
 	    LOG(PRI_ERR, "read filled device_buf - end: <%s>\n", device_buf + DEVICE_BUFSIZE - 10); fflush(stdout);
+		pclose(device_fp);
 	    return;
 	};
 	int device_req_status = pclose(device_fp);
@@ -50,6 +51,7 @@ void _update_telem_async_services(telem_t* telem) {
 	char service_buf[SERVICE_BUFSIZE]; memset(service_buf, 0, SERVICE_BUFSIZE);
 	if ( std::fread(service_buf, sizeof(char), SERVICE_BUFSIZE, service_fp) == SERVICE_BUFSIZE ) {
 	    LOG(PRI_ERR, "read filled service_buf - end: <%s>\n", service_buf + SERVICE_BUFSIZE - 10); fflush(stdout);
+		pclose(service_fp);
 	    return;
 	};
 	int service_req_status = pclose(service_fp);

@@ -48,9 +48,11 @@ void* update_weather_async(void* data_vp) {
 	char* weather_buf = (char*) malloc(WEATHER_SIZE * sizeof(char)); memset(weather_buf, 0, WEATHER_SIZE);
 	if ( fread(weather_buf, sizeof(char), WEATHER_SIZE, weather_fp) == WEATHER_SIZE ) {
 	    LOG(PRI_ERR, "read filled buffer of weather_req - end: <%s>\n", weather_buf + WEATHER_SIZE - 10); fflush(stdout);
+		pclose(weather_fp);
 	    free(weather_buf);
 	    return NULL;
 	};
+	pclose(weather_fp);
 	cJSON* weather = cJSON_Parse(weather_buf);
 	cJSON* hourly = cJSON_GetObjectItem(weather, "hourly");
 	cJSON* temps = cJSON_GetObjectItem(hourly, "temperature_2m");

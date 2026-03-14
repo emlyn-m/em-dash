@@ -20,6 +20,7 @@ void* update_alerts_async(void* data_vp) {
 	char alert_buf[ALERT_BUFSIZE]; memset(alert_buf, 0, ALERT_BUFSIZE);
 	if ( std::fread(alert_buf, sizeof(char), ALERT_BUFSIZE, alert_fp) == ALERT_BUFSIZE ) {
 	    LOG(PRI_ERR, "read filled alert_buf - end: <%s>\n", alert_buf + ALERT_BUFSIZE - 10); fflush(stdout);
+		pclose(alert_fp);
 	    return NULL;
 	};
 	int alert_req_status = pclose(alert_fp);

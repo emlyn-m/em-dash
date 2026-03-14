@@ -34,7 +34,7 @@ void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data) {
         if (logbuf[i] == '\'') { logbuf[i] = '`'; }
     }
     snprintf(logbuf_wp, 34, "\' | nc %s %ld", getenv("LOG_IP"), atol(getenv("LOG_PORT")));
-    popen(logbuf, "r");
+    pclose(popen(logbuf, "r"));
     free(logbuf);
 }
 

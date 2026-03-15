@@ -30,9 +30,11 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (connect(sockfd,res->ai_addr,res->ai_addrlen)) {
 	    LOG(PRI_ERR, "error in connect\n"); fflush(stdout);
+		freeaddrinfo(res);
 	    close(sockfd);
 	    return 1;
 	};
+	freeaddrinfo(res);
 
 	const uint32_t header_size = 2048;
 	char header[header_size];
@@ -56,7 +58,7 @@ int http_get(char* hostname, char* path, int port, char** out, time_t* pingp) {
 
 	char* body_offset = strstr(buf, "\r\n\r\n") + 4*sizeof(char);
 	int body_length = strlen(body_offset);
-	if (!(*out = (char*) malloc(sizeof(char) * (body_length + 1)))) {
+	if (!(*out = (char*) realloc(*out, sizeof(char) * (body_length + 1)))) {
 	    LOG(PRI_ERR, "failed to realloc output buffer to size %d\n", body_length + 1); fflush(stdout);
 	    return 1;
 	};

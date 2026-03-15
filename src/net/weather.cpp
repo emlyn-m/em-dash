@@ -63,6 +63,8 @@ void* update_weather_async(void* data_vp) {
 	if (!(weather && hourly && temps && rain_probs && wmo_codes && weather_times)) {
 	    LOG(PRI_ERR, "parse weather, json <%s>\n", weather_buf);
 	    fflush(stdout);
+		if (weather) { cJSON_Delete(weather); }
+		free(weather_buf);
 	    return NULL;
 	}
 
@@ -84,7 +86,7 @@ void* update_weather_async(void* data_vp) {
 	    event_idx++;
 	}
 
-	cJSON_free(weather);
+	cJSON_Delete(weather);
 	free(weather_buf);
 	weather_data->last_update = ctime;
 	return NULL;

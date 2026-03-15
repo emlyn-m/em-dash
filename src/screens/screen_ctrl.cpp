@@ -14,10 +14,8 @@
 #include <unistd.h>
 
 
-#define DISABLE_BRIGHTNESS 0
 #define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"
-// #define BRIGHTNESS_SCALE 4095
-#define BRIGHTNESS_SCALE 200
+#define BRIGHTNESS_SCALE 200  // default 4095
 
 
 void exit_handler(GtkButton* _b, GdkEvent* _e, void* _d) {
@@ -25,7 +23,7 @@ void exit_handler(GtkButton* _b, GdkEvent* _e, void* _d) {
 }
 
 float get_brightness() {
-    if (DISABLE_BRIGHTNESS) { return 0; }
+    if (getenv("LOCAL_BUILD")) { return 0; }
 	FILE* bfile = fopen(BRIGHTNESS_SYSFILE, "r");
 	char brightness[32];
 	fgets(brightness, 31, bfile);
@@ -35,7 +33,7 @@ float get_brightness() {
 }
 
 void set_brightness(GtkButton* _b, GdkEvent* _e, void* brightness) {
-    if (DISABLE_BRIGHTNESS) { return; }
+    if (getenv("LOCAL_BUILD")) { return; }
 	char brightness_s[32];
 	memset(brightness_s, 0, 32);
 

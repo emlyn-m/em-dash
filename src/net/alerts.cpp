@@ -50,6 +50,7 @@ void* update_alerts_async(void* data_vp) {
 	    LOG(PRI_DBG, "found %s alert \"%s\" (sev %d, sent at %ld)\n", alert_obj->category, alert_obj->msg, alert_obj->severity, (unsigned long) alert_obj->time);
 	    fflush(stdout);
 	}
+	cJSON_Delete(alerts);
 
 	alert_data->last_update = now;
 	return NULL;

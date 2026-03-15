@@ -104,12 +104,12 @@ void* update_events_async(void* data_vp) {
 
 	    cJSON* expires_in_j   = cJSON_GetObjectItem(token_resp_j, "expires_in");
 	    cJSON* access_token_j = cJSON_GetObjectItem(token_resp_j, "access_token");
-	    if (!expires_in_j || !access_token_j) { LOG(PRI_ERR, "missing fields in token response\n"); fflush(stdout); cJSON_free(token_resp_j); return NULL; }
+	    if (!expires_in_j || !access_token_j) { LOG(PRI_ERR, "missing fields in token response\n"); fflush(stdout); cJSON_Delete(token_resp_j); return NULL; }
 
 	    cal->token_exp = ctime + expires_in_j->valueint;
 	    strcpy(cal->token_buf, access_token_j->valuestring);
 
-	    cJSON_free(token_resp_j);
+	    cJSON_Delete(token_resp_j);
 	}
 
 	LOG(PRI_INF, "existing valid token found\n"); fflush(stdout);
@@ -150,7 +150,7 @@ void* update_events_async(void* data_vp) {
 	cJSON* events_j = cJSON_Parse(events_buf);
 	if (!events_j) { LOG(PRI_ERR, "failed to parse events response\n"); fflush(stdout); return NULL; }
 	cJSON* event_lst = cJSON_GetObjectItem(events_j, "items");
-	if (!event_lst) { LOG(PRI_ERR, "missing items in events response\n"); fflush(stdout); cJSON_free(events_j); return NULL; }
+	if (!event_lst) { LOG(PRI_ERR, "missing items in events response\n"); fflush(stdout); cJSON_Delete(events_j); return NULL; }
 
 	for (int i=0; i < MIN(cJSON_GetArraySize(event_lst), MAX_CAL_EVENTS); i++) {
 	    cJSON* event_obj = cJSON_GetArrayItem(event_lst, i);
@@ -176,7 +176,7 @@ void* update_events_async(void* data_vp) {
 
 	cal->num_events = MIN(cJSON_GetArraySize(event_lst), MAX_CAL_EVENTS);
 	cal->last_updated = time(NULL);
-	cJSON_free(events_j);
+	cJSON_Delete(events_j);
 	return NULL;
 }
 

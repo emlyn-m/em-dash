@@ -39,6 +39,7 @@ void _update_telem_async_devices(telem_t* telem) {
 	    LOG(PRI_DBG, "found device %s (%s): %s (%s)\n", telem->devices[i]->alias, telem->devices[i]->name, telem->devices[i]->online ? "online" : "offline", telem->devices[i]->online ? telem->devices[i]->ip : "-");
 	    fflush(stdout);
 	}
+	cJSON_Delete(devices);
 }
 
 void _update_telem_async_services(telem_t* telem) {
@@ -67,6 +68,7 @@ void _update_telem_async_services(telem_t* telem) {
 	    LOG(PRI_INF, "found service %s: %s \n", telem->services[i]->name, telem->services[i]->status);
 	    fflush(stdout);
 	}
+	cJSON_Delete(services);
 }
 
 void* update_telem_async(void* data_vp) {

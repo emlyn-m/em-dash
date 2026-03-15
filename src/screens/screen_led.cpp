@@ -61,7 +61,7 @@ struct _spawn_slider_args { tuya_led_t* led; kindle_slider_t** sliders; };
 void _update_values_from_buf(char* buf, struct _spawn_slider_args* args) {
     cJSON* values_j = cJSON_Parse(buf);
     cJSON* dps = cJSON_GetObjectItem(values_j, "dps");
-    if (!dps) { cJSON_free(values_j); return; }
+    if (!dps) { cJSON_Delete(values_j); return; }
 
     cJSON *dp20, *dp24;
     if ((dp20 = cJSON_GetObjectItem(dps, "20"))) {
@@ -74,7 +74,7 @@ void _update_values_from_buf(char* buf, struct _spawn_slider_args* args) {
         args->sliders[2]->value = ((float) args->led->val) / 1000.0; gtk_widget_queue_draw(args->sliders[2]->drawing_area);
     }
 
-    cJSON_free(values_j);
+    cJSON_Delete(values_j);
 }
 void* _spawn_led_strip_thread(void* args_vp) {
     struct _spawn_slider_args* args = (struct _spawn_slider_args*) args_vp;

@@ -90,13 +90,7 @@ void* _spawn_led_strip_thread(void* args_vp) {
         else if (status == ERR_SOCK_CLOSE) { LOG(PRI_ERR, "\nsocket closed!\n"); }
         else { LOG(PRI_ERR, "error code %d in tuya_recv_msg!\n", status); }
     } else {
-        LOG(PRI_INF, "rx msg %d\n", msg.seqno);
-        printf("      command=%d\n", msg.command);
-        printf("      retcode=%d\n", msg.retcode);
         if (msg.payload && msg.payload_len > 0) {
-            printf("      payload (%zu bytes)=", msg.payload_len); fflush(stdout);
-            for (size_t i=0; i < msg.payload_len; i++) { printf("%02x", msg.payload[i]); }
-            printf("\n      decoded=%s\n", msg.payload);
             _update_values_from_buf((char*) msg.payload, args);
         }
     }
@@ -110,13 +104,7 @@ void* _spawn_led_strip_thread(void* args_vp) {
             else { LOG(PRI_ERR, "error code %d in tuya_recv_msg!\n", status); break; }
         }
         if (msg.command == COMMAND_STATUS) {
-            LOG(PRI_INF, "rx msg %d\n", msg.seqno);
-            printf("      command=%d\n", msg.command);
-            printf("      retcode=%d\n", msg.retcode);
             if (msg.payload && msg.payload_len > 0) {
-                printf("      payload (%zu bytes)=", msg.payload_len); fflush(stdout);
-                for (uint32_t i=0; i < msg.payload_len; i++) { printf("%02x", msg.payload[i]); }
-                printf("\n      decoded=%s\n", msg.payload);
                 _update_values_from_buf((char*) msg.payload, args);
             }
         }
@@ -130,7 +118,7 @@ void* _spawn_led_strip_thread(void* args_vp) {
 struct _tuya_power_btn_args { tuya_led_t* led; GtkWidget* widget; };
 gboolean power_button_update(void* data_vp) {
     struct _tuya_power_btn_args* data = (struct _tuya_power_btn_args*) data_vp;
-    gtk_label_set_text(GTK_LABEL(data->widget), data->led->power ? "/running" : "/paused");
+    gtk_label_set_text(GTK_LABEL(data->widget), data->led->failures ? "!ECONN" : data->led->power ? "/running" : "/paused");
     return TRUE;
 }
 
@@ -170,7 +158,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 
 	gtk_table_add(table, 7, 9, 0, 1, button_widget((char*) "۶ৎ₊˚⊹⋆ৎ", set_ctrl_handler,    ctrl_data));
 
-	kindle_slider_t* hue_slider = kindle_slider_new(led, NULL, &led_hue_callback);
+	kindle_slider_t* hue_slider = kindle_slider_new(led, NULL, &led_hue_callback, 0);
 	gtk_table_add(table, 0, 1, 1, 6, hue_slider->drawing_area);
 	struct _img_src_dat* hue_dat = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
 	gtk_table_add(table, 0, 1, 6, 7, image_widget(&hue_dat->ref));
@@ -179,7 +167,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	hue_dat->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, hue_dat);
 
-	kindle_slider_t* sat_slider = kindle_slider_new(led, NULL, &led_sat_callback);
+	kindle_slider_t* sat_slider = kindle_slider_new(led, NULL, &led_sat_callback, 0);
 	gtk_table_add(table, 1, 2, 1, 6, sat_slider->drawing_area);
 	struct _img_src_dat* sat_dat = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
 	gtk_table_add(table, 1, 2, 6, 7, image_widget(&sat_dat->ref));
@@ -188,7 +176,7 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
 	sat_dat->flag = 0;
 	g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")), (GSourceFunc) _img_set_src_helper, sat_dat);
 
-	kindle_slider_t* val_slider = kindle_slider_new(led, NULL, &led_val_callback);
+	kindle_slider_t* val_slider = kindle_slider_new(led, NULL, &led_val_callback, 0);
 	gtk_table_add(table, 2, 3, 1, 6, val_slider->drawing_area);
 	struct _img_src_dat* val_dat = (struct _img_src_dat*) malloc(sizeof(struct _img_src_dat));
 	gtk_table_add(table, 2, 3, 6, 7, image_widget(&val_dat->ref));
@@ -207,7 +195,8 @@ GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkBu
     pthread_create(&thread_id, NULL, _spawn_led_strip_thread, args);
     pthread_detach(thread_id);
 
-	gtk_table_add(table, 3, 9, 1, 7, model_init());
+	gtk_table_add(table, 3, 9, 1, 7, led_graph());
+	
 	return table;
 }
 

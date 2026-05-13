@@ -41,6 +41,7 @@ typedef struct tuya_led {
     int sock;
     uint32_t random_id;
     unsigned int seqno;
+    int failures;
 } tuya_led_t;
 
 typedef struct _tuya_msg {

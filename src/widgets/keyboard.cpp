@@ -109,7 +109,7 @@ void read_keyboard(kb_data_t* data) {
 void* _gtk_kb_redraw(void* data) {
     GtkWidget* ref = (GtkWidget*) data;
     fflush(stdout); usleep(500 * 1000);
-    gtk_widget_queue_draw(ref);
+    g_idle_add((GSourceFunc) gtk_widget_queue_draw, ref);
     return NULL;
 }
 void* _keyboard_listener_async(void* data_vp) {
@@ -146,7 +146,6 @@ void keyboard_onpress_cb(GtkButton* _button, GdkEvent* _event, void* data_vp) {
 }
 
 void append_keycode_lut(kb_lut_t** kb_lut, int layer, double x, double y, double w, double h, char value) {
-//	printf("\x1b[38;5;139m\x1b[1mDEBUG:\x1b[0m loading key <%c> in range (%lf, %lf) to (%lf, %lf) on layer %d\n", value, x, y, x+w, y+h, layer);
 	kb_lut_t* lut = (kb_lut_t*) malloc(sizeof(kb_lut_t));
 	if (!lut) { LOG(PRI_ERR, "failed to alloc memory\n"); fflush(stdout); }
 	if (*kb_lut) {

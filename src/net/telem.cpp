@@ -15,7 +15,6 @@ void _update_telem_async_devices(telem_t* telem) {
 
    	char device_req_cmdbuf[1024]; memset(device_req_cmdbuf, 0, 1024);
 	snprintf(device_req_cmdbuf, 1024, "curl -s %s", getenv("TELEM_DEVICE_ENDPOINT"));
-	LOG(PRI_INF, "using command \"%s\"\n", device_req_cmdbuf); fflush(stdout);
 	FILE* device_fp = popen(device_req_cmdbuf, "r");
 	if (!device_fp) { LOG(PRI_ERR, "failed to fetch devices\n"); fflush(stdout); return; }
 	char device_buf[DEVICE_BUFSIZE]; memset(device_buf, 0, DEVICE_BUFSIZE);
@@ -30,13 +29,11 @@ void _update_telem_async_devices(telem_t* telem) {
 
 	cJSON* devices = cJSON_Parse(device_buf);
 	telem->n_devices = cJSON_GetArraySize(devices);
-	LOG(PRI_INF, "found %d devices\n", telem->n_devices); fflush(stdout);
 	for (int i=0; i < telem->n_devices; i++) {
 	    strncpy(telem->devices[i]->name, cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "name")->valuestring, 63);
 	    strncpy(telem->devices[i]->alias, cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "alias")->valuestring, 63);
 	    strncpy(telem->devices[i]->ip, cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "ip")->valuestring, 31);
 	    telem->devices[i]->online = cJSON_GetObjectItem(cJSON_GetArrayItem(devices, i), "online")->valueint;
-	    LOG(PRI_DBG, "found device %s (%s): %s (%s)\n", telem->devices[i]->alias, telem->devices[i]->name, telem->devices[i]->online ? "online" : "offline", telem->devices[i]->online ? telem->devices[i]->ip : "-");
 	    fflush(stdout);
 	}
 	cJSON_Delete(devices);
@@ -61,11 +58,9 @@ void _update_telem_async_services(telem_t* telem) {
 
 	cJSON* services = cJSON_Parse(service_buf);
 	telem->n_services = cJSON_GetArraySize(services);
-	LOG(PRI_INF, "found %d services\n", telem->n_services); fflush(stdout);
 	for (int i=0; i < telem->n_services; i++) {
 	    strncpy(telem->services[i]->name, cJSON_GetObjectItem(cJSON_GetArrayItem(services, i), "name")->valuestring, 63);
 	    strncpy(telem->services[i]->status, cJSON_GetObjectItem(cJSON_GetArrayItem(services, i), "status")->valuestring, 63);
-	    LOG(PRI_INF, "found service %s: %s \n", telem->services[i]->name, telem->services[i]->status);
 	    fflush(stdout);
 	}
 	cJSON_Delete(services);
@@ -79,7 +74,6 @@ void* update_telem_async(void* data_vp) {
    	FILE* read_battery_fp = popen(battery_cmdbuf, "r");
 	if (read_battery_fp) {
 	    fscanf(read_battery_fp, "%d", &(telem->battery));
-		LOG(PRI_DBG, "read battery %d\n", telem->battery);
 		pclose(read_battery_fp);
 	}
 
@@ -88,16 +82,13 @@ void* update_telem_async(void* data_vp) {
 	FILE* read_current_fp = popen(current_cmdbuf, "r");
 	if (read_current_fp) {
 	    fscanf(read_current_fp, "%d", &(telem->current));
-		LOG(PRI_DBG, "read current %d\n", telem->current);
 		pclose(read_current_fp);
 	}
 
 	FILE* read_wifi_fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
 	if (read_wifi_fp) {
 	    if (fscanf(read_wifi_fp, "  signal: %d dBm", &(telem->wifi_strength)) > 0) {
-			LOG(PRI_DBG, "read wifi %d\n", telem->wifi_strength);
 		} else {
-		    LOG(PRI_WRN, "wifi disconnected!\n");
 			telem->wifi_strength = 1;
 		}
 		pclose(read_wifi_fp);
@@ -121,7 +112,6 @@ void* _update_telem_async_net(void* data_vp) {
     if (telem->num_pings >= 2) {
         telem->jitter += abs((float) (telem->ping_logs[telem->ping_offset]) - telem->ping_logs[(telem->ping_offset - 1) % telem->num_pings]);
     }
-    LOG(PRI_DBG, "ping of duration %ldms (%d total)\n", duration, telem->num_pings);
 
 
 	telem->last_update = time(NULL);
@@ -137,13 +127,10 @@ gboolean update_telem_async(gpointer* data_vp) {
 	    return TRUE;  // skipping
 	}
 	telem->last_update = now;
-	LOG(PRI_DBG, "begin telemetry async update\n"); fflush(stdout);
-
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_telem_async, data_vp);
 	pthread_detach(thread_id);
 
-	LOG(PRI_DBG, "end telemetry async update\n"); fflush(stdout);
 	return TRUE;
 }
 
@@ -154,12 +141,10 @@ gboolean update_telem_async_net(gpointer* data_vp) {
 	    return TRUE;  // skipping
 	}
 	telem->last_update_net = now;
-	LOG(PRI_DBG, "begin telemetry network update\n"); fflush(stdout);
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, _update_telem_async_net, data_vp);
 	pthread_detach(thread_id);
 
-	LOG(PRI_DBG, "end telemetry network update\n"); fflush(stdout);
 	return TRUE;
 }

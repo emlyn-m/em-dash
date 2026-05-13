@@ -33,6 +33,7 @@ void tuya_led_new(
     led->sat = 0;
     led->val = 0;
 
+    led->failures = 1;
     led->seqno = 1;
     led->sock = 0;
     srand(time(0));
@@ -42,7 +43,6 @@ void tuya_led_new(
 void tuya_msg_free(tuya_msg_t* msg) { if (msg && msg->payload) { free(msg->payload); msg->payload = NULL; } }
 
 int _tuya_socket_open(tuya_led_t* led) {
-    LOG(PRI_DBG, "connecting to led socket...\n");
     int status, sock;
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -57,7 +57,6 @@ int _tuya_socket_open(tuya_led_t* led) {
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 
     if ((status = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) { close(sock); return ERR_SOCK_FAIL; }
-    LOG(PRI_DBG, "connection success!\n");
     led->sock = sock;
     return 0;
 }
@@ -74,7 +73,6 @@ static uint32_t _crc32(unsigned char *buf, size_t len) {
 
 unsigned char* _pad(unsigned char* buf, int len, int target_len, int* out_len) {
     int padnum = target_len - len % target_len;
-    LOG(PRI_DBG, "padding %d bytes for a length of %d\n", padnum, len+padnum);
     *out_len = len + padnum;
     unsigned char* output_buf;
     while (!(output_buf = (unsigned char*) malloc(len + padnum))) {};
@@ -103,7 +101,6 @@ int _popen_crypt(unsigned char* pt_buf, int pt_len, unsigned char* key, unsigned
         snprintf(hexbuf+(2*(i+i/30)), 3, "%02x", pt_buf[i]);
     }
     snprintf(cmdbuf, 679, "echo -en '%s' | xxd -r -p -c30 | openssl enc %s -nopad -aes-128-ecb -nosalt -K %016" PRIx64 "%016" PRIx64 " -in /dev/stdin -out /dev/stdout | xxd -p | tr -d \'\\n\'", hexbuf, decrypt ? "-d" : "-e", key_high, key_low);
-    LOG(PRI_DBG, "cmd: <%s>\n", cmdbuf);
     FILE* enc_fp = popen(cmdbuf, "r");
     if (!enc_fp) { return 0; }
 
@@ -113,15 +110,11 @@ int _popen_crypt(unsigned char* pt_buf, int pt_len, unsigned char* key, unsigned
     if (ct_hlen <= 0) {
         LOG(PRI_WRN, "_popen_crypt read 0 bytes\n");
         return 0;
-    } else {
-        LOG(PRI_DBG, "_popen_crypt read %d bytes: ", ct_hlen);
     }
 
     for (int i=0; i < ct_hlen - 1; i+=2) {
         sscanf(ct_hexbuf+i, "%02hhx", &(ct_buf[i / 2]));
-        printf("%02hhx", ct_buf[i / 2]);
     }
-    printf("\n");
     return ct_hlen/2;
 }
 
@@ -195,13 +188,11 @@ void _tuya_generate_header(unsigned char* buf) {
 }
 
 int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
-    printf("\n");
     unsigned char payload[256];
     uint32_t msg_size = snprintf((char*) payload, 256, "{\"gwId\":\"%s\",\"devId\":\"%s\",\"uid\":\"%s\",\"t\":\"%d\"", led->id, led->id, led->id, (int) time(NULL));
     if (dps) { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, ",\"dps\":%s}",  dps ? dps : "{}"); }
     else { msg_size += snprintf((char*) payload + msg_size, 256 - msg_size, "}"); }
 
-    LOG(PRI_DBG, "header (%zu bytes): %s\n", strlen((char*) payload), payload);
     unsigned char header_buf[VERSION_HEADER_SIZE] = { 0 };
     unsigned char* header = header_buf;
     if (!( ( command == COMMAND_QUERY) )) { _tuya_generate_header(header); }
@@ -209,23 +200,21 @@ int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps) {
     uint8_t* encoded = _tuya_payload_encode(led, command, payload, header, &msg_size);
     if (!encoded) { return ERR_ENCODE_FAIL; }
 
-    LOG(PRI_DBG, "encoded (%d bytes): ", msg_size);
-    for (size_t i=0; i < msg_size; i++) { printf("%02x", encoded[i]); }
-    printf("\n");
-
     int success = send(led->sock, encoded, msg_size, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && success <= 0) {
-        LOG(PRI_WRN, "send() in tuya_cmd_send returned %d\n", errno);
         if (errno) {
             int sock_open_status;
-            if (( sock_open_status = _tuya_socket_open(led) )) { LOG(PRI_ERR, "failed to open socket: %d\n", sock_open_status); };
+            if (( sock_open_status = _tuya_socket_open(led) ) && retries == 0) { LOG(PRI_ERR, "failed to open socket: %d\n", sock_open_status); };
         }
         success = send(led->sock, encoded, msg_size, 0);
+        retries++;
     }
-    if (success < 0) { return ERR_SOCK_FAIL; }
+    if (success < 0) { 
+        led->failures++;
+        return ERR_SOCK_FAIL;
+    } else { led->failures = 0; }
 
-    LOG(PRI_INF, "sent %d bytes\n", success);
     free(encoded);
     return 0;
 }
@@ -241,7 +230,6 @@ _tuya_header_t _tuya_header_parse(unsigned char* header_buf, size_t header_size)
     const uint32_t header_len = 16;
     uint32_t prefix; _unpack_u32_be(header_buf, &prefix);
     if (prefix != PREFIX_55AA_VALUE) { LOG(PRI_WRN, "unknown prefix %d\n", prefix); }
-    else { LOG(PRI_DBG, "received 55AA prefix\n"); }
 
     _unpack_u32_be(header_buf+4, &header.seqno);
     _unpack_u32_be(header_buf+8, &header.command);
@@ -267,7 +255,6 @@ void _tuya_payload_decode(tuya_led_t* led, uint32_t expected_command, unsigned c
     else { msg->retcode = -1; }
 
     unsigned char padded[ct_len]; memset(padded, 0, ct_len);
-    LOG(PRI_DBG, "using range %zu to %zu of payload size %zu\n", ct_offset, ct_offset + ct_len, msg->payload_len);
     memcpy(ct, encoded + ct_offset, ct_len);
     if ((msg->payload_len = _decrypt(ct, ct_len, led->key, padded)) <= 0) {
         msg->payload_len = 0;
@@ -280,22 +267,21 @@ void _tuya_payload_decode(tuya_led_t* led, uint32_t expected_command, unsigned c
 
 int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
     const uint32_t BUFSIZE = 1024;
-    printf("\n");
     unsigned char output_buf[BUFSIZE]; memset(output_buf, 0, BUFSIZE);
     const uint32_t min_len = 16 + 4;
 
     int header_len = recv(led->sock, output_buf, min_len, 0);
     int retries = 0;
     while (retries <= MAX_RETRIES && header_len <= 0) {
-        LOG(PRI_WRN, "recv() in tuya_cmd_send returned %d\n", errno);
         if (errno) {
             int sock_open_status;
-            if (( sock_open_status = _tuya_socket_open(led) )) { LOG(PRI_ERR, "failed to open socket: %d\n", sock_open_status); };
+            if (( sock_open_status = _tuya_socket_open(led) ) && retries == 0) { LOG(PRI_ERR, "failed to open socket: %d\n", sock_open_status); };
         }
         header_len = recv(led->sock, output_buf, min_len, 0);
+        retries++;
     }
-    if (header_len < 0) { LOG(PRI_DBG, "rx header failed!\n"); return ERR_SOCK_FAIL; }
-    else if (header_len == 0) { LOG(PRI_DBG, "rx closed\n"); return ERR_SOCK_CLOSE; }
+    if (header_len < 0) { led->failures++; return ERR_SOCK_FAIL; }
+    else if (header_len == 0) { led->failures++; return ERR_SOCK_CLOSE; }
 
     _tuya_header_t header = _tuya_header_parse(output_buf, (size_t) header_len);
     uint32_t remaining = header.total_len - header_len;
@@ -305,21 +291,14 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg) {
         msg->command = header.command;
         msg->payload_len = remaining;
     }
-    LOG(PRI_DBG, "rx %d byte initial: ", header_len);
-    for (int i=0; i < header_len; i++) { printf("%02x", (unsigned char) output_buf[i]); }
-    printf("\n");
 
-    LOG(PRI_DBG, "rx remaining (expecting %u bytes)... ", header.total_len - header_len); fflush(stdout);
     size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
-    if (body_rx < 0) { LOG(PRI_WRN, "\nfailed!\n"); return ERR_SOCK_FAIL; }
-    else if (body_rx == 0) { LOG(PRI_WRN, "\nclosed!\n"); return ERR_SOCK_CLOSE; }
-    printf("%zu bytes: ", body_rx);
-    for (size_t i=0; i < body_rx; i++) { printf("%02x", (unsigned char) (output_buf + header_len)[i]); }
-    printf("\n");
+    if (body_rx < 0) { LOG(PRI_WRN, "\nfailed!\n"); led->failures++; return ERR_SOCK_FAIL; }
+    else if (body_rx == 0) { LOG(PRI_WRN, "\nclosed!\n"); led->failures++; return ERR_SOCK_CLOSE; }
 
     if (msg) {
         msg->payload_len = header.payload_len;
         _tuya_payload_decode(led, expected_command, output_buf, msg);
     }
-    return 0;
+    return led->failures = 0;
 }

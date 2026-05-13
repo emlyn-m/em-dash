@@ -29,6 +29,7 @@ sources = files(
 	'./src/widgets/calendar.cpp',
 	'./src/widgets/image.cpp',
 	'./src/widgets/label.cpp',
+	'./src/widgets/led_graph.cpp',
 	'./src/widgets/tasks.cpp',
 	'./src/widgets/weather.cpp',
 	'./src/widgets/logs.cpp'

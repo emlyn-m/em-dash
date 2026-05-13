@@ -31,8 +31,7 @@ void* update_alerts_async(void* data_vp) {
 	cJSON* alerts = cJSON_Parse(alert_buf);
 	unsigned int rx_alert_count = cJSON_GetArraySize(alerts);
 	alert_data->num_alerts = std::min(alert_data->max_alerts, rx_alert_count);
-	LOG(PRI_INF, "found %d alerts\n", alert_data->num_alerts); fflush(stdout);
-	for (guint i=0; i < alert_data->num_alerts; i++) {
+		for (guint i=0; i < alert_data->num_alerts; i++) {
 		alert_ev_t* alert_obj = alert_data->alerts[i];
 		cJSON* alert_jobj = cJSON_GetArrayItem(alerts, i);
 
@@ -47,7 +46,6 @@ void* update_alerts_async(void* data_vp) {
 	    strncpy(alert_obj->msg, msg_body_j->valuestring, 2047);
 	    alert_obj->time = msg_timestamp_j->valueint;
 		alert_obj->severity = msg_sev_j->valueint;
-	    LOG(PRI_DBG, "found %s alert \"%s\" (sev %d, sent at %ld)\n", alert_obj->category, alert_obj->msg, alert_obj->severity, (unsigned long) alert_obj->time);
 	    fflush(stdout);
 	}
 	cJSON_Delete(alerts);
@@ -64,7 +62,6 @@ gboolean update_alerts_net(gpointer* data_vp) {
 	}
 
 	alert_data->last_update = now;
-	LOG(PRI_INF, "begin alert network update\n"); fflush(stdout);
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, update_alerts_async, data_vp);

@@ -162,6 +162,7 @@ typedef struct TaskData {
 typedef struct KindleSlider {
 	GtkWidget *drawing_area;
 	float value;      // 0.0 to 1.0
+	int invisible;
 	void* data;
 	gboolean dragging;
 	void (*callback_change)(float, void*);
@@ -191,6 +192,34 @@ typedef struct kb_data {
 	void(*on_enter)(struct kb_data* data);
 } kb_data_t;
 
+typedef struct graph_point {
+    GtkWidget* ref;
+    GtkWidget* drawref;
+    kindle_slider_t* sliderref;
+    float* v;
+    float _v_h;
+    float _v_s;
+    float _v_v;
+    float _v_tmp;
+    time_t t;
+} graph_point_t;
+typedef struct led_graph_data {
+    GtkWidget* ref;
+    GtkWidget* drawref;
+    GtkWidget* label_a;
+    GtkWidget* label_r;
+    GtkWidget* label_g;
+    GtkWidget* label_b;
+
+    graph_point_t* points;
+    int last_w = 0;
+    int last_h = 0;
+} led_graph_data_t;
+#define ww(ref) ref->allocation.width
+#define wh(ref) ref->allocation.height
+#define refw(gdata) gdata->ref->allocation.width
+#define refh(gdata) gdata->ref->allocation.height
+
 void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data);
 
 GtkWidget* time_widget();
@@ -208,6 +237,8 @@ void set_keyboard(gboolean show);
 void read_keyboard(kb_data_t* data);
 GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*, char), void (*onend)(kb_data_t*));
 void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
-kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*));
+void crosshatch_bb(cairo_t* cr, int width, int height, int spacing, float (*getlevel)(float, float));
+kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*), int invisible);
 GtkWidget* model_init();
 GtkWidget* log_widget();
+GtkWidget* led_graph();

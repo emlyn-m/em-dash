@@ -8,7 +8,7 @@
 
 #define SCALE 1
 
-#define FONT_8  "Geist Mono, 4"
+#define FONT_8 "Geist Mono, 4"
 #define FONT_10 "Geist Mono, 5"
 #define FONT_12 "Geist Mono, 6"
 #define FONT_14 "Geist Mono, 7"
@@ -18,7 +18,7 @@
 #define FONT_30 "Geist Mono, 15"
 #define FONT_40 "Geist Mono, Bold 20"
 
-#define FONT_BOLD_8  "Geist Mono, Bold 4"
+#define FONT_BOLD_8 "Geist Mono, Bold 4"
 #define FONT_BOLD_10 "Geist Mono, Bold 5"
 #define FONT_BOLD_12 "Geist Mono, Bold 6"
 #define FONT_BOLD_14 "Geist Mono, Bold 7"
@@ -27,218 +27,226 @@
 #define FONT_BOLD_20 "Geist Mono, Bold 10"
 #define FONT_BOLD_30 "Geist Mono, Bold 15"
 
-
 typedef struct ClockData {
-	GtkWidget* month_widget;
-	GtkWidget* day_widget;
-	GtkWidget* time_widget;
-	GtkWidget* ampm_widget;
+  GtkWidget *month_widget;
+  GtkWidget *day_widget;
+  GtkWidget *time_widget;
+  GtkWidget *ampm_widget;
 } clock_data_t;
 typedef struct DeviceData {
-	char* name;
-	char* alias;
-	char* ip;
-	gboolean online;
+  char *name;
+  char *alias;
+  char *ip;
+  gboolean online;
 } device_t;
 typedef struct ServiceData {
-	char* name;
-	char* status;
+  char *name;
+  char *status;
 } service_t;
 typedef struct TelemetryData {
-	guint8 max_devices;
-	guint8 max_services;
-	guint8 n_devices;
-	guint8 n_services;
-	device_t** devices;
-	service_t** services;
+  guint8 max_devices;
+  guint8 max_services;
+  guint8 n_devices;
+  guint8 n_services;
+  device_t **devices;
+  service_t **services;
 
-	time_t last_update;
-	time_t update_freq;
-	time_t last_update_net;
-	time_t update_freq_net;
+  time_t last_update;
+  time_t update_freq;
+  time_t last_update_net;
+  time_t update_freq_net;
 
-	int current;
-	unsigned int battery;
-	int wifi_strength;
-	unsigned long* ping_logs;
-	int ping_offset;
-	unsigned int num_pings;
-	unsigned int max_pings;
-	double jitter;
-	char* ip;
+  int current;
+  unsigned int battery;
+  int wifi_strength;
+  unsigned long *ping_logs;
+  int ping_offset;
+  unsigned int num_pings;
+  unsigned int max_pings;
+  double jitter;
+  char *ip;
 
-	GtkWidget** device_name_widgets;
-	GtkWidget** device_ip_widgets;
-	GtkWidget** service_name_widgets;
-	GtkWidget** service_status_widgets;
-	GtkWidget* battery_label;
-	GtkWidget* current_label;
-	GtkWidget* wifi_strength_label;
-	GtkWidget* ping_label;
-	GtkWidget* jitter_label;
-	GtkWidget* ip_label;
+  GtkWidget **device_name_widgets;
+  GtkWidget **device_ip_widgets;
+  GtkWidget **service_name_widgets;
+  GtkWidget **service_status_widgets;
+  GtkWidget *battery_label;
+  GtkWidget *current_label;
+  GtkWidget *wifi_strength_label;
+  GtkWidget *ping_label;
+  GtkWidget *jitter_label;
+  GtkWidget *ip_label;
 } telem_t;
 
 #define MAX_CAL_EVENTS 20
 #define SHOW_CAL_EVENTS 4
 
 typedef struct CalendarEvent {
-	uint id;
-	time_t start_time;
-	time_t end_time;
-	char* title;
+  uint id;
+  time_t start_time;
+  time_t end_time;
+  char *title;
 } cal_event_t;
 typedef struct CalendarData {
-	uint32_t num_events;
-	uint32_t show_events;
-	cal_event_t** events;
-	cal_event_t* active_event;
+  uint32_t num_events;
+  uint32_t show_events;
+  cal_event_t **events;
+  cal_event_t *active_event;
 
-	char* token_buf;
-	uint64_t token_exp;
-	time_t last_updated;
-	uint32_t update_frequency;
+  char *token_buf;
+  uint64_t token_exp;
+  time_t last_updated;
+  uint32_t update_frequency;
 
-	GtkWidget* title_widget;
-	GtkWidget* title_date_widget;
-	GtkWidget* title_day_widget;
+  GtkWidget *title_widget;
+  GtkWidget *title_date_widget;
+  GtkWidget *title_day_widget;
 
-	GtkWidget* active_event_widget;
-	GtkWidget* active_event_title_widget;
-	GtkWidget* active_event_duration_widget;
+  GtkWidget *active_event_widget;
+  GtkWidget *active_event_title_widget;
+  GtkWidget *active_event_duration_widget;
 
-	GtkWidget** events_title_widgets;
-	GtkWidget** events_time_widgets;
+  GtkWidget **events_title_widgets;
+  GtkWidget **events_time_widgets;
 } calendar_t;
 
 typedef struct WeatherEvent {
-	time_t time;
-	double rain_prob;
-	double temp_c;
-	int wmo_code;
+  time_t time;
+  double rain_prob;
+  double temp_c;
+  int wmo_code;
 
-	GtkWidget* widget_time;
-	GtkWidget* widget_temp;
-	GtkWidget* widget_icon;
+  GtkWidget *widget_time;
+  GtkWidget *widget_temp;
+  GtkWidget *widget_icon;
 } weather_ev_t;
 typedef struct WeatherData {
-	uint32_t num_weather_events;
-	weather_ev_t** events;
+  uint32_t num_weather_events;
+  weather_ev_t **events;
 
-	time_t last_update;
-	time_t update_freq;
+  time_t last_update;
+  time_t update_freq;
 } weather_t;
 
 typedef struct AlertEvent {
-	uint64_t time;
-	uint8_t severity;
-	char* category;
-	char* msg;
+  uint64_t time;
+  uint8_t severity;
+  char *category;
+  char *msg;
 } alert_ev_t;
 typedef struct AlertData {
-	uint32_t max_alerts;
-	uint32_t num_alerts;
-	alert_ev_t** alerts;
+  uint32_t max_alerts;
+  uint32_t num_alerts;
+  alert_ev_t **alerts;
 
-	time_t last_update;
-	time_t update_freq;
+  time_t last_update;
+  time_t update_freq;
 
-	GtkWidget** alert_meta_widgets;
-	GtkWidget** alert_widgets;
+  GtkWidget **alert_meta_widgets;
+  GtkWidget **alert_widgets;
 } alert_t;
 
 typedef struct Task {
-	char* task;
-	gboolean completed;
+  char *task;
+  gboolean completed;
 } task_ev_t;
 typedef struct TaskData {
-	int num_tasks;
-	int max_tasks;
-	int pending_idx;
-	task_ev_t** tasks;
-	GtkWidget** task_widgets;
+  int num_tasks;
+  int max_tasks;
+  int pending_idx;
+  task_ev_t **tasks;
+  GtkWidget **task_widgets;
 } task_t;
 
 typedef struct KindleSlider {
-	GtkWidget *drawing_area;
-	float value;      // 0.0 to 1.0
-	int invisible;
-	void* data;
-	gboolean dragging;
-	void (*callback_change)(float, void*);
-	void (*callback_release)(float, void*);
+  GtkWidget *drawing_area;
+  float value; // 0.0 to 1.0
+  int invisible;
+  void *data;
+  gboolean dragging;
+  void (*callback_change)(float, void *);
+  void (*callback_release)(float, void *);
 } kindle_slider_t;
 
 typedef struct kb_lut {
-	int layer;
-	double x;
-	double y;
-	double w;
-	double h;
-	char value;
-	struct kb_lut* next;
+  int layer;
+  double x;
+  double y;
+  double w;
+  double h;
+  char value;
+  struct kb_lut *next;
 } kb_lut_t;
 typedef struct kb_data {
-    GtkWidget* ref;
-   	void* add_data;
-	long last_showing;
-	double min_frequency;
-	char* kb_buf;
-	int layer;
-	kb_lut_t* lookup_table;
-	double x;
-	double y;
-	gboolean(*on_key_press)(struct kb_data* data, char key);
-	void(*on_enter)(struct kb_data* data);
+  GtkWidget *ref;
+  void *add_data;
+  long last_showing;
+  double min_frequency;
+  char *kb_buf;
+  int layer;
+  kb_lut_t *lookup_table;
+  double x;
+  double y;
+  gboolean (*on_key_press)(struct kb_data *data, char key);
+  void (*on_enter)(struct kb_data *data);
 } kb_data_t;
 
 typedef struct graph_point {
-    GtkWidget* ref;
-    GtkWidget* drawref;
-    kindle_slider_t* sliderref;
-    float* v;
-    float _v_h;
-    float _v_s;
-    float _v_v;
-    float _v_tmp;
-    time_t t;
+  GtkWidget *ref;
+  GtkWidget *drawref;
+  kindle_slider_t *sliderref;
+  float *v;
+  float _v_h;
+  float _v_s;
+  float _v_v;
+  float _v_tmp;
+  time_t t;
 } graph_point_t;
 typedef struct led_graph_data {
-    GtkWidget* ref;
-    GtkWidget* drawref;
-    GtkWidget* label_a;
-    GtkWidget* label_r;
-    GtkWidget* label_g;
-    GtkWidget* label_b;
+  GtkWidget *ref;
+  GtkWidget *drawref;
+  GtkWidget *label_a;
+  GtkWidget *label_r;
+  GtkWidget *label_g;
+  GtkWidget *label_b;
 
-    graph_point_t* points;
-    int last_w = 0;
-    int last_h = 0;
+  graph_point_t *points;
+  int last_w = 0;
+  int last_h = 0;
 } led_graph_data_t;
 #define ww(ref) ref->allocation.width
 #define wh(ref) ref->allocation.height
 #define refw(gdata) gdata->ref->allocation.width
 #define refh(gdata) gdata->ref->allocation.height
 
-void dumplog_handler(GtkButton* _button, GdkEvent* _event, void* _data);
+void dumplog_handler(GtkButton *_button, GdkEvent *_event, void *_data);
 
-GtkWidget* time_widget();
-GtkWidget* telem_widget();
-GtkWidget* button_widget(char* label_content, void (*callback)(GtkButton*, GdkEvent*, void*), void* data);
-GtkWidget* weather_widget();
-GtkWidget* calendar_widget();
-GtkWidget* alerts_widget();
-GtkWidget* tasks_widget();
-GtkWidget* label_widget(char* label_content);
-GtkWidget* image_widget(GtkWidget** image_ref);
-void generate_keycode_lut(kb_lut_t** kb_lut);
-char match_keycode(kb_lut_t* lut, int layer, double x, double y);
+GtkWidget *time_widget();
+GtkWidget *telem_widget();
+GtkWidget *button_widget(char *label_content,
+                         void (*callback)(GtkButton *, GdkEvent *, void *),
+                         void *data);
+GtkWidget *weather_widget();
+GtkWidget *calendar_widget();
+GtkWidget *alerts_widget();
+GtkWidget *tasks_widget();
+GtkWidget *label_widget(char *label_content);
+GtkWidget *image_widget(GtkWidget **image_ref);
+void generate_keycode_lut(kb_lut_t **kb_lut);
+char match_keycode(kb_lut_t *lut, int layer, double x, double y);
 void set_keyboard(gboolean show);
-void read_keyboard(kb_data_t* data);
-GtkWidget* keyboard_widget(void* add_data, gboolean (*onpress)(kb_data_t*, char), void (*onend)(kb_data_t*));
-void set_image_src(GtkImage* image, const guint8* icon_dat, int target_width, int target_height);
-void crosshatch_bb(cairo_t* cr, int width, int height, int spacing, float (*getlevel)(float, float));
-kindle_slider_t* kindle_slider_new(void* data, void (*callback_change)(float,void*), void (*callback_release)(float,void*), int invisible);
-GtkWidget* model_init();
-GtkWidget* log_widget();
-GtkWidget* led_graph();
+void read_keyboard(kb_data_t *data);
+GtkWidget *keyboard_widget(void *add_data,
+                           gboolean (*onpress)(kb_data_t *, char),
+                           void (*onend)(kb_data_t *));
+void set_image_src(GtkImage *image, const guint8 *icon_dat, int target_width,
+                   int target_height);
+void dither_bb(cairo_t *cr, int width, int height,
+               float (*level)(float x, float y));
+kindle_slider_t *kindle_slider_new(void *data,
+                                   void (*callback_change)(float, void *),
+                                   void (*callback_release)(float, void *),
+                                   int invisible);
+GtkWidget *model_init();
+GtkWidget *log_widget();
+GtkWidget *led_graph();

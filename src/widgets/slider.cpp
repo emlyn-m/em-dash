@@ -1,55 +1,44 @@
 #include "./widgets.hpp"
 #include "cairo.h"
-#include <cmath>
+#include <cairo.h>
 #include <gtk-2.0/gdk/gdk.h>
 #include <gtk-2.0/gtk/gtk.h>
+#include <math.h>
+#include <stdlib.h>
 
-void crosshatch_bb(cairo_t *cr, int width, int height, int spacing,
-                   float (*getlevel)(float, float)) {
-  cairo_surface_t *hatch =
-      cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t *tcr = cairo_create(hatch);
-  cairo_set_antialias(tcr, CAIRO_ANTIALIAS_NONE);
-  cairo_set_source_rgba(tcr, 0, 0, 0, 1);
-  cairo_set_line_width(tcr, 1);
+/* Bayer 8x8 matrix, values 0..63 */
+static const uint8_t bayer8[8][8] = {
+    {0, 32, 8, 40, 2, 34, 10, 42},  {48, 16, 56, 24, 50, 18, 58, 26},
+    {12, 44, 4, 36, 14, 46, 6, 38}, {60, 28, 52, 20, 62, 30, 54, 22},
+    {3, 35, 11, 43, 1, 33, 9, 41},  {51, 19, 59, 27, 49, 17, 57, 25},
+    {15, 47, 7, 39, 13, 45, 5, 37}, {63, 31, 55, 23, 61, 29, 53, 21},
+};
 
-  float x = 0, y;
-  float level;
-  while (x * spacing < width) {
-    y = 0;
+void dither_bb(cairo_t *cr, int width, int height,
+               float (*level)(float x, float y)) {
+  cairo_surface_t *mask =
+      cairo_image_surface_create(CAIRO_FORMAT_A8, width, height);
+  int stride = cairo_image_surface_get_stride(mask);
+  uint8_t *data = cairo_image_surface_get_data(mask);
 
-    while (y * spacing < height) {
-      float xv = ((float)(x * spacing)) / ((float)width);
-      float yv = ((float)(y * spacing)) / ((float)height);
+  for (int y = 0; y < height; y++) {
+    /* lerp level across y */
 
-      level = getlevel(xv, yv);
-      cairo_move_to(tcr, (x + 1) * spacing, y * spacing);
-      cairo_line_to(tcr, x * spacing, (y + 1) * spacing);
-      cairo_stroke(tcr);
-      if (level > 0.33) {
-        cairo_move_to(tcr, x * spacing, y * spacing);
-        cairo_line_to(tcr, (x + 1) * spacing, (y + 1) * spacing);
-        cairo_stroke(tcr);
-      }
-      if (level > 0.67) {
-        cairo_move_to(tcr, (x + .5) * spacing, (y)*spacing);
-        cairo_line_to(tcr, (x + .5) * spacing, (y + 1) * spacing);
-        cairo_stroke(tcr);
-      }
-
-      y += 1;
+    for (int x = 0; x < width; x++) {
+      float ty = (float)y / (float)(height - 1);
+      float tx = (float)x / (float)(width - 1);
+      int threshold = (int)(((ty * 0.5) + .1) * 64);
+      data[y * stride + x] = (bayer8[y & 7][x & 7] < threshold) ? 255 : 0;
     }
-    x += 1;
   }
-  cairo_destroy(tcr);
+  cairo_surface_mark_dirty(mask);
 
-  cairo_set_source_surface(cr, hatch, 0, 0);
-  cairo_paint(cr);
-  cairo_surface_destroy(hatch);
+  cairo_set_source_rgb(cr, 0, 0, 0);
+  cairo_mask_surface(cr, mask, 0, 0);
+
+  cairo_surface_destroy(mask);
 }
-
-float getlevel_slider(float x, float y) { return .3; }
-
+float lvl_const(float _tx, float _ty) { return 0.3; }
 static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event,
                           gpointer data) {
   KindleSlider *slider = (KindleSlider *)data;
@@ -68,7 +57,7 @@ static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event,
     cairo_rectangle(cr, border_offset_px, y0, width - 2 * border_offset_px,
                     y1 - y0);
     cairo_clip(cr);
-    crosshatch_bb(cr, width, height, 8, getlevel_slider);
+    dither_bb(cr, width, height, &lvl_const);
     cairo_reset_clip(cr);
   }
 

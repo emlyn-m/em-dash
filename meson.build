@@ -33,7 +33,8 @@ sources = files(
 	'./src/widgets/led_graph.cpp',
 	'./src/widgets/tasks.cpp',
 	'./src/widgets/weather.cpp',
-	'./src/widgets/logs.cpp'
+	'./src/widgets/logs.cpp',
+	'./src/storage/storage.cpp'
 )
 
 include_dirs = include_directories()

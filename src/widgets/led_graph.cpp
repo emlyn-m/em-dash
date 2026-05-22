@@ -140,7 +140,7 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
   if (dither) {
     dither_bb(cr, w, h, &levels, 1., (void *)bdist);
     int STORAGE_OFFSET =
-        ARRAY_KEY_GRAPH_H + (gdata->points[0].v - &gdata->points[0]._v_h);
+        gdata->storage_offset_h + (gdata->points[0].v - &gdata->points[0]._v_h);
     float values[12];
     for (int i = 0; i < 12; i++) {
       values[i] = *gdata->points[i].v;
@@ -172,11 +172,10 @@ void process_graph_update(led_graph_data_t *gdata) {
   int w = (int)refw(gdata);
   int h = (int)refh(gdata);
 
-#define LABEL_PAD 20
   GtkRequisition req_a, req_r, req_g;
   gtk_widget_size_request(gdata->label_a, &req_a);
-  req_a.width += LABEL_PAD;
-  req_a.height += LABEL_PAD;
+  req_a.width += 20;
+  req_a.height += 20;
   gtk_widget_size_request(gdata->label_r, &req_r);
   gtk_widget_size_request(gdata->label_g, &req_g);
 
@@ -231,6 +230,7 @@ static gboolean _shadow_expose(GtkWidget *widget, GdkEventExpose *event,
 
   return TRUE;
 }
+
 GtkWidget *table_wrapping(GtkWidget *c) {
   GdkColor black = {0, 0, 0, 0};
   GdkColor white = {0, 255 << 8, 255 << 8, 255 << 8};
@@ -277,13 +277,14 @@ void slider_release(float v, void *data_vp) {
 }
 
 // note: using every 2-hours starting at midnight
-GtkWidget *led_graph() {
+GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
   led_graph_data_t *gdata =
       (led_graph_data_t *)malloc(sizeof(led_graph_data_t));
 
   gdata->ref = gtk_fixed_new();
   gdata->drawref = gtk_drawing_area_new();
   gdata->is_final = 1;
+  gdata->storage_offset_h = STORAGE_OFFSET_H;
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->drawref, 0, 0);
   g_signal_connect(gdata->drawref, "expose-event", G_CALLBACK(graph_ondraw),
                    gdata);
@@ -295,12 +296,11 @@ GtkWidget *led_graph() {
   time_t start = time(NULL) % 3600;
   gdata->points = (graph_point_t *)malloc(12 * sizeof(graph_point_t));
 
-  float *existing_h =
-      (float *)read_void_ptr(ARRAY_KEY_GRAPH_H, 12, sizeof(int));
+  float *existing_h = (float *)read_void_ptr(STORAGE_OFFSET_H, 12, sizeof(int));
   float *existing_s =
-      (float *)read_void_ptr(ARRAY_KEY_GRAPH_S, 12, sizeof(int));
+      (float *)read_void_ptr(STORAGE_OFFSET_H + 1, 12, sizeof(int));
   float *existing_v =
-      (float *)read_void_ptr(ARRAY_KEY_GRAPH_V, 12, sizeof(int));
+      (float *)read_void_ptr(STORAGE_OFFSET_H + 2, 12, sizeof(int));
 
   for (int i = 0; i < 12; i++) {
     gdata->points[i].drawref = gdata->drawref;
@@ -334,17 +334,17 @@ GtkWidget *led_graph() {
   pango_font_description_free(font_desc);
   font_desc = pango_font_description_from_string(FONT_12);
   gdata->label_a =
-      table_wrapping(button_widget((char *)"value", button_callback_a, gdata));
+      table_wrapping(button_widget((char *)"hue", button_callback_a, gdata));
   gtk_widget_modify_font(gdata->label_a, font_desc);
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_a, refw(gdata),
                 refh(gdata));
   gdata->label_r =
-      table_wrapping(button_widget((char *)"hue", button_callback_r, gdata));
+      table_wrapping(button_widget((char *)"sat", button_callback_r, gdata));
   gtk_widget_modify_font(gdata->label_r, font_desc);
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_r, refw(gdata),
                 refh(gdata));
   gdata->label_g =
-      table_wrapping(button_widget((char *)"sat", button_callback_g, gdata));
+      table_wrapping(button_widget((char *)"value", button_callback_g, gdata));
   gtk_widget_modify_font(gdata->label_g, font_desc);
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_g, refw(gdata),
                 refh(gdata));

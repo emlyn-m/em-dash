@@ -212,6 +212,7 @@ typedef struct led_graph_data {
   GtkWidget *label_g;
   GtkWidget *label_b;
 
+  int storage_offset_h;
   graph_point_t *points;
   int last_w = 0;
   int last_h = 0;
@@ -254,4 +255,4 @@ kindle_slider_t *kindle_slider_new(void *data,
                                    int invisible);
 GtkWidget *model_init();
 GtkWidget *log_widget();
-GtkWidget *led_graph();
+GtkWidget *led_graph(const int storage_offset_h);

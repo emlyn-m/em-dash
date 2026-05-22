@@ -21,7 +21,7 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
-full_tx_cmd=""
+full_tx_cmd="mount -o rw,remount / &&"
 active_mode_path=$REMOTE_DATA_PATH
 active_mode_name=""
 while [[ "$#" -gt 0 ]]; do
@@ -57,7 +57,7 @@ if [ -z "$full_tx_cmd" ]; then
     exit 1
 fi
 
-full_tx_cmd="${full_tx_cmd}fc-cache -vf $REMOTE_FONT_PATH && exit" 
+full_tx_cmd="${full_tx_cmd}fc-cache -vf $REMOTE_FONT_PATH && exit"
 echo -e "\x1b[38;5;139m\x1b[1mDBG: \x1b[0m using \"$full_tx_cmd\""
 echo -e "\x1b[38;5;139m\x1b[1mINFO:\x1b[0m ready transmit on port $TX_PORT"
 echo $full_tx_cmd | nc -lvp $TX_PORT 2>/dev/null

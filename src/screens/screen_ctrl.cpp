@@ -13,9 +13,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"
-#define BRIGHTNESS_SCALE 200 // default 4095
-
 void exit_handler(GtkButton *_b, GdkEvent *_e, void *_d) { exit(0); }
 
 float get_brightness() {

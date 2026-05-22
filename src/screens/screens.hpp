@@ -7,16 +7,32 @@
 #define SCREEN_IDX_CTRL 1
 #define SCREEN_IDX_LED1 2
 
+#define BRIGHTNESS_SCALE 4095 // 2
+#define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"
+
 typedef struct set_screen_data {
-	GtkWidget* stack;
-	guint target_screen_idx;
+  GtkWidget *stack;
+  guint target_screen_idx;
 } set_screen_data_t;
 
-void set_screen(GtkButton* _button, GdkEvent* _event, void* data_v);
+void set_screen(GtkButton *_button, GdkEvent *_event, void *data_v);
 
-GtkWidget* generate_ctrl_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
-GtkWidget* generate_life_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
-GtkWidget* generate_led_strip_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
-GtkWidget* generate_lamp_screen( GtkWidget* stack, void (*set_screen)(GtkButton*, GdkEvent*, void*) );
-struct _img_src_dat { GtkWidget* ref; const unsigned char* img; int size; int flag; };
-gboolean _img_set_src_helper(void* data_vp);
+GtkWidget *generate_ctrl_screen(GtkWidget *stack,
+                                void (*set_screen)(GtkButton *, GdkEvent *,
+                                                   void *));
+GtkWidget *generate_life_screen(GtkWidget *stack,
+                                void (*set_screen)(GtkButton *, GdkEvent *,
+                                                   void *));
+GtkWidget *generate_led_strip_screen(GtkWidget *stack,
+                                     void (*set_screen)(GtkButton *, GdkEvent *,
+                                                        void *));
+GtkWidget *generate_lamp_screen(GtkWidget *stack,
+                                void (*set_screen)(GtkButton *, GdkEvent *,
+                                                   void *));
+struct _img_src_dat {
+  GtkWidget *ref;
+  const unsigned char *img;
+  int size;
+  int flag;
+};
+gboolean _img_set_src_helper(void *data_vp);

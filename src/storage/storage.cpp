@@ -1,6 +1,7 @@
 #include "storage.h"
 #include "../log.hpp"
 #include "../net/cJSON.h"
+#include "src/screens/screens.hpp"
 #include "src/widgets/widgets.hpp"
 #include <cstdlib>
 #include <cstring>
@@ -94,7 +95,7 @@ void write_void_ptr(int key, void *objs, int n, int stride) {
 }
 
 void _storage_init_brightness(cJSON *arr) {
-  int existing_brightness = 200;
+  int existing_brightness = BRIGHTNESS_SCALE;
   cJSON *new_arr = cJSON_CreateArray();
   serialize_array(new_arr, &existing_brightness, 1, sizeof(int));
   cJSON_AddItemToArray(arr, new_arr);

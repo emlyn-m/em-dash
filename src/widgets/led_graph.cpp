@@ -29,7 +29,7 @@ void process_graph_update(led_graph_data_t *gdata);
 void button_callback_a(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
     ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_h);
+        &(((led_graph_data_t *)gdata_vp)->points[i]._v_v);
     ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
         *((led_graph_data_t *)gdata_vp)->points[i].v;
   }
@@ -38,7 +38,7 @@ void button_callback_a(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
 void button_callback_r(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
     ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_s);
+        &(((led_graph_data_t *)gdata_vp)->points[i]._v_h);
     ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
         *((led_graph_data_t *)gdata_vp)->points[i].v;
   }
@@ -47,7 +47,7 @@ void button_callback_r(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
 void button_callback_g(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
     ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_v);
+        &(((led_graph_data_t *)gdata_vp)->points[i]._v_s);
     ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
         *((led_graph_data_t *)gdata_vp)->points[i].v;
   }

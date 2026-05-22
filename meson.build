@@ -21,6 +21,7 @@ sources = files(
 	'./src/screens/table.cpp',
 	'./src/widgets/3d.cpp',
 	'./src/widgets/button.cpp',
+	'./src/widgets/bezier.cpp',
 	'./src/widgets/clock.cpp',
 	'./src/widgets/keyboard.cpp',
 	'./src/widgets/slider.cpp',

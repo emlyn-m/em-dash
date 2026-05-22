@@ -1,44 +1,57 @@
 #include "./widgets.hpp"
 #include "cairo.h"
+#include "glibconfig.h"
 #include <cairo.h>
+#include <cmath>
 #include <gtk-2.0/gdk/gdk.h>
 #include <gtk-2.0/gtk/gtk.h>
 #include <math.h>
 #include <stdlib.h>
 
-/* Bayer 8x8 matrix, values 0..63 */
-static const uint8_t bayer8[8][8] = {
-    {0, 32, 8, 40, 2, 34, 10, 42},  {48, 16, 56, 24, 50, 18, 58, 26},
-    {12, 44, 4, 36, 14, 46, 6, 38}, {60, 28, 52, 20, 62, 30, 54, 22},
-    {3, 35, 11, 43, 1, 33, 9, 41},  {51, 19, 59, 27, 49, 17, 57, 25},
-    {15, 47, 7, 39, 13, 45, 5, 37}, {63, 31, 55, 23, 61, 29, 53, 21},
-};
-
 void dither_bb(cairo_t *cr, int width, int height,
-               float (*level)(float x, float y)) {
-  cairo_surface_t *mask =
-      cairo_image_surface_create(CAIRO_FORMAT_A8, width, height);
+               float (*level)(float x, float y, void *data), float alpha,
+               void *data) {
+  const int scale = 20;
+  cairo_surface_t *mask = cairo_image_surface_create(
+      CAIRO_FORMAT_A8, width / scale, height / scale);
   int stride = cairo_image_surface_get_stride(mask);
-  uint8_t *data = cairo_image_surface_get_data(mask);
+  uint8_t *idata = cairo_image_surface_get_data(mask);
 
-  for (int y = 0; y < height; y++) {
-    /* lerp level across y */
+  for (int y = 0; y < height / scale; y++) {
+    float ty = (float)y / (float)(((float)height / scale) - 1);
+    for (int x = 0; x < width / scale; x++) {
+      float tx = (float)x / (float)(((float)width / scale) - 1);
+      float new_level = 255 * level(tx, ty, data);
+#ifndef N_QUANTIZE_LEVELS
+#define N_QUANTIZE_LEVELS 50.
+#endif
 
-    for (int x = 0; x < width; x++) {
-      float ty = (float)y / (float)(height - 1);
-      float tx = (float)x / (float)(width - 1);
-      int threshold = (int)(((ty * 0.5) + .1) * 64);
-      data[y * stride + x] = (bayer8[y & 7][x & 7] < threshold) ? 255 : 0;
+      float newpx = (255. / N_QUANTIZE_LEVELS) *
+                    round((new_level / 255.) * (N_QUANTIZE_LEVELS));
+      idata[y * stride + x] = newpx;
     }
   }
   cairo_surface_mark_dirty(mask);
 
-  cairo_set_source_rgb(cr, 0, 0, 0);
-  cairo_mask_surface(cr, mask, 0, 0);
+  cairo_pattern_t *pat = cairo_pattern_create_for_surface(mask);
+  cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
+  cairo_matrix_t m;
+  cairo_matrix_init_scale(&m, 1.0 / ((float)scale), 1.0 / ((float)scale));
+  cairo_pattern_set_matrix(pat, &m);
 
+  cairo_set_source_rgba(cr, 0, 0, 0, alpha);
+  cairo_mask(cr, pat);
+
+  cairo_pattern_destroy(pat);
   cairo_surface_destroy(mask);
 }
-float lvl_const(float _tx, float _ty) { return 0.3; }
+float lvl_v_noise(float tx, float ty, void *_data) {
+  float natural = (ty * .9) + .1;
+  double _void;
+  float rseed = modf(sin(tx * 12.9898 + ty * 78.233) * 43758.5453, &_void);
+  float rand = rseed / 100.;
+  return CLAMP(natural + rand, 0., 1.);
+}
 static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event,
                           gpointer data) {
   KindleSlider *slider = (KindleSlider *)data;
@@ -57,7 +70,7 @@ static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event,
     cairo_rectangle(cr, border_offset_px, y0, width - 2 * border_offset_px,
                     y1 - y0);
     cairo_clip(cr);
-    dither_bb(cr, width, height, &lvl_const);
+    dither_bb(cr, width, height, &lvl_v_noise, 1, NULL);
     cairo_reset_clip(cr);
   }
 

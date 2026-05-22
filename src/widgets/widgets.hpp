@@ -242,7 +242,8 @@ GtkWidget *keyboard_widget(void *add_data,
 void set_image_src(GtkImage *image, const guint8 *icon_dat, int target_width,
                    int target_height);
 void dither_bb(cairo_t *cr, int width, int height,
-               float (*level)(float x, float y));
+               float (*level)(float x, float y, void *data), float alpha,
+               void *data);
 kindle_slider_t *kindle_slider_new(void *data,
                                    void (*callback_change)(float, void *),
                                    void (*callback_release)(float, void *),

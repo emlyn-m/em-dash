@@ -8,6 +8,7 @@
 
 #include "../log.hpp"
 #include "./widgets.hpp"
+#include "bezier.h"
 #include "pango/pango-font.h"
 
 // #define LED_CURVE(i) MAX(1 - (((i - 5.5) * (i - 5.5))/30.25), 0.1)
@@ -54,48 +55,19 @@ void button_callback_g(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   gtk_widget_queue_draw(((led_graph_data_t *)gdata_vp)->drawref);
 }
 
-static void bezier_extrema_axis(float p0, float p1, float p2, float p3,
-                                float *out_min, float *out_max) {
-  float lo = p0 < p3 ? p0 : p3;
-  float hi = p0 > p3 ? p0 : p3;
+float levels(float tx, float ty, void *_data) {
+  bezier_dist_t *data = (bezier_dist_t *)_data;
+  int _out_seg;
+  double _dist;
+  double dist = bezier_path_distance(data->path, tx * data->width,
+                                     ty * data->height, &_dist, &_out_seg);
 
-  float a = -p0 + 3.0f * p1 - 3.0f * p2 + p3;
-  float b = 2.0f * (p0 - 2.0f * p1 + p2);
-  float c = p1 - p0;
+  const double falloff_dist = 500.0;
+  double t = fmin(dist / falloff_dist, 0.9);
+  double shade = pow(t, 1.2);
 
-  float roots[2];
-  int n = 0;
-
-  if (fabsf(a) < 1e-6f) {
-    if (fabsf(b) > 1e-6f)
-      roots[n++] = -c / b;
-  } else {
-    float disc = b * b - 4.0f * a * c;
-    if (disc >= 0.0f) {
-      float s = sqrtf(disc);
-      roots[n++] = (-b + s) / (2.0f * a);
-      roots[n++] = (-b - s) / (2.0f * a);
-    }
-  }
-
-  for (int i = 0; i < n; i++) {
-    float t = roots[i];
-    if (t <= 0.0f || t >= 1.0f)
-      continue;
-    float u = 1.0f - t;
-    float v = u * u * u * p0 + 3.0f * u * u * t * p1 + 3.0f * u * t * t * p2 +
-              t * t * t * p3;
-    if (v < lo)
-      lo = v;
-    if (v > hi)
-      hi = v;
-  }
-
-  *out_min = lo;
-  *out_max = hi;
+  return shade;
 }
-
-float levels(float tx, float ty) { return .3; }
 void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h) {
   int by_min = INT32_MAX;
   cairo_set_line_width(cr, line_w);
@@ -153,10 +125,17 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h) {
   cairo_line_to(cr, (0.5 / 12.0) * w, h);
   cairo_close_path(cr);
   cairo_clip_preserve(cr);
+
+  bezier_dist_t *bdist = (bezier_dist_t *)malloc(sizeof(bezier_dist_t));
+  bdist->width = w;
+  bdist->height = h;
+  bdist->path = cairo_copy_path(cr);
+
   cairo_set_line_width(cr, 1);
   cairo_set_source_rgba(cr, (2. - ((float)0)) / 5., (2. - ((float)0)) / 5.,
                         (2. - ((float)0)) / 5., 1);
-  dither_bb(cr, w, h, &levels);
+  dither_bb(cr, w, h, &levels, 1., (void *)bdist);
+  cairo_path_destroy(bdist->path);
 
   cairo_restore(cr);
 }

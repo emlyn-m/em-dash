@@ -8,6 +8,7 @@
 
 #define SCALE 1
 
+#define FONT_6 "Geist Mono, 3"
 #define FONT_8 "Geist Mono, 4"
 #define FONT_10 "Geist Mono, 5"
 #define FONT_12 "Geist Mono, 6"
@@ -216,6 +217,7 @@ typedef struct led_graph_data {
   int last_h = 0;
   int is_final;
 } led_graph_data_t;
+#define LED_CURVE(i) MAX(1 - (((i - 5.5) * (i - 5.5)) / 30.25), 0.1)
 #define ww(ref) ref->allocation.width
 #define wh(ref) ref->allocation.height
 #define refw(gdata) gdata->ref->allocation.width

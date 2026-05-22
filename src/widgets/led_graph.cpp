@@ -10,9 +10,8 @@
 #include "./widgets.hpp"
 #include "bezier.h"
 #include "pango/pango-font.h"
+#include "src/storage/storage.h"
 
-// #define LED_CURVE(i) MAX(1 - (((i - 5.5) * (i - 5.5))/30.25), 0.1)
-#define LED_CURVE(i) 1
 #define ledg_padw 30
 #define ledg_padh 30
 #define ledg_gaph 1
@@ -140,6 +139,13 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
                         (2. - ((float)0)) / 5., 1);
   if (dither) {
     dither_bb(cr, w, h, &levels, 1., (void *)bdist);
+    int STORAGE_OFFSET =
+        ARRAY_KEY_GRAPH_H + (gdata->points[0].v - &gdata->points[0]._v_h);
+    float values[12];
+    for (int i = 0; i < 12; i++) {
+      values[i] = *gdata->points[i].v;
+    }
+    write_void_ptr(STORAGE_OFFSET, values, 12, sizeof(float));
     cairo_path_destroy(bdist->path);
   }
 
@@ -270,6 +276,7 @@ void slider_release(float v, void *data_vp) {
   *(data->is_final) = 1;
 }
 
+// note: using every 2-hours starting at midnight
 GtkWidget *led_graph() {
   led_graph_data_t *gdata =
       (led_graph_data_t *)malloc(sizeof(led_graph_data_t));
@@ -283,23 +290,31 @@ GtkWidget *led_graph() {
 
   g_signal_connect(gdata->ref, "size-allocate", G_CALLBACK(graph_resize),
                    gdata);
-  PangoFontDescription *font_desc = pango_font_description_from_string(FONT_8);
+  PangoFontDescription *font_desc = pango_font_description_from_string(FONT_6);
 
   time_t start = time(NULL) % 3600;
   gdata->points = (graph_point_t *)malloc(12 * sizeof(graph_point_t));
+
+  float *existing_h =
+      (float *)read_void_ptr(ARRAY_KEY_GRAPH_H, 12, sizeof(int));
+  float *existing_s =
+      (float *)read_void_ptr(ARRAY_KEY_GRAPH_S, 12, sizeof(int));
+  float *existing_v =
+      (float *)read_void_ptr(ARRAY_KEY_GRAPH_V, 12, sizeof(int));
 
   for (int i = 0; i < 12; i++) {
     gdata->points[i].drawref = gdata->drawref;
     gdata->points[i].is_final = &gdata->is_final;
 
-    gdata->points[i]._v_h = LED_CURVE(i);
-    gdata->points[i]._v_s = LED_CURVE(i);
-    gdata->points[i]._v_v = LED_CURVE(i);
+    gdata->points[i]._v_h = existing_h[i];
+    gdata->points[i]._v_s = existing_s[i];
+    gdata->points[i]._v_v = existing_v[i];
     gdata->points[i].v = &(gdata->points[i]._v_v);
 
     gdata->points[i].t = start + 3600 * i;
     char labelbuf[8];
-    snprintf(labelbuf, 8, "%02ld:00", ((gdata->points[i].t) % 86400) / 3600);
+    snprintf(labelbuf, 8, "%02ld:00",
+             2 * ((gdata->points[i].t) % 86400) / 3600);
     gdata->points[i].ref = label_widget(labelbuf);
     gtk_widget_modify_font(gdata->points[i].ref, font_desc);
     gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->points[i].ref, 0, 0);
@@ -311,6 +326,10 @@ GtkWidget *led_graph() {
     gtk_fixed_put(GTK_FIXED(gdata->ref),
                   gdata->points[i].sliderref->drawing_area, 0, 1);
   }
+
+  free(existing_h);
+  free(existing_s);
+  free(existing_v);
 
   pango_font_description_free(font_desc);
   font_desc = pango_font_description_from_string(FONT_12);

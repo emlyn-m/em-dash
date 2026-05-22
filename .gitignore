@@ -1,6 +1,7 @@
 .cache/
 src/secrets.h
 .env
+config.dat
 
 apis/__pycache__
 apis/.venv

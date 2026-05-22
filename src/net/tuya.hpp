@@ -16,45 +16,48 @@
 #define PREFIX_55AA_VALUE 0x000055AA
 #define SUFFIX_VALUE 0x0000AA55
 
-#define COMMAND_CTRL  0x07
+#define COMMAND_CTRL 0x07
 #define COMMAND_STATUS 0x08
 #define COMMAND_QUERY 0x0a
 
 #define MAX_DPS 10
 
 typedef struct tuya_dp {
-    int index;
-    void* value;
+  int index;
+  void *value;
 } tuya_dp_t;
 
 typedef struct tuya_led {
-    char* id;
-    char* name;
-    uint32_t ip;
-    unsigned char* key;
+  char *id;
+  char *name;
+  uint32_t ip;
+  unsigned char *key;
 
-    int power;
-    uint32_t hue;
-    uint32_t sat;
-    uint32_t val;
+  int power;
+  uint32_t hue;
+  uint32_t sat;
+  uint32_t val;
 
-    int sock;
-    uint32_t random_id;
-    unsigned int seqno;
-    int failures;
+  int sock;
+  uint32_t random_id;
+  unsigned int seqno;
+  int failures;
+
+  int graph_control;
 } tuya_led_t;
 
 typedef struct _tuya_msg {
-    uint32_t seqno;
-    uint32_t retcode;
-    uint32_t command;
-    size_t payload_len;
-    unsigned char* payload;
+  uint32_t seqno;
+  uint32_t retcode;
+  uint32_t command;
+  size_t payload_len;
+  unsigned char *payload;
 } tuya_msg_t;
 
-void tuya_led_new(tuya_led_t* led, char* id, char* name, uint32_t ip, unsigned char* key);
-int _tuya_socket_open(tuya_led_t* led);
-void tuya_msg_free(tuya_msg_t* msg);
+void tuya_led_new(tuya_led_t *led, char *id, char *name, uint32_t ip,
+                  unsigned char *key);
+int _tuya_socket_open(tuya_led_t *led);
+void tuya_msg_free(tuya_msg_t *msg);
 
-int tuya_cmd_send(tuya_led_t* led, uint32_t command, char* dps);
-int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t* msg);
+int tuya_cmd_send(tuya_led_t *led, uint32_t command, char *dps);
+int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t *msg);

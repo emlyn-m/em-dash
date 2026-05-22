@@ -2,7 +2,6 @@
 #include "src/log.hpp"
 #include "src/screens/screens.hpp"
 #include "src/screens/table.hpp"
-#include "src/storage/storage.h"
 #include "src/widgets/widgets.hpp"
 
 #include <cstdio>
@@ -20,7 +19,7 @@
 void exit_handler(GtkButton *_b, GdkEvent *_e, void *_d) { exit(0); }
 
 float get_brightness() {
-  if (getenv("LOCAL_BUILD")) {
+  if (strcmp(getenv("LOCAL_BUILD"), "0")) {
     return 0;
   }
   FILE *bfile = fopen(BRIGHTNESS_SYSFILE, "r");
@@ -32,7 +31,7 @@ float get_brightness() {
 }
 
 void set_brightness(GtkButton *_b, GdkEvent *_e, void *brightness) {
-  if (getenv("LOCAL_BUILD")) {
+  if (strcmp(getenv("LOCAL_BUILD"), "0")) {
     return;
   }
 

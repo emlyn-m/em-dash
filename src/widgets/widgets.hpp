@@ -203,6 +203,7 @@ typedef struct graph_point {
   float _v_v;
   float _v_tmp;
   time_t t;
+  int *graph_mode;
 } graph_point_t;
 typedef struct led_graph_data {
   GtkWidget *ref;
@@ -217,6 +218,7 @@ typedef struct led_graph_data {
   int last_w = 0;
   int last_h = 0;
   int is_final;
+  int *graph_mode;
 } led_graph_data_t;
 #define LED_CURVE(i) MAX(1 - (((i - 5.5) * (i - 5.5)) / 30.25), 0.1)
 #define ww(ref) ref->allocation.width
@@ -255,4 +257,4 @@ kindle_slider_t *kindle_slider_new(void *data,
                                    int invisible);
 GtkWidget *model_init();
 GtkWidget *log_widget();
-GtkWidget *led_graph(const int storage_offset_h);
+GtkWidget *led_graph(const int storage_offset_h, int *graph_mode);

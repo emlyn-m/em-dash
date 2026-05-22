@@ -274,10 +274,12 @@ void slider_release(float v, void *data_vp) {
   }
   *(data->v) = MIN(MAX(0, v), 0.9999f);
   *(data->is_final) = 1;
+  *(data->graph_mode) = 1;
+  gtk_widget_queue_draw(data->drawref);
 }
 
 // note: using every 2-hours starting at midnight
-GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
+GtkWidget *led_graph(const int STORAGE_OFFSET_H, int *graph_mode) {
   led_graph_data_t *gdata =
       (led_graph_data_t *)malloc(sizeof(led_graph_data_t));
 
@@ -285,6 +287,7 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
   gdata->drawref = gtk_drawing_area_new();
   gdata->is_final = 1;
   gdata->storage_offset_h = STORAGE_OFFSET_H;
+  gdata->graph_mode = graph_mode;
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->drawref, 0, 0);
   g_signal_connect(gdata->drawref, "expose-event", G_CALLBACK(graph_ondraw),
                    gdata);
@@ -323,6 +326,8 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
         &(gdata->points[i]), slider_update, slider_release, 1);
     gdata->points[i].sliderref->value = *gdata->points[i].v;
 
+    gdata->points[i].graph_mode = graph_mode;
+
     gtk_fixed_put(GTK_FIXED(gdata->ref),
                   gdata->points[i].sliderref->drawing_area, 0, 1);
   }
@@ -334,7 +339,7 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
   pango_font_description_free(font_desc);
   font_desc = pango_font_description_from_string(FONT_12);
   gdata->label_a =
-      table_wrapping(button_widget((char *)"hue", button_callback_a, gdata));
+      table_wrapping(button_widget((char *)"value", button_callback_a, gdata));
   gtk_widget_modify_font(gdata->label_a, font_desc);
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_a, refw(gdata),
                 refh(gdata));
@@ -344,7 +349,7 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H) {
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_r, refw(gdata),
                 refh(gdata));
   gdata->label_g =
-      table_wrapping(button_widget((char *)"value", button_callback_g, gdata));
+      table_wrapping(button_widget((char *)"hue", button_callback_g, gdata));
   gtk_widget_modify_font(gdata->label_g, font_desc);
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->label_g, refw(gdata),
                 refh(gdata));

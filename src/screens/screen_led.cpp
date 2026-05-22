@@ -72,14 +72,17 @@ void led_power_callback(GtkButton *_button, GdkEvent *_event, void *led_vp) {
 
 void led_hue_callback(float progress, void *led_vp) {
   tuya_led_t *led = (tuya_led_t *)led_vp;
+  led->graph_control = 0;
   _tuya_color_set(led, progress * 359.0, led->sat, led->val);
 }
 void led_sat_callback(float progress, void *led_vp) {
   tuya_led_t *led = (tuya_led_t *)led_vp;
+  led->graph_control = 0;
   _tuya_color_set(led, led->hue, progress * 1000.0, led->val);
 }
 void led_val_callback(float progress, void *led_vp) {
   tuya_led_t *led = (tuya_led_t *)led_vp;
+  led->graph_control = 0;
   _tuya_color_set(led, led->hue, led->sat, progress * 1000.0);
 }
 
@@ -173,6 +176,18 @@ gboolean power_button_update(void *data_vp) {
   return TRUE;
 }
 
+void set_mode_handler(GtkButton *_button, GdkEvent *_event, void *led_vp) {
+  tuya_led_t *led = (tuya_led_t *)led_vp;
+  led->graph_control = 1 - led->graph_control;
+}
+
+gboolean mode_handler_update(void *data_vp) {
+  struct _tuya_power_btn_args *data = (struct _tuya_power_btn_args *)data_vp;
+  gtk_label_set_text(GTK_LABEL(data->widget),
+                     data->led->graph_control ? "TIMED" : "DYNAMIC");
+  return TRUE;
+}
+
 GtkWidget *generate_led_strip_screen(GtkWidget *stack,
                                      void (*set_screen)(GtkButton *, GdkEvent *,
                                                         void *)) {
@@ -203,10 +218,10 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   g_signal_connect(ev_box, "button-press-event", G_CALLBACK(led_power_callback),
                    led);
   gtk_box_pack_start(GTK_BOX(wrapper), ev_box, TRUE, TRUE, 5 * SCALE);
-
   gtk_table_add(table, 0, 1, 0, 1, wrapper);
   g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
                 (GSourceFunc)power_button_update, pb_args);
+
   GtkWidget *labelbox = gtk_hbox_new(FALSE, 0);
   GtkWidget *label = gtk_label_new((char *)led->name);
   PangoFontDescription *font_desc_label =
@@ -216,7 +231,29 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   gtk_box_pack_start(GTK_BOX(labelbox), label, FALSE, FALSE, 20);
   gtk_table_add(table, 1, 7, 0, 1, labelbox);
 
-  gtk_table_add(table, 7, 9, 0, 1,
+  struct _tuya_power_btn_args *mode_args =
+      (struct _tuya_power_btn_args *)malloc(
+          sizeof(struct _tuya_power_btn_args));
+  mode_args->led = led;
+  GtkWidget *wrapper_mode = gtk_vbox_new(FALSE, 0);
+  GtkWidget *ev_box_mode = gtk_event_box_new();
+  gtk_widget_add_events(ev_box_mode, GDK_BUTTON_PRESS_MASK);
+  gtk_event_box_set_visible_window(GTK_EVENT_BOX(ev_box_mode), FALSE);
+  GTK_WIDGET_UNSET_FLAGS(GTK_EVENT_BOX(ev_box_mode), GTK_CAN_FOCUS);
+  mode_args->widget = gtk_label_new("");
+  PangoFontDescription *font_desc_mode =
+      pango_font_description_from_string(FONT_8);
+  gtk_widget_modify_font(mode_args->widget, font_desc_mode);
+  pango_font_description_free(font_desc_mode);
+  gtk_container_add(GTK_CONTAINER(ev_box_mode), mode_args->widget);
+  g_signal_connect(ev_box_mode, "button-press-event",
+                   G_CALLBACK(set_mode_handler), led);
+  gtk_box_pack_start(GTK_BOX(wrapper_mode), ev_box_mode, TRUE, TRUE, 5 * SCALE);
+  gtk_table_add(table, 7, 8, 0, 1, wrapper_mode);
+  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+                (GSourceFunc)mode_handler_update, mode_args);
+
+  gtk_table_add(table, 8, 9, 0, 1,
                 button_widget((char *)"۶ৎ₊˚⊹⋆ৎ", set_ctrl_handler, ctrl_data));
 
   kindle_slider_t *hue_slider =
@@ -266,7 +303,8 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   pthread_create(&thread_id, NULL, _spawn_led_strip_thread, args);
   pthread_detach(thread_id);
 
-  gtk_table_add(table, 3, 9, 1, 7, led_graph(ARRAY_STRIP_GRAPH_H));
+  gtk_table_add(table, 3, 9, 1, 7,
+                led_graph(ARRAY_STRIP_GRAPH_H, &led->graph_control));
 
   return table;
 }

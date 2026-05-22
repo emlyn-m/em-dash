@@ -68,7 +68,8 @@ float levels(float tx, float ty, void *_data) {
 
   return shade;
 }
-void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h) {
+void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
+                int dither) {
   int by_min = INT32_MAX;
   cairo_set_line_width(cr, line_w);
   cairo_set_source_rgb(cr, 0, 0, 0);
@@ -126,16 +127,21 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h) {
   cairo_close_path(cr);
   cairo_clip_preserve(cr);
 
-  bezier_dist_t *bdist = (bezier_dist_t *)malloc(sizeof(bezier_dist_t));
-  bdist->width = w;
-  bdist->height = h;
-  bdist->path = cairo_copy_path(cr);
+  bezier_dist_t *bdist;
+  if (dither) {
+    bdist = (bezier_dist_t *)malloc(sizeof(bezier_dist_t));
+    bdist->width = w;
+    bdist->height = h;
+    bdist->path = cairo_copy_path(cr);
+  }
 
   cairo_set_line_width(cr, 1);
   cairo_set_source_rgba(cr, (2. - ((float)0)) / 5., (2. - ((float)0)) / 5.,
                         (2. - ((float)0)) / 5., 1);
-  dither_bb(cr, w, h, &levels, 1., (void *)bdist);
-  cairo_path_destroy(bdist->path);
+  if (dither) {
+    dither_bb(cr, w, h, &levels, 1., (void *)bdist);
+    cairo_path_destroy(bdist->path);
+  }
 
   cairo_restore(cr);
 }
@@ -150,7 +156,7 @@ gboolean graph_ondraw(GtkWidget *widget, GdkEventExpose *_e, gpointer data) {
   cairo_paint(cr);
   cairo_restore(cr);
 
-  draw_lines(cr, gdata, w, h);
+  draw_lines(cr, gdata, w, h, gdata->is_final);
   return FALSE;
 }
 
@@ -251,6 +257,7 @@ void slider_update(float v, void *data_vp) {
     data->v = &data->_v_tmp;
   }
   *(data->v) = ((int)*data->v) + MIN(MAX(0, v), 0.9999f);
+  *(data->is_final) = 0;
   gtk_widget_queue_draw(data->drawref);
 }
 
@@ -260,6 +267,7 @@ void slider_release(float v, void *data_vp) {
     data->v = &(data->_v_h) + (int)data->_v_tmp;
   }
   *(data->v) = MIN(MAX(0, v), 0.9999f);
+  *(data->is_final) = 1;
 }
 
 GtkWidget *led_graph() {
@@ -268,6 +276,7 @@ GtkWidget *led_graph() {
 
   gdata->ref = gtk_fixed_new();
   gdata->drawref = gtk_drawing_area_new();
+  gdata->is_final = 1;
   gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->drawref, 0, 0);
   g_signal_connect(gdata->drawref, "expose-event", G_CALLBACK(graph_ondraw),
                    gdata);
@@ -281,6 +290,7 @@ GtkWidget *led_graph() {
 
   for (int i = 0; i < 12; i++) {
     gdata->points[i].drawref = gdata->drawref;
+    gdata->points[i].is_final = &gdata->is_final;
 
     gdata->points[i]._v_h = LED_CURVE(i);
     gdata->points[i]._v_s = LED_CURVE(i);

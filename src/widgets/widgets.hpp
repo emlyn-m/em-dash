@@ -194,6 +194,7 @@ typedef struct kb_data {
 typedef struct graph_point {
   GtkWidget *ref;
   GtkWidget *drawref;
+  int *is_final;
   kindle_slider_t *sliderref;
   float *v;
   float _v_h;
@@ -213,6 +214,7 @@ typedef struct led_graph_data {
   graph_point_t *points;
   int last_w = 0;
   int last_h = 0;
+  int is_final;
 } led_graph_data_t;
 #define ww(ref) ref->allocation.width
 #define wh(ref) ref->allocation.height

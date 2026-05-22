@@ -23,7 +23,7 @@ void dither_bb(cairo_t *cr, int width, int height,
       float tx = (float)x / (float)(((float)width / scale) - 1);
       float new_level = 255 * level(tx, ty, data);
 #ifndef N_QUANTIZE_LEVELS
-#define N_QUANTIZE_LEVELS 50.
+#define N_QUANTIZE_LEVELS 10.
 #endif
 
       float newpx = (255. / N_QUANTIZE_LEVELS) *

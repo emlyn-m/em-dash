@@ -7,7 +7,7 @@
 #define SCREEN_IDX_CTRL 1
 #define SCREEN_IDX_LED1 2
 
-#define BRIGHTNESS_SCALE 4095 // 2
+#define BRIGHTNESS_SCALE 200 // full=4095
 #define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"
 
 typedef struct set_screen_data {

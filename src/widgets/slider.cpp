@@ -12,6 +12,8 @@ void dither_bb(cairo_t *cr, int width, int height,
                float (*level)(float x, float y, void *data), float alpha,
                void *data) {
   const int scale = 20;
+
+  double ewidth = width / scale, eheight = height / scale;
   cairo_surface_t *mask = cairo_image_surface_create(
       CAIRO_FORMAT_A8, width / scale, height / scale);
   int stride = cairo_image_surface_get_stride(mask);
@@ -36,7 +38,8 @@ void dither_bb(cairo_t *cr, int width, int height,
   cairo_pattern_t *pat = cairo_pattern_create_for_surface(mask);
   cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
   cairo_matrix_t m;
-  cairo_matrix_init_scale(&m, 1.0 / ((float)scale), 1.0 / ((float)scale));
+  cairo_matrix_init_scale(&m, ((float)ewidth) / ((float)width),
+                          ((float)eheight) / ((float)height));
   cairo_pattern_set_matrix(pat, &m);
 
   cairo_set_source_rgba(cr, 0, 0, 0, alpha);
@@ -50,7 +53,7 @@ float lvl_v_noise(float tx, float ty, void *_data) {
   double _void;
   float rseed = modf(sin(tx * 12.9898 + ty * 78.233) * 43758.5453, &_void);
   float rand = rseed / 100.;
-  return CLAMP(natural + rand, 0., 1.);
+  return CLAMP(natural + rand, 0.1, 1.);
 }
 static gboolean on_expose(GtkWidget *widget, GdkEventExpose *event,
                           gpointer data) {

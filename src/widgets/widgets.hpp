@@ -214,7 +214,7 @@ typedef struct led_graph_data {
   GtkWidget *label_b;
 
   int storage_offset_h;
-  graph_point_t *points;
+  graph_point_t **points;
   int last_w = 0;
   int last_h = 0;
   int is_final;

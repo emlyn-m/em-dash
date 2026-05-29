@@ -28,28 +28,28 @@
 void process_graph_update(led_graph_data_t *gdata);
 void button_callback_a(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
-    ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_v);
-    ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
-        *((led_graph_data_t *)gdata_vp)->points[i].v;
+    ((led_graph_data_t *)gdata_vp)->points[i]->v =
+        &(((led_graph_data_t *)gdata_vp)->points[i]->_v_v);
+    ((led_graph_data_t *)gdata_vp)->points[i]->sliderref->value =
+        *((led_graph_data_t *)gdata_vp)->points[i]->v;
   }
   gtk_widget_queue_draw(((led_graph_data_t *)gdata_vp)->drawref);
 }
 void button_callback_r(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
-    ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_h);
-    ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
-        *((led_graph_data_t *)gdata_vp)->points[i].v;
+    ((led_graph_data_t *)gdata_vp)->points[i]->v =
+        &(((led_graph_data_t *)gdata_vp)->points[i]->_v_h);
+    ((led_graph_data_t *)gdata_vp)->points[i]->sliderref->value =
+        *((led_graph_data_t *)gdata_vp)->points[i]->v;
   }
   gtk_widget_queue_draw(((led_graph_data_t *)gdata_vp)->drawref);
 }
 void button_callback_g(GtkButton *_b, GdkEvent *_e, void *gdata_vp) {
   for (int i = 0; i < 12; i++) {
-    ((led_graph_data_t *)gdata_vp)->points[i].v =
-        &(((led_graph_data_t *)gdata_vp)->points[i]._v_s);
-    ((led_graph_data_t *)gdata_vp)->points[i].sliderref->value =
-        *((led_graph_data_t *)gdata_vp)->points[i].v;
+    ((led_graph_data_t *)gdata_vp)->points[i]->v =
+        &(((led_graph_data_t *)gdata_vp)->points[i]->_v_s);
+    ((led_graph_data_t *)gdata_vp)->points[i]->sliderref->value =
+        *((led_graph_data_t *)gdata_vp)->points[i]->v;
   }
   gtk_widget_queue_draw(((led_graph_data_t *)gdata_vp)->drawref);
 }
@@ -76,7 +76,7 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
   for (int j = 0; j < 12; j++) {
     int x1 = (int)(((float)(j + 0.5) / 12.0) * (w));
     int y1 = h -
-             ((int)((*gdata->points[j].v - ((int)*gdata->points[j].v)) *
+             ((int)((*gdata->points[j]->v - ((int)*gdata->points[j]->v)) *
                     (float)(h - (lg_t + lg_b)))) -
              lg_b;
     if (j == 0) {
@@ -85,22 +85,22 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
     if (j < 11) {
       int x0 = (int)(((float)(j - 0.5) / 12.0) * (w));
       int y0 = h -
-               ((int)((*gdata->points[j > 0 ? j - 1 : 0].v -
-                       ((int)*gdata->points[j > 0 ? j - 1 : 0].v)) *
+               ((int)((*gdata->points[j > 0 ? j - 1 : 0]->v -
+                       ((int)*gdata->points[j > 0 ? j - 1 : 0]->v)) *
                       (float)(h - (lg_t + lg_b)))) -
                lg_b;
 
       int x2 = (int)(((float)(j + 1.5) / 12.0) * (w));
       int y2 =
           h -
-          ((int)((*gdata->points[j + 1].v - ((int)*gdata->points[j + 1].v)) *
+          ((int)((*gdata->points[j + 1]->v - ((int)*gdata->points[j + 1]->v)) *
                  (float)(h - (lg_t + lg_b)))) -
           lg_b;
 
       int x3 = (int)(((float)(j + 2.5) / 12.0) * (w));
       int y3 = h -
-               ((int)((*gdata->points[j < 10 ? j + 2 : 0].v -
-                       ((int)*gdata->points[j < 10 ? j + 2 : 0].v)) *
+               ((int)((*gdata->points[j < 10 ? j + 2 : 0]->v -
+                       ((int)*gdata->points[j < 10 ? j + 2 : 0]->v)) *
                       (float)(h - (lg_t + lg_b)))) -
                lg_b;
 
@@ -139,11 +139,11 @@ void draw_lines(cairo_t *cr, led_graph_data_t *gdata, int w, int h,
                         (2. - ((float)0)) / 5., 1);
   if (dither) {
     dither_bb(cr, w, h, &levels, 1., (void *)bdist);
-    int STORAGE_OFFSET =
-        gdata->storage_offset_h + (gdata->points[0].v - &gdata->points[0]._v_h);
+    int STORAGE_OFFSET = gdata->storage_offset_h +
+                         (gdata->points[0]->v - &gdata->points[0]->_v_h);
     float values[12];
     for (int i = 0; i < 12; i++) {
-      values[i] = *gdata->points[i].v;
+      values[i] = *gdata->points[i]->v;
     }
     write_void_ptr(STORAGE_OFFSET, values, 12, sizeof(float));
     cairo_path_destroy(bdist->path);
@@ -184,15 +184,15 @@ void process_graph_update(led_graph_data_t *gdata) {
   a = {0, 0, 0, 0};
 
   for (int i = 0; i < 12; i++) {
-    gtk_widget_size_request(gdata->points[i].ref, &lreq);
+    gtk_widget_size_request(gdata->points[i]->ref, &lreq);
     int lx = (int)(((float)(i + 0.5) / 12.0) * (w - 2 * ledg_padw)) + ledg_padw;
     a = {lx, h - ledg_padh / 2 - lreq.height / 2, lreq.width, lreq.height};
-    gtk_widget_size_allocate(gdata->points[i].ref, &a);
+    gtk_widget_size_allocate(gdata->points[i]->ref, &a);
 
     a = {(int)(((float)i / 13.0) * w) + ledg_padw + 2, ledg_padh + lg_t,
          (w - 2 * ledg_padw) / 12 - 4,
          h - ((int)1.5 * ledg_padh + lreq.height + lg_b + lg_t)};
-    gtk_widget_size_allocate(gdata->points[i].sliderref->drawing_area, &a);
+    gtk_widget_size_allocate(gdata->points[i]->sliderref->drawing_area, &a);
   }
 
   a = {ledg_padw, ledg_padh, w - 2 * ledg_padw,
@@ -297,7 +297,7 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H, int *graph_mode) {
   PangoFontDescription *font_desc = pango_font_description_from_string(FONT_6);
 
   time_t start = time(NULL) % 3600;
-  gdata->points = (graph_point_t *)malloc(12 * sizeof(graph_point_t));
+  gdata->points = (graph_point_t **)malloc(12 * sizeof(graph_point_t *));
 
   float *existing_h = (float *)read_void_ptr(STORAGE_OFFSET_H, 12, sizeof(int));
   float *existing_s =
@@ -306,30 +306,31 @@ GtkWidget *led_graph(const int STORAGE_OFFSET_H, int *graph_mode) {
       (float *)read_void_ptr(STORAGE_OFFSET_H + 2, 12, sizeof(int));
 
   for (int i = 0; i < 12; i++) {
-    gdata->points[i].drawref = gdata->drawref;
-    gdata->points[i].is_final = &gdata->is_final;
+    gdata->points[i] = (graph_point_t *)malloc(sizeof(graph_point_t));
+    gdata->points[i]->drawref = gdata->drawref;
+    gdata->points[i]->is_final = &gdata->is_final;
 
-    gdata->points[i]._v_h = existing_h[i];
-    gdata->points[i]._v_s = existing_s[i];
-    gdata->points[i]._v_v = existing_v[i];
-    gdata->points[i].v = &(gdata->points[i]._v_v);
+    gdata->points[i]->_v_h = existing_h[i];
+    gdata->points[i]->_v_s = existing_s[i];
+    gdata->points[i]->_v_v = existing_v[i];
+    gdata->points[i]->v = &(gdata->points[i]->_v_v);
 
-    gdata->points[i].t = start + 3600 * i;
+    gdata->points[i]->t = start + 3600 * i;
     char labelbuf[8];
     snprintf(labelbuf, 8, "%02ld:00",
-             2 * ((gdata->points[i].t) % 86400) / 3600);
-    gdata->points[i].ref = label_widget(labelbuf);
-    gtk_widget_modify_font(gdata->points[i].ref, font_desc);
-    gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->points[i].ref, 0, 0);
+             2 * ((gdata->points[i]->t) % 86400) / 3600);
+    gdata->points[i]->ref = label_widget(labelbuf);
+    gtk_widget_modify_font(gdata->points[i]->ref, font_desc);
+    gtk_fixed_put(GTK_FIXED(gdata->ref), gdata->points[i]->ref, 0, 0);
 
-    gdata->points[i].sliderref = kindle_slider_new(
-        &(gdata->points[i]), slider_update, slider_release, 1);
-    gdata->points[i].sliderref->value = *gdata->points[i].v;
+    gdata->points[i]->sliderref =
+        kindle_slider_new(gdata->points[i], slider_update, slider_release, 1);
+    gdata->points[i]->sliderref->value = *gdata->points[i]->v;
 
-    gdata->points[i].graph_mode = graph_mode;
+    gdata->points[i]->graph_mode = graph_mode;
 
     gtk_fixed_put(GTK_FIXED(gdata->ref),
-                  gdata->points[i].sliderref->drawing_area, 0, 1);
+                  gdata->points[i]->sliderref->drawing_area, 0, 1);
   }
 
   free(existing_h);

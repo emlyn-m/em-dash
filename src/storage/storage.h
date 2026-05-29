@@ -1,5 +1,5 @@
 #pragma once
-#define STORAGE_PATH "/config.dat"
+#define STORAGE_PATH "./config.dat"
 
 #define ARRAY_KEY_COUNT 7
 

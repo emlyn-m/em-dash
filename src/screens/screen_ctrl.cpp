@@ -1,3 +1,4 @@
+#include "src/config.hpp"
 #include "src/images/val.h"
 #include "src/log.hpp"
 #include "src/screens/screens.hpp"
@@ -16,7 +17,8 @@
 void exit_handler(GtkButton *_b, GdkEvent *_e, void *_d) { exit(0); }
 
 float get_brightness() {
-  if (strcmp(getenv("LOCAL_BUILD"), "0")) {
+  printf("lb %d\n", get_attr_bool("LOCAL_BUILD"));
+  if (get_attr_bool("LOCAL_BUILD")) {
     return 0;
   }
   FILE *bfile = fopen(BRIGHTNESS_SYSFILE, "r");
@@ -28,7 +30,7 @@ float get_brightness() {
 }
 
 void set_brightness(GtkButton *_b, GdkEvent *_e, void *brightness) {
-  if (strcmp(getenv("LOCAL_BUILD"), "0")) {
+  if (get_attr_bool("LOCAL_BUILD")) {
     return;
   }
 
@@ -90,10 +92,10 @@ GtkWidget *generate_ctrl_screen(GtkWidget *stack,
   brightness_data->img = val;
   brightness_data->size = 40;
   brightness_data->flag = 0;
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)_img_set_src_helper, brightness_data);
   char dumpbuf[32];
-  char *ip = getenv("LOG_IP");
+  char *ip = get_attr_str("LOG_IP");
   int ip_offset = strlen(ip) - 1, flag = 0;
   while (!(ip[--ip_offset] == '.' && flag)) {
     if (ip[ip_offset] == '.') {
@@ -101,7 +103,7 @@ GtkWidget *generate_ctrl_screen(GtkWidget *stack,
     }
   }
   snprintf(dumpbuf, 32, "<b>logdump</b>\n%s\n:%ld", ip + ip_offset,
-           atol(getenv("LOG_PORT")));
+           get_attr_long("LOG_PORT"));
   gtk_table_add(table, 0, 2, 16, 20,
                 button_widget(dumpbuf, dumplog_handler, NULL));
 

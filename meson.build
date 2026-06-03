@@ -6,6 +6,7 @@ thread_dep = dependency('threads')
 sources = files(
     './src/log.cpp',
     './src/main.cpp',
+    './src/config.cpp',
 	'./src/net/alerts.cpp',
 	'./src/net/cJSON.cpp',
 	'./src/net/calendar.cpp',

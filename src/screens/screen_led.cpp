@@ -1,3 +1,4 @@
+#include "src/config.hpp"
 #include "src/images/hue.h"
 #include "src/images/sat.h"
 #include "src/images/val.h"
@@ -195,9 +196,10 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
       (set_screen_data_t *)malloc(sizeof(set_screen_data_t));
   ctrl_data->stack = stack;
   tuya_led_t *led = (tuya_led_t *)malloc(sizeof(tuya_led_t));
-  tuya_led_new(led, getenv("LED_STRIP_ID"), getenv("LED_STRIP_NAME"),
-               inet_addr(getenv("LED_STRIP_IP")),
-               (unsigned char *)getenv("LED_STRIP_KEY"));
+  tuya_led_new(led, get_attr_str("LED_STRIP_ID"),
+               get_attr_str("LED_STRIP_NAME"),
+               inet_addr(get_attr_str("LED_STRIP_IP")),
+               (unsigned char *)get_attr_str("LED_STRIP_KEY"));
 
   GtkWidget *table = gtk_table_custom(7, 9);
 
@@ -219,7 +221,7 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
                    led);
   gtk_box_pack_start(GTK_BOX(wrapper), ev_box, TRUE, TRUE, 5 * SCALE);
   gtk_table_add(table, 0, 1, 0, 1, wrapper);
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)power_button_update, pb_args);
 
   GtkWidget *labelbox = gtk_hbox_new(FALSE, 0);
@@ -250,7 +252,7 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
                    G_CALLBACK(set_mode_handler), led);
   gtk_box_pack_start(GTK_BOX(wrapper_mode), ev_box_mode, TRUE, TRUE, 5 * SCALE);
   gtk_table_add(table, 7, 8, 0, 1, wrapper_mode);
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)mode_handler_update, mode_args);
 
   gtk_table_add(table, 8, 9, 0, 1,
@@ -265,7 +267,7 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   hue_dat->img = hue;
   hue_dat->size = 40;
   hue_dat->flag = 0;
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)_img_set_src_helper, hue_dat);
 
   kindle_slider_t *sat_slider =
@@ -277,7 +279,7 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   sat_dat->img = sat;
   sat_dat->size = 40;
   sat_dat->flag = 0;
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)_img_set_src_helper, sat_dat);
 
   kindle_slider_t *val_slider =
@@ -289,7 +291,7 @@ GtkWidget *generate_led_strip_screen(GtkWidget *stack,
   val_dat->img = val;
   val_dat->size = 40;
   val_dat->flag = 0;
-  g_timeout_add(atol(getenv("UI_UPDATE_FREQUENCY")),
+  g_timeout_add(get_attr_long("UI_UPDATE_FREQUENCY"),
                 (GSourceFunc)_img_set_src_helper, val_dat);
 
   struct _spawn_slider_args *args =

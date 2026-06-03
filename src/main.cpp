@@ -1,3 +1,4 @@
+#include "config.hpp"
 #include "src/log.hpp"
 #include "src/screens/screens.hpp"
 
@@ -15,9 +16,11 @@
 #define OFFSET_SIZE 5
 
 int main(int argc, char *argv[]) {
-
   log_init();
   storage_init();
+
+  load_config_file(".env");
+  load_config_file(".env.config");
 
   GtkWidget *window;
   gtk_init(&argc, &argv);

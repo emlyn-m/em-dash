@@ -19,6 +19,7 @@ sources = files(
 	'./src/screens/screen_life.cpp',
 	'./src/screens/screen_ctrl.cpp',
 	'./src/screens/screen_led.cpp',
+	'./src/screens/screen_lamp.cpp',
 	'./src/screens/table.cpp',
 	'./src/widgets/3d.cpp',
 	'./src/widgets/button.cpp',

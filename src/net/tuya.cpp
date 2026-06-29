@@ -1,5 +1,6 @@
 #include "src/net/tuya.hpp"
 #include "src/log.hpp"
+#include <glib.h>
 
 #include <arpa/inet.h>
 #include <cinttypes>
@@ -14,10 +15,11 @@
 #include <unistd.h>
 
 void tuya_led_new(tuya_led_t *led, char *id, char *name, uint32_t ip,
-                  unsigned char *key) {
+                  uint8_t version, unsigned char *key) {
   led->id = id;
   led->name = name;
   led->ip = ip;
+  led->version = version;
   led->key = key;
 
   led->power = 0;
@@ -199,7 +201,13 @@ unsigned char *_tuya_payload_encode(tuya_led_t *led, uint32_t command,
     ct_len += 15;
   }
 
-  *msg_size = 16 + ct_len + 8; // 16 byte header, 8 byte tail
+  uint header_size =
+      led->version >= 35 ? 0 : 16; // todo: header size for v3.5 proto
+  // for v3.5, hmac key = local key, use 6699 header
+
+  uint end_size = led->version >= 35 ? 24 : 8;
+
+  *msg_size = header_size + ct_len + end_size; // 16 byte header, 8 byte tail
 
   uint8_t *msg_buf = (uint8_t *)malloc(*msg_size);
   if (!msg_buf) {
@@ -221,10 +229,17 @@ unsigned char *_tuya_payload_encode(tuya_led_t *led, uint32_t command,
   return msg_buf;
 }
 
-void _tuya_generate_header(unsigned char *buf) {
+void _tuya_33_protobytes(unsigned char *buf) {
   buf[0] = '3';
   buf[1] = '.';
   buf[2] = '3';
+  _pack_u32_be(0, buf + 3);
+}
+
+void _tuya_35_protobytes(unsigned char *buf) {
+  buf[0] = '3';
+  buf[1] = '.';
+  buf[2] = '5';
   _pack_u32_be(0, buf + 3);
 }
 
@@ -243,10 +258,15 @@ int tuya_cmd_send(tuya_led_t *led, uint32_t command, char *dps) {
 
   unsigned char header_buf[VERSION_HEADER_SIZE] = {0};
   unsigned char *header = header_buf;
-  if (!((command == COMMAND_QUERY))) {
-    _tuya_generate_header(header);
+  if (led->version == 33) {
+    if (!((command == COMMAND_QUERY))) {
+      _tuya_33_protobytes(header);
+    } else {
+      header = NULL;
+    }
   } else {
-    header = NULL;
+    // _tuya_paload_encode fails on 35 msgs since we dont generate a header?
+    return 1;
   }
   uint8_t *encoded =
       _tuya_payload_encode(led, command, payload, header, &msg_size);

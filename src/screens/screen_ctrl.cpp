@@ -71,6 +71,12 @@ void set_led1_handler(GtkButton *_button, GdkEvent *_event, void *data_v) {
   set_screen(_button, _event, data_v);
 }
 
+void set_lamp1_handler(GtkButton *_button, GdkEvent *_event, void *data_v) {
+  set_screen_data_t *data = (set_screen_data_t *)data_v;
+  data->target_screen_idx = SCREEN_IDX_LED2;
+  set_screen(_button, _event, data_v);
+}
+
 GtkWidget *generate_ctrl_screen(GtkWidget *stack,
                                 void (*set_screen)(GtkButton *, GdkEvent *,
                                                    void *)) {
@@ -112,8 +118,12 @@ GtkWidget *generate_ctrl_screen(GtkWidget *stack,
   gtk_table_add(
       table, 12, 15, 4, 8,
       button_widget((char *)"led.strip0", set_led1_handler, ctrl_data));
+  gtk_table_add(
+      table, 12, 15, 8, 12,
+      button_widget((char *)"lamp.strip0", set_lamp1_handler, ctrl_data));
   gtk_table_add(table, 12, 15, 16, 20,
                 button_widget((char *)"۶ৎ₊˚⊹⋆ৎ", set_life_handler, ctrl_data));
+
   gtk_table_add(table, 2, 12, 0, 20, log_widget());
   return table;
 }

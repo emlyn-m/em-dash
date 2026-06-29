@@ -2,10 +2,11 @@
 
 #include <gtk-2.0/gtk/gtk.h>
 
-#define N_SCREENS 3
+#define N_SCREENS 4
 #define SCREEN_IDX_LIFE 0
 #define SCREEN_IDX_CTRL 1
 #define SCREEN_IDX_LED1 2
+#define SCREEN_IDX_LED2 3
 
 #define BRIGHTNESS_SCALE 200 // full=4095
 #define BRIGHTNESS_SYSFILE "/sys/class/backlight/max77696-bl/brightness"

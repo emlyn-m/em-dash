@@ -93,7 +93,8 @@ struct _spawn_slider_args {
   tuya_led_t *led;
   kindle_slider_t **sliders;
 };
-void _update_values_from_buf(char *buf, struct _spawn_slider_args *args) {
+static void _update_values_from_buf(char *buf,
+                                    struct _spawn_slider_args *args) {
   cJSON *values_j = cJSON_Parse(buf);
   cJSON *dps = cJSON_GetObjectItem(values_j, "dps");
   if (!dps) {
@@ -118,7 +119,7 @@ void _update_values_from_buf(char *buf, struct _spawn_slider_args *args) {
 
   cJSON_Delete(values_j);
 }
-void *_spawn_led_strip_thread(void *args_vp) {
+static void *_spawn_led_strip_thread(void *args_vp) {
   struct _spawn_slider_args *args = (struct _spawn_slider_args *)args_vp;
   tuya_led_t *led = args->led;
 
@@ -192,18 +193,17 @@ static gboolean mode_handler_update(void *data_vp) {
   return TRUE;
 }
 
-GtkWidget *generate_led_strip_screen(GtkWidget *stack,
-                                     void (*set_screen)(GtkButton *, GdkEvent *,
-                                                        void *)) {
+GtkWidget *generate_lamp_screen(GtkWidget *stack,
+                                void (*set_screen)(GtkButton *, GdkEvent *,
+                                                   void *)) {
   set_screen_data_t *ctrl_data =
       (set_screen_data_t *)malloc(sizeof(set_screen_data_t));
   ctrl_data->stack = stack;
   tuya_led_t *led = (tuya_led_t *)malloc(sizeof(tuya_led_t));
-  tuya_led_new(led, get_attr_str("LED_STRIP_ID"),
-               get_attr_str("LED_STRIP_NAME"),
-               inet_addr(get_attr_str("LED_STRIP_IP")),
-               get_attr_long("LED_STRIP_VERSION"),
-               (unsigned char *)get_attr_str("LED_STRIP_KEY"));
+  tuya_led_new(led, get_attr_str("LED_LAMP_ID"), get_attr_str("LED_LAMP_NAME"),
+               inet_addr(get_attr_str("LED_LAMP_IP")),
+               get_attr_long("LED_LAMP_VERSION"),
+               (unsigned char *)get_attr_str("LED_LAMP_KEY"));
 
   GtkWidget *table = gtk_table_custom(7, 9);
 

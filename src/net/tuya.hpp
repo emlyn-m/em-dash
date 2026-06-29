@@ -12,13 +12,20 @@
 #define TUYA_PORT 6668
 
 #define VERSION_HEADER_SIZE 19
-// 19 = 3[3.3] + 16??
+
 #define PREFIX_55AA_VALUE 0x000055AA
+#define PREFIX_6699_VALUE 0x00006699
 #define SUFFIX_VALUE 0x0000AA55
+#define SUFFIX_6699_VALUE 0x00009966
 
 #define COMMAND_CTRL 0x07
 #define COMMAND_STATUS 0x08
 #define COMMAND_QUERY 0x0a
+#define COMMAND_CTRL_NEW 0x0D
+#define COMMAND_DP_QUERY_NEW 0x10
+#define SESS_KEY_NEG_START 3
+#define SESS_KEY_NEG_RESP 4
+#define SESS_KEY_NEG_FINISH 5
 
 #define MAX_DPS 10
 
@@ -32,6 +39,7 @@ typedef struct tuya_led {
   char *name;
   uint32_t ip;
   unsigned char *key;
+  uint8_t version; // supported: 33, 35
 
   int power;
   uint32_t hue;
@@ -44,6 +52,9 @@ typedef struct tuya_led {
   int failures;
 
   int graph_control;
+
+  unsigned char sesskey[16];
+  int has_sesskey;
 } tuya_led_t;
 
 typedef struct _tuya_msg {
@@ -55,7 +66,7 @@ typedef struct _tuya_msg {
 } tuya_msg_t;
 
 void tuya_led_new(tuya_led_t *led, char *id, char *name, uint32_t ip,
-                  unsigned char *key);
+                  uint8_t version, unsigned char *key);
 int _tuya_socket_open(tuya_led_t *led);
 void tuya_msg_free(tuya_msg_t *msg);
 

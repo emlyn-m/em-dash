@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
       generate_life_screen(stack, set_screen),
       generate_ctrl_screen(stack, set_screen),
       generate_led_strip_screen(stack, set_screen),
+      generate_lamp_screen(stack, set_screen),
   };
   for (int i = 0; i < N_SCREENS; i++) {
     gtk_container_add(GTK_CONTAINER(stack), screens[i]);

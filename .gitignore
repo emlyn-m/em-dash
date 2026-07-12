@@ -1,0 +1,6 @@
+# secrets / local config
+.env
+config.dat
+
+# caches
+.cache/

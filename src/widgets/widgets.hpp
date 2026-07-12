@@ -53,8 +53,12 @@ GtkWidget *make_card(int w, int h);
 
 // --- weather ---------------------------------------------------------------
 
-// Weather panel: a bare Cairo surface for the caller to draw onto later. For
-// now it renders a solid-red debug fill (no dashed border).
+// Weather panel
 GtkWidget *make_weather_surface(int w, int h);
 
-}  // namespace ui
+// --- telem -----------------------------------------------------------------
+
+// Telemtry panel
+GtkWidget *make_telem_surface(int w, int h);
+
+} // namespace ui

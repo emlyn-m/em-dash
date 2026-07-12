@@ -26,17 +26,22 @@ Telem g_telem;
 // Read a single integer from a sysfs-style file. Leaves `out` untouched (0) if
 // the path is missing — e.g. when running off-device.
 void read_int_file(const char *path, int &out) {
-  if (!path) return;
+  if (!path)
+    return;
   FILE *fp = fopen(path, "r");
-  if (!fp) return;
-  if (fscanf(fp, "%d", &out) != 1) out = 0;
+  if (!fp)
+    return;
+  if (fscanf(fp, "%d", &out) != 1)
+    out = 0;
   fclose(fp);
 }
 
 void read_wifi_strength(int &out) {
   FILE *fp = popen("iw wlan0 link | head -n 6 | tail -n 1", "r");
-  if (!fp) return;
-  if (fscanf(fp, "  signal: %d dBm", &out) <= 0) out = 0;
+  if (!fp)
+    return;
+  if (fscanf(fp, "  signal: %d dBm", &out) <= 0)
+    out = 0;
   pclose(fp);
 }
 
@@ -44,7 +49,8 @@ bool run_curl(const char *url, std::string &out) {
   char cmd[1024];
   snprintf(cmd, sizeof cmd, "curl -s %s", url);
   FILE *fp = popen(cmd, "r");
-  if (!fp) return false;
+  if (!fp)
+    return false;
   char chunk[4096];
   size_t got;
   while ((got = fread(chunk, 1, sizeof chunk, fp)) > 0)
@@ -65,7 +71,8 @@ bool fetch_devices(std::vector<Device> &out) {
     return false;
   }
   cJSON *arr = cJSON_Parse(body.c_str());
-  if (!arr) return false;
+  if (!arr)
+    return false;
   out.clear();
   int n = cJSON_GetArraySize(arr);
   for (int i = 0; i < n; i++) {
@@ -84,7 +91,8 @@ bool fetch_services(std::vector<Service> &out) {
     return false;
   }
   cJSON *arr = cJSON_Parse(body.c_str());
-  if (!arr) return false;
+  if (!arr)
+    return false;
   out.clear();
   int n = cJSON_GetArraySize(arr);
   for (int i = 0; i < n; i++) {
@@ -96,7 +104,8 @@ bool fetch_services(std::vector<Service> &out) {
 }
 
 double compute_jitter(const std::vector<long> &pings) {
-  if (pings.size() < 2) return 0;
+  if (pings.size() < 2)
+    return 0;
   double sum = 0;
   for (size_t i = 1; i < pings.size(); i++)
     sum += std::fabs((double)pings[i] - (double)pings[i - 1]);
@@ -105,7 +114,8 @@ double compute_jitter(const std::vector<long> &pings) {
 
 void telem_local_worker(std::function<void()> on_update) {
   long freq = get_attr_long("TELEM_UPDATE_FREQUENCY");
-  if (freq <= 0) freq = 15;
+  if (freq <= 0)
+    freq = 15;
 
   for (;;) {
     int battery = 0, current = 0, wifi = 0;
@@ -118,7 +128,8 @@ void telem_local_worker(std::function<void()> on_update) {
       g_telem.current = current;
       g_telem.wifi_strength = wifi;
       g_telem.last_update = time(nullptr);
-      if (on_update) on_update();
+      if (on_update)
+        on_update();
     });
     std::this_thread::sleep_for(std::chrono::seconds(freq));
   }
@@ -126,7 +137,8 @@ void telem_local_worker(std::function<void()> on_update) {
 
 void telem_net_worker(std::function<void()> on_update) {
   long freq = get_attr_long("TELEM_NET_UPDATE_FREQUENCY");
-  if (freq <= 0) freq = 120;
+  if (freq <= 0)
+    freq = 120;
 
   for (;;) {
     std::vector<Device> devices;
@@ -141,24 +153,25 @@ void telem_net_worker(std::function<void()> on_update) {
       ip = ip_buf;
     free(ip_buf);
 
-    post_to_main([devices = std::move(devices),
-                  services = std::move(services), ip = std::move(ip), ping,
-                  on_update]() mutable {
+    post_to_main([devices = std::move(devices), services = std::move(services),
+                  ip = std::move(ip), ping, on_update]() mutable {
       g_telem.devices = std::move(devices);
       g_telem.services = std::move(services);
-      if (!ip.empty()) g_telem.ip = std::move(ip);
+      if (!ip.empty())
+        g_telem.ip = std::move(ip);
       g_telem.ping_history.push_back(ping);
       if (g_telem.ping_history.size() > PING_HISTORY_MAX)
         g_telem.ping_history.erase(g_telem.ping_history.begin());
       g_telem.jitter = compute_jitter(g_telem.ping_history);
       g_telem.last_update_net = time(nullptr);
-      if (on_update) on_update();
+      if (on_update)
+        on_update();
     });
     std::this_thread::sleep_for(std::chrono::seconds(freq));
   }
 }
 
-}  // namespace
+} // namespace
 
 void telem_start(std::function<void()> on_update) {
   std::thread(telem_local_worker, on_update).detach();
@@ -167,4 +180,4 @@ void telem_start(std::function<void()> on_update) {
 
 const Telem &telem_state() { return g_telem; }
 
-}  // namespace ui
+} // namespace ui

@@ -1,3 +1,4 @@
+#include "net/telem.hpp"
 #include "screens/screens.hpp"
 
 #include "net/weather.hpp"
@@ -59,14 +60,17 @@ GtkWidget *build_main_screen() {
   put(fixed, backdrop, 0, 0);
   clock_start(backdrop);
 
-  // Weather: bare Cairo surface. The net worker fills the
-  // model in the background and redraws the surface on each refresh.
+  // Weather
   GtkWidget *weather = make_weather_surface(276, 591);
   put(fixed, weather, 30, 293);
   weather_start([weather] { gtk_widget_queue_draw(weather); });
 
+  // Telemetry
+  GtkWidget *telem = make_telem_surface(324, 737);
+  put(fixed, telem, 318, 293);
+  telem_start([telem] { gtk_widget_queue_draw(telem); });
+
   // Placeholders left as null components
-  put(fixed, make_fill(327, 737, GREY), 316, 293); // telem TODO
   put(fixed, make_fill(717, 737, GREY), 673, 293); // calendar TODO
 
   // Device button row. Each LED button opens the modal pointed at its own

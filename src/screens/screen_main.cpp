@@ -70,18 +70,18 @@ GtkWidget *build_main_screen() {
       make_button("ping pixel", 245, 50, 10, 0.0, noop_press,
                   (gpointer) "ping pixel"),
       846, 184);
-  put(fixed,
-      make_button("sigterm", 245, 50, 10, 0.0, quit_press, nullptr), 1116, 184);
+  put(fixed, make_button("sigterm", 245, 50, 10, 0.0, quit_press, nullptr),
+      1116, 184);
 
   // Shell controls
   put(fixed,
       make_button("dumplogs", 236, 50, 10, 0.0, noop_press,
                   (gpointer) "dumplogs"),
-      50, 919);
+      50, 915);
   put(fixed,
       make_button("revshell", 236, 50, 10, 0.0, noop_press,
                   (gpointer) "revshell"),
-      50, 980);
+      50, 976);
 
   return fixed;
 }

@@ -25,6 +25,7 @@ sources = files(
     './src/widgets/card.cpp',
     './src/widgets/weather.cpp',
     './src/widgets/clock.cpp',
+    './src/widgets/slider.cpp',
     './src/screens/nav.cpp',
     './src/screens/screen_main.cpp',
     './src/screens/screen_led.cpp',

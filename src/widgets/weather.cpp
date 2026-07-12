@@ -19,23 +19,23 @@ constexpr int BOX_H = 40;
 constexpr int BOX_PAD = 5;
 
 gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
-  Weather weather = weather_state();
-  if (!weather.last_update) {
-    return 1;
-  } // todo: proper handling
-
   cairo_t *cr = detail::begin_paint(w);
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
                 w->allocation.y);
 
   draw_text_tl(cr, 20, 20, BLACK, "weather", 30, PANGO_WEIGHT_BOLD);
 
+  Weather weather = weather_state();
+  if (!weather.last_update) {
+    return TRUE;
+  }
+
   // precompute ranges
   double global_tmin = 999, global_tmax = -999;
   double tmin[ROWS] = {999, 999, 999, 999, 999, 999, 999};
   double tmax[ROWS] = {-999, -999, -999, -999, -999, -999, -999};
   for (int i = 0; i < ROWS; i++) {
-    for (int j = 24 * i; j < 24 * (i + 1); j++) {
+    for (int j = 24 * i; j < MIN(weather.events.size(), 24 * (i + 1)); j++) {
       if (weather.events[j].temp_c < tmin[i]) {
         tmin[i] = weather.events[j].temp_c;
       }

@@ -9,6 +9,9 @@ enum Screen { SCREEN_MAIN = 0, SCREEN_LED = 1, N_SCREENS = 2 };
 // Register the GtkNotebook that screen-switching buttons navigate.
 void set_stack(GtkWidget *notebook);
 
+// Switch to a screen programmatically (same effect as nav_press).
+void navigate(int screen);
+
 // Screen-switching press handler: `data` carries the target screen index
 // (via GINT_TO_POINTER).
 gboolean nav_press(GtkWidget *, GdkEventButton *, gpointer data);

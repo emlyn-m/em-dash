@@ -14,6 +14,18 @@ void put(GtkWidget *fixed, GtkWidget *child, int x, int y) {
   gtk_fixed_put(GTK_FIXED(fixed), child, x, y);
 }
 
+// A main-screen device button: point the modal at this device, then open it.
+struct LedButton {
+  int device;
+  const char *label;
+};
+gboolean open_led(GtkWidget *, GdkEventButton *, gpointer d) {
+  auto *b = static_cast<LedButton *>(d);
+  led_screen_set_target(b->device, b->label);
+  navigate(SCREEN_LED);
+  return TRUE;
+}
+
 // Static art painted directly on the dotted field: dots, divider, and the
 // clock (which needs to composite over the dots rather than sit in a box).
 gboolean draw_backdrop(GtkWidget *w, GdkEventExpose *, gpointer) {
@@ -57,14 +69,13 @@ GtkWidget *build_main_screen() {
   put(fixed, make_fill(327, 737, GREY), 316, 293); // telem TODO
   put(fixed, make_fill(717, 737, GREY), 673, 293); // calendar TODO
 
-  // Device button row
-  put(fixed,
-      make_button("led.strip0", 245, 50, 10, 0.0, nav_press,
-                  GINT_TO_POINTER(SCREEN_LED)),
+  // Device button row. Each LED button opens the modal pointed at its own
+  // device.
+  static LedButton strip_btn{0, "led.strip0"};
+  static LedButton lamp_btn{1, "led.lamp0"};
+  put(fixed, make_button("led.strip0", 245, 50, 10, 0.0, open_led, &strip_btn),
       306, 184);
-  put(fixed,
-      make_button("led.lamp0", 245, 50, 10, 0.0, nav_press,
-                  GINT_TO_POINTER(SCREEN_LED)),
+  put(fixed, make_button("led.lamp0", 245, 50, 10, 0.0, open_led, &lamp_btn),
       576, 184);
   put(fixed,
       make_button("ping pixel", 245, 50, 10, 0.0, noop_press,

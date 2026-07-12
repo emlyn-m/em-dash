@@ -60,6 +60,7 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
     snprintf(day_buf, 32, "test");
     struct tm *t = localtime(&weather.events[24 * i].time);
     strftime(day_buf, 32, "%a %d", t);
+    *day_buf |= 0x20; // lowercase first letter
     draw_text_tl(cr, 25, top, BLACK, day_buf,
                  20, // GMT+12 offset
                  PANGO_WEIGHT_NORMAL);

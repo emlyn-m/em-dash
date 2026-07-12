@@ -33,4 +33,9 @@ void draw_text(cairo_t *cr, double rx, double ry, double rw, double rh,
 void draw_text_tl(cairo_t *cr, double x, double y, unsigned hex,
                   const char *text, double px, PangoWeight weight);
 
+// Render every font (weight, size) the UI uses to a throwaway surface, so the
+// one-time fontconfig/FreeType/Pango glyph-caching cost is paid at launch
+// rather than on the first screen that uses each combo. Call once at startup.
+void prewarm_fonts();
+
 }  // namespace ui

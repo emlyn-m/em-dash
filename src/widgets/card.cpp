@@ -13,6 +13,11 @@ gboolean draw_card(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
   CardView *v = static_cast<CardView *>(data_v);
   cairo_t *cr = detail::begin_paint(widget);
 
+  // Fill the shadow's uncovered corner gaps with the aligned backdrop so they
+  // don't show the grey window background.
+  paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
+                widget->allocation.x, widget->allocation.y);
+
   // Hard drop shadow.
   set_rgb(cr, BLACK);
   cairo_rectangle(cr, detail::SHADOW, detail::SHADOW, v->w, v->h);

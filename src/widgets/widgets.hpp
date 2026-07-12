@@ -16,6 +16,11 @@ using PressFn = gboolean (*)(GtkWidget *, GdkEventButton *, gpointer);
 // context (for screens that composite their own art over the dots).
 void paint_dots(cairo_t *cr, int w, int h);
 
+// As paint_dots, but phase-aligned to the global grid for a widget whose
+// top-left sits at (origin_x, origin_y) on screen — so an overlay's dots line
+// up seamlessly with the backdrop's.
+void paint_dots_at(cairo_t *cr, int w, int h, int origin_x, int origin_y);
+
 // Full-screen dotted grid.
 GtkWidget *make_dotted_background();
 

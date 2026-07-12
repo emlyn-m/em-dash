@@ -19,4 +19,9 @@ gboolean noop_press(GtkWidget *, GdkEventButton *, gpointer data) {
   return TRUE;
 }
 
+gboolean quit_press(GtkWidget *, GdkEventButton *, gpointer) {
+  gtk_main_quit();
+  return TRUE;
+}
+
 }  // namespace ui

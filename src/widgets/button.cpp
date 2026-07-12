@@ -16,6 +16,12 @@ gboolean draw_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
   ButtonView *v = static_cast<ButtonView *>(data_v);
   cairo_t *cr = detail::begin_paint(widget);
 
+  // The offset shadow leaves two corner gaps uncovered; fill the whole widget
+  // with the aligned backdrop first so those gaps blend in instead of showing
+  // the grey window background.
+  paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
+                widget->allocation.x, widget->allocation.y);
+
   // Hard drop shadow, offset down-right.
   set_rgb(cr, BLACK);
   cairo_rectangle(cr, detail::SHADOW, detail::SHADOW, v->w, v->h);

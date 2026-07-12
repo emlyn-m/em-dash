@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
   ui::led_init();
 
   gtk_init(&argc, &argv);
+  ui::prewarm_fonts();  // pay glyph-caching cost at launch, not on first switch
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   // Window-manager hint for the Kindle's awesome/KUAL launcher.

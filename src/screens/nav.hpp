@@ -17,4 +17,7 @@ gboolean nav_press(GtkWidget *, GdkEventButton *, gpointer data);
 // yet. `data` carries the button's name (const char *) for logging.
 gboolean noop_press(GtkWidget *, GdkEventButton *, gpointer data);
 
+// Quit the application (exits the GTK main loop).
+gboolean quit_press(GtkWidget *, GdkEventButton *, gpointer data);
+
 }  // namespace ui

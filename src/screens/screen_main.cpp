@@ -38,7 +38,7 @@ GtkWidget *make_backdrop() {
   return a;
 }
 
-}  // namespace
+} // namespace
 
 GtkWidget *build_main_screen() {
   GtkWidget *fixed = gtk_fixed_new();
@@ -47,42 +47,43 @@ GtkWidget *build_main_screen() {
   put(fixed, backdrop, 0, 0);
   clock_start(backdrop);
 
-  // Weather: bare Cairo surface (red debug fill for now). The net worker fills
-  // the model in the background and redraws the surface on each refresh.
+  // Weather: bare Cairo surface. The net worker fills the
+  // model in the background and redraws the surface on each refresh.
   GtkWidget *weather = make_weather_surface(276, 591);
   put(fixed, weather, 30, 293);
   weather_start([weather] { gtk_widget_queue_draw(weather); });
 
-  // Placeholders left as null components.
-  put(fixed, make_fill(327, 737, GREY), 316, 293);  // telem TODO
-  put(fixed, make_fill(717, 737, GREY), 673, 293);  // calendar TODO
+  // Placeholders left as null components
+  put(fixed, make_fill(327, 737, GREY), 316, 293); // telem TODO
+  put(fixed, make_fill(717, 737, GREY), 673, 293); // calendar TODO
 
-  // Device button row (245 x 50). Both LED buttons open the modal; the rest
-  // are inert.
+  // Device button row
   put(fixed,
-      make_button("led.strip0", 245, 50, 20, 0.0, nav_press,
+      make_button("led.strip0", 245, 50, 10, 0.0, nav_press,
                   GINT_TO_POINTER(SCREEN_LED)),
       306, 184);
   put(fixed,
-      make_button("led.lamp0", 245, 50, 20, 0.0, nav_press,
+      make_button("led.lamp0", 245, 50, 10, 0.0, nav_press,
                   GINT_TO_POINTER(SCREEN_LED)),
       576, 184);
-  put(fixed, make_button("ping pixel", 245, 50, 20, 0.0, noop_press,
-                         (gpointer) "ping pixel"),
+  put(fixed,
+      make_button("ping pixel", 245, 50, 10, 0.0, noop_press,
+                  (gpointer) "ping pixel"),
       846, 184);
-  put(fixed, make_button("sigterm", 245, 50, 20, 0.0, noop_press,
-                         (gpointer) "sigterm"),
-      1116, 184);
+  put(fixed,
+      make_button("sigterm", 245, 50, 10, 0.0, quit_press, nullptr), 1116, 184);
 
-  // Shell controls (236 x 50, centred text).
-  put(fixed, make_button("dumplogs", 236, 50, 20, 0.5, noop_press,
-                         (gpointer) "dumplogs"),
+  // Shell controls
+  put(fixed,
+      make_button("dumplogs", 236, 50, 10, 0.0, noop_press,
+                  (gpointer) "dumplogs"),
       50, 919);
-  put(fixed, make_button("revshell", 236, 50, 20, 0.5, noop_press,
-                         (gpointer) "revshell"),
+  put(fixed,
+      make_button("revshell", 236, 50, 10, 0.0, noop_press,
+                  (gpointer) "revshell"),
       50, 980);
 
   return fixed;
 }
 
-}  // namespace ui
+} // namespace ui

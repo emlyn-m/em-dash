@@ -17,7 +17,7 @@ namespace ui {
 namespace {
 
 // How many upcoming hourly entries to keep in the model.
-constexpr int WEATHER_EVENTS = 24;
+constexpr int WEATHER_EVENTS = 24 * 7;
 
 Weather g_weather;
 
@@ -39,7 +39,7 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
   time_t now = time(nullptr);
   char date_low[16], date_high[16];
   format_date(((now - 86400) / 86400) * 86400, date_low, sizeof date_low);
-  format_date(((now + 86400) / 86400) * 86400, date_high, sizeof date_high);
+  format_date(((now + 7 * 86400) / 86400) * 86400, date_high, sizeof date_high);
 
   char cmd[1024];
   snprintf(cmd, sizeof cmd, get_attr_str("WEATHER_API_CMD"),
@@ -68,17 +68,13 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
   cJSON *times = cJSON_GetObjectItem(hourly, "time");
   if (!(root && hourly && temps && rain && codes && times)) {
     LOG(PRI_ERR, "weather: parse failed\n");
+    LOG(PRI_DBG, "weather raw: <%s>", body.c_str());
     cJSON_Delete(root);
     return false;
   }
 
-  // Skip to the hourly entry that covers "now".
   int offset = 0;
   int count = cJSON_GetArraySize(times);
-  while (offset + 1 < count &&
-         parse_time_offset(cJSON_GetArrayItem(times, offset + 1)->valuestring) <
-             now)
-    offset++;
 
   out.clear();
   for (int i = 0; i < WEATHER_EVENTS && offset < count; i++, offset++) {
@@ -97,7 +93,8 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
 
 void weather_worker(std::function<void()> on_update) {
   long freq = get_attr_long("WEATHER_UPDATE_FREQUENCY");
-  if (freq <= 0) freq = 3600;
+  if (freq <= 0)
+    freq = 3600;
 
   for (;;) {
     std::vector<WeatherEvent> parsed;
@@ -105,14 +102,15 @@ void weather_worker(std::function<void()> on_update) {
       post_to_main([parsed = std::move(parsed), on_update]() mutable {
         g_weather.events = std::move(parsed);
         g_weather.last_update = time(nullptr);
-        if (on_update) on_update();
+        if (on_update)
+          on_update();
       });
     }
     std::this_thread::sleep_for(std::chrono::seconds(freq));
   }
 }
 
-}  // namespace
+} // namespace
 
 void weather_start(std::function<void()> on_update) {
   std::thread(weather_worker, std::move(on_update)).detach();
@@ -120,4 +118,4 @@ void weather_start(std::function<void()> on_update) {
 
 const Weather &weather_state() { return g_weather; }
 
-}  // namespace ui
+} // namespace ui

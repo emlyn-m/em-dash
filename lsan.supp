@@ -1,0 +1,8 @@
+leak:libgtk*
+leak:libgdk*
+leak:libglib*
+leak:libgobject*
+leak:libpango*
+leak:libcairo*
+leak:libX11*
+leak:libfontconfig*

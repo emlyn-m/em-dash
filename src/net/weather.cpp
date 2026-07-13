@@ -38,8 +38,8 @@ void format_date(time_t when, char *res, size_t n) {
 bool fetch_weather(std::vector<WeatherEvent> &out) {
   time_t now = time(nullptr);
   char date_low[16], date_high[16];
-  format_date(((now - 86400) / 86400) * 86400, date_low, sizeof date_low);
-  format_date(((now + 7 * 86400) / 86400) * 86400, date_high, sizeof date_high);
+  format_date(now, date_low, sizeof date_low);
+  format_date(now + 7 * 86400, date_high, sizeof date_high);
 
   char cmd[1024];
   snprintf(cmd, sizeof cmd, get_attr_str("WEATHER_API_CMD"),
@@ -60,6 +60,7 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
     body.append(chunk, got);
   pclose(fp);
 
+  LOG(PRI_DBG, "weather raw: <%s> (%d bytes)\n", body.c_str(), body.size());
   cJSON *root = cJSON_Parse(body.c_str());
   cJSON *hourly = cJSON_GetObjectItem(root, "hourly");
   cJSON *temps = cJSON_GetObjectItem(hourly, "temperature_2m");
@@ -68,7 +69,6 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
   cJSON *times = cJSON_GetObjectItem(hourly, "time");
   if (!(root && hourly && temps && rain && codes && times)) {
     LOG(PRI_ERR, "weather: parse failed\n");
-    LOG(PRI_DBG, "weather raw: <%s>", body.c_str());
     cJSON_Delete(root);
     return false;
   }

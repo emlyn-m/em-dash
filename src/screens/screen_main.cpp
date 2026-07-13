@@ -33,9 +33,8 @@ gboolean draw_backdrop(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = gdk_cairo_create(w->window);
   paint_dots(cr, w->allocation.width, w->allocation.height);
 
-  // Divider bar: (30, 259) 1360 x 10.
   set_rgb(cr, BLACK);
-  cairo_rectangle(cr, 30, 259, 1360, 10);
+  cairo_rectangle(cr, 30, 259, 1380, 10);
   cairo_fill(cr);
 
   clock_paint(cr);
@@ -67,34 +66,32 @@ GtkWidget *build_main_screen() {
 
   // Telemetry
   GtkWidget *telem = make_telem_surface(324, 737);
-  put(fixed, telem, 318, 293);
+  put(fixed, telem, 336, 293);
   telem_start([telem] { gtk_widget_queue_draw(telem); });
 
   // Placeholders left as null components
-  put(fixed, make_fill(717, 737, GREY), 673, 293); // calendar TODO
+  put(fixed, make_fill(720, 737, GREY), 690, 293); // calendar TODO
 
-  // Device button row. Each LED button opens the modal pointed at its own
-  // device.
   static LedButton strip_btn{0, "led.strip0"};
   static LedButton lamp_btn{1, "led.lamp0"};
-  put(fixed, make_button("led.strip0", 245, 50, 10, 0.0, open_led, &strip_btn),
-      306, 184);
-  put(fixed, make_button("led.lamp0", 245, 50, 10, 0.0, open_led, &lamp_btn),
-      576, 184);
+  put(fixed, make_button("led.strip0", 245, 50, 12, 0.0, open_led, &strip_btn),
+      910, 129);
+  put(fixed, make_button("led.lamp0", 245, 50, 12, 0.0, open_led, &lamp_btn),
+      910, 189);
   put(fixed,
-      make_button("ping pixel", 245, 50, 10, 0.0, noop_press,
+      make_button("ping pixel", 245, 50, 12, 0.0, noop_press,
                   (gpointer) "ping pixel"),
-      846, 184);
-  put(fixed, make_button("sigterm", 245, 50, 10, 0.0, quit_press, nullptr),
-      1116, 184);
+      1165, 129);
+  put(fixed, make_button("sigterm", 245, 50, 12, 0.0, quit_press, nullptr),
+      1165, 189);
 
   // Shell controls
   put(fixed,
-      make_button("dumplogs", 236, 50, 10, 0.0, noop_press,
+      make_button("dumplogs", 236, 50, 12, 0.0, noop_press,
                   (gpointer) "dumplogs"),
       50, 915);
   put(fixed,
-      make_button("revshell", 236, 50, 10, 0.0, noop_press,
+      make_button("revshell", 236, 50, 12, 0.0, noop_press,
                   (gpointer) "revshell"),
       50, 976);
 

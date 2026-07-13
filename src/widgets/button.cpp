@@ -1,3 +1,4 @@
+#include "pango/pango-font.h"
 #include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 
@@ -23,24 +24,18 @@ gboolean draw_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
                 widget->allocation.x, widget->allocation.y);
 
   // Hard drop shadow, offset down-right.
-  set_rgb(cr, BLACK);
-  cairo_rectangle(cr, detail::SHADOW, detail::SHADOW, v->w, v->h);
-  cairo_fill(cr);
+  // set_rgb(cr, BLACK);
+  // cairo_rectangle(cr, detail::SHADOW, detail::SHADOW, v->w, v->h);
+  // cairo_fill(cr);
 
   // White face.
-  set_rgb(cr, WHITE);
+  set_rgb(cr, BLACK);
   cairo_rectangle(cr, 0, 0, v->w, v->h);
   cairo_fill(cr);
 
-  // 1px black border.
-  set_rgb(cr, BLACK);
-  cairo_set_line_width(cr, 1.0);
-  cairo_rectangle(cr, 0.5, 0.5, v->w - 1, v->h - 1);
-  cairo_stroke(cr);
-
   const double pad = v->halign == 0.0 ? 12.0 : 0.0;
-  draw_text(cr, pad, 0, v->w - pad, v->h, BLACK, v->label, v->px,
-            PANGO_WEIGHT_MEDIUM, v->halign, 0.5);
+  draw_text(cr, pad, 0, v->w - pad, v->h, WHITE, v->label, v->px,
+            PANGO_WEIGHT_ULTRABOLD, v->halign, 0.5);
 
   cairo_destroy(cr);
   return TRUE;
@@ -59,13 +54,13 @@ gboolean draw_box_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
   set_rgb(cr, v->bg);
   cairo_rectangle(cr, 0, 0, v->w, v->h);
   cairo_fill(cr);
-  draw_text(cr, 0, 0, v->w, v->h, BLACK, v->label, v->px, PANGO_WEIGHT_MEDIUM,
+  draw_text(cr, 0, 0, v->w, v->h, WHITE, v->label, v->px, PANGO_WEIGHT_BOLD,
             0.5, 0.5);
   cairo_destroy(cr);
   return TRUE;
 }
 
-}  // namespace
+} // namespace
 
 GtkWidget *make_button(const char *label, int w, int h, double px,
                        double halign, PressFn cb, gpointer data) {
@@ -86,4 +81,4 @@ GtkWidget *make_box_button(const char *label, int w, int h, double px,
   return a;
 }
 
-}  // namespace ui
+} // namespace ui

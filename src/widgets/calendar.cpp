@@ -33,12 +33,16 @@ gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
     strftime(datebuf, 32, "%B %-d", t_date);
     datebuf[0] |= 0x20;
 
-    printf("%d %d, %d %d\n", calendar.events[i].start_time,
-           calendar.events[i].end_time, calendar.events[i].start_time % 86400,
-           calendar.events[i].end_time % 86400);
+    // All-day events land on local midnight; localtime() accounts for the
+    // timezone (and DST) offset, whereas a raw UTC `% 86400` does not.
+    struct tm *t_s = localtime(&calendar.events[i].start_time);
+    bool start_midnight =
+        t_s->tm_hour == 0 && t_s->tm_min == 0 && t_s->tm_sec == 0;
+    struct tm *t_e = localtime(&calendar.events[i].end_time);
+    bool end_midnight =
+        t_e->tm_hour == 0 && t_e->tm_min == 0 && t_e->tm_sec == 0;
 
-    if (!((calendar.events[i].start_time % 86400) |
-          (calendar.events[i].end_time % 86400))) {
+    if (start_midnight && end_midnight) {
       snprintf(timebuf, 64, "all day");
     } else {
       struct tm *t_0 = localtime(&calendar.events[i].start_time);

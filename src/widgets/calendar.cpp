@@ -15,23 +15,21 @@ namespace {
 // Agenda layout (panel-local px).
 constexpr int MARGIN = 20;
 constexpr int AGENDA_TOP = 74;
-constexpr int DAYBAR_H = 26; // sharp black date bar
-constexpr int DAYBAR_GAP = 4;
-constexpr int ROW_H = 34;         // one event
-constexpr int TIME_RESERVE = 130; // width kept clear on the right for the time
+constexpr int DAYBAR_H = 26;
+constexpr int DAYBAR_GAP = 0;
+constexpr int ROW_H = 34;
+constexpr int TIME_RESERVE = 100;
 
 void lower(char *s) {
   for (; *s; s++)
     *s = (char)tolower((unsigned char)*s);
 }
 
-// Distinct per calendar day, for grouping consecutive events.
 int day_key(time_t t) {
   struct tm x = *localtime(&t);
   return x.tm_year * 400 + x.tm_yday;
 }
 
-// "all day", else "9:00am–9:30am" (lowercased).
 void format_time(const CalEvent &ev, char *buf, size_t n) {
   struct tm s = *localtime(&ev.start_time);
   struct tm e = *localtime(&ev.end_time);
@@ -40,11 +38,11 @@ void format_time(const CalEvent &ev, char *buf, size_t n) {
     return;
   }
   char a[16], b[16];
-  strftime(a, sizeof a, "%-I:%M%p", &s);
-  strftime(b, sizeof b, "%-I:%M%p", &e);
+  strftime(a, sizeof a, "%H:%M", &s);
+  strftime(b, sizeof b, "%H:%M", &e);
   lower(a);
   lower(b);
-  snprintf(buf, n, "%s – %s", a, b); // en dash
+  snprintf(buf, n, "%s – %s", a, b);
 }
 
 gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
@@ -63,6 +61,7 @@ gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   const int cw = W - 2 * MARGIN; // content width
   const int bottom = H - MARGIN;
+  const int today = day_key(time(nullptr));
   int y = AGENDA_TOP;
   int last_day = -1;
 
@@ -70,17 +69,19 @@ gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
     const CalEvent &ev = calendar.events[i];
     int dk = day_key(ev.start_time);
 
-    // Sharp black date bar whenever the day changes — but only if there's room
-    // for the bar plus at least one event, so we never leave a dangling header.
     if (dk != last_day) {
       if (y + DAYBAR_H + ROW_H > bottom)
         break;
       last_day = dk;
 
       char day_buf[32];
-      struct tm d = *localtime(&ev.start_time);
-      strftime(day_buf, sizeof day_buf, "%a %-d %b", &d); // "tue 14 jul"
-      lower(day_buf);
+      if (dk == today) {
+        snprintf(day_buf, sizeof day_buf, "today");
+      } else {
+        struct tm d = *localtime(&ev.start_time);
+        strftime(day_buf, sizeof day_buf, "%a %-d %b", &d);
+        lower(day_buf);
+      }
 
       set_rgb(cr, BLACK);
       cairo_rectangle(cr, MARGIN, y, cw, DAYBAR_H);
@@ -93,22 +94,25 @@ gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
     if (y + ROW_H > bottom)
       break;
 
-    // Time — muted grey, right-aligned.
     char time_buf[32];
     format_time(ev, time_buf, sizeof time_buf);
-    draw_text(cr, MARGIN, y, cw, ROW_H, MUTED, time_buf, 14,
+    draw_text(cr, MARGIN + 10, y, cw - 20, ROW_H, MUTED, time_buf, 14,
               PANGO_WEIGHT_NORMAL, /*halign=*/1.0);
 
-    // Title — black, clipped so a long one never runs under the time.
+    char title_buf[16];
+    if (ev.title.size() > 15) {
+      snprintf(title_buf, 12, "%s", ev.title.c_str());
+      snprintf(title_buf + 11, 4, "...");
+    } else {
+      snprintf(title_buf, 15, "%s", ev.title.c_str());
+    }
     cairo_save(cr);
     cairo_rectangle(cr, MARGIN + 10, y, cw - 10 - TIME_RESERVE, ROW_H);
     cairo_clip(cr);
-    draw_text(cr, MARGIN + 10, y, cw, ROW_H, BLACK, ev.title.c_str(), 16,
+    draw_text(cr, MARGIN + 10, y, cw, ROW_H, BLACK, title_buf, 16,
               PANGO_WEIGHT_MEDIUM, /*halign=*/0.0);
     cairo_restore(cr);
 
-    // Hairline between events of the same day (the next day's bar separates
-    // days on its own).
     bool same_day_next = i + 1 < calendar.events.size() &&
                          day_key(calendar.events[i + 1].start_time) == dk;
     if (same_day_next) {

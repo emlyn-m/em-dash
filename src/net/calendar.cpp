@@ -28,7 +28,8 @@ time_t parse_gcal_datetime(cJSON *obj) {
     t.tm_isdst = -1;
     return mktime(&t);
   }
-  if (!cJSON_HasObjectItem(obj, "dateTime")) return 0;
+  if (!cJSON_HasObjectItem(obj, "dateTime"))
+    return 0;
 
   const char *str = cJSON_GetObjectItem(obj, "dateTime")->valuestring;
   strptime(str, "%Y-%m-%dT%H:%M:%S", &t);
@@ -41,7 +42,8 @@ time_t parse_gcal_datetime(cJSON *obj) {
     int hh = 0, mm = 0;
     if (sscanf(tz + 1, "%d:%d", &hh, &mm) >= 1) {
       tz_offset = hh * 3600 + mm * 60;
-      if (*tz == '-') tz_offset = -tz_offset;
+      if (*tz == '-')
+        tz_offset = -tz_offset;
     }
   }
   return timegm(&t) - tz_offset;
@@ -50,7 +52,8 @@ time_t parse_gcal_datetime(cJSON *obj) {
 // Ensure `token` holds a valid access token, refreshing via JWT if expired.
 bool ensure_token(std::string &token, time_t &token_exp) {
   time_t now = time(nullptr);
-  if (now <= token_exp && !token.empty()) return true;
+  if (now <= token_exp && !token.empty())
+    return true;
 
   std::string jwt;
   if (!generate_gcal_jwt(get_attr_str("GOOGLE_SERVICE_EMAIL"),
@@ -96,7 +99,7 @@ bool ensure_token(std::string &token, time_t &token_exp) {
 
 bool fetch_events(const std::string &token, std::vector<CalEvent> &out) {
   time_t lo_t = time(nullptr);
-  time_t hi_t = lo_t + 86400;
+  time_t hi_t = lo_t + 7 * 86400;
   struct tm lo = *gmtime(&lo_t);
   struct tm hi = *gmtime(&hi_t);
   char ts_lo[64], ts_hi[64];
@@ -132,7 +135,8 @@ bool fetch_events(const std::string &token, std::vector<CalEvent> &out) {
 
   out.clear();
   int n = cJSON_GetArraySize(items);
-  if (n > MAX_CAL_EVENTS) n = MAX_CAL_EVENTS;
+  if (n > MAX_CAL_EVENTS)
+    n = MAX_CAL_EVENTS;
   for (int i = 0; i < n; i++) {
     cJSON *obj = cJSON_GetArrayItem(items, i);
     cJSON *summary = cJSON_GetObjectItem(obj, "summary");
@@ -142,8 +146,8 @@ bool fetch_events(const std::string &token, std::vector<CalEvent> &out) {
     }
     time_t start = parse_gcal_datetime(cJSON_GetObjectItem(obj, "start"));
     time_t end = parse_gcal_datetime(cJSON_GetObjectItem(obj, "end"));
-    out.push_back(CalEvent{summary->valuestring, start ? start : lo_t,
-                           end ? end : hi_t});
+    out.push_back(
+        CalEvent{summary->valuestring, start ? start : lo_t, end ? end : hi_t});
   }
 
   cJSON_Delete(root);
@@ -153,7 +157,8 @@ bool fetch_events(const std::string &token, std::vector<CalEvent> &out) {
 
 void calendar_worker(std::function<void()> on_update) {
   long freq = get_attr_long("CALENDAR_UPDATE_FREQUENCY");
-  if (freq <= 0) freq = 600;
+  if (freq <= 0)
+    freq = 600;
 
   std::string token;
   time_t token_exp = 0;
@@ -164,14 +169,15 @@ void calendar_worker(std::function<void()> on_update) {
       post_to_main([parsed = std::move(parsed), on_update]() mutable {
         g_calendar.events = std::move(parsed);
         g_calendar.last_update = time(nullptr);
-        if (on_update) on_update();
+        if (on_update)
+          on_update();
       });
     }
     std::this_thread::sleep_for(std::chrono::seconds(freq));
   }
 }
 
-}  // namespace
+} // namespace
 
 void calendar_start(std::function<void()> on_update) {
   std::thread(calendar_worker, std::move(on_update)).detach();
@@ -179,4 +185,4 @@ void calendar_start(std::function<void()> on_update) {
 
 const Calendar &calendar_state() { return g_calendar; }
 
-}  // namespace ui
+} // namespace ui

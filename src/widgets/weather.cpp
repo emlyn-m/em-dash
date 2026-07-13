@@ -27,6 +27,7 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   Weather weather = weather_state();
   if (!weather.last_update) {
+    cairo_destroy(cr);
     return TRUE;
   }
 

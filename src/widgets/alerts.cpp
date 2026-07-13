@@ -19,6 +19,7 @@ gboolean draw_alerts(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   Alerts alerts = alerts_state();
   if (!alerts.last_update) {
+    cairo_destroy(cr);
     return TRUE;
   }
 

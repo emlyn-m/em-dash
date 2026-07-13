@@ -13,8 +13,9 @@ constexpr int SCREEN_H = 1080;
 // neutral grey used for placeholders.
 constexpr unsigned BLACK = 0x000000;
 constexpr unsigned WHITE = 0xFFFFFF;
-constexpr unsigned GREY = 0xD9D9D9;  // placeholder / disabled fill
-constexpr unsigned DOT = 0xCBCBCB;   // dotted-grid background
+constexpr unsigned GREY = 0xD9D9D9;   // placeholder / disabled fill / hairlines
+constexpr unsigned MUTED = 0x888888;  // secondary text (times, captions)
+constexpr unsigned DOT = 0xCBCBCB;    // dotted-grid background
 constexpr unsigned DEBUG_RED = 0xFF0000;
 
 // Geist Mono is installed system-wide; faces are selected by weight.

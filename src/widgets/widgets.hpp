@@ -52,13 +52,18 @@ GtkWidget *make_label(const char *text, int w, int h, double px,
 GtkWidget *make_card(int w, int h);
 
 // --- weather ---------------------------------------------------------------
-
-// Weather panel
 GtkWidget *make_weather_surface(int w, int h);
 
 // --- telem -----------------------------------------------------------------
-
-// Telemtry panel
 GtkWidget *make_telem_surface(int w, int h);
+
+// --- alerts ----------------------------------------------------------------
+GtkWidget *make_alerts_surface(int w, int h);
+
+// --- calendar---------------------------------------------------------------
+GtkWidget *make_calendar_surface(int w, int h);
+
+// --- image -----------------------------------------------------------------
+GtkWidget *make_image_surface(int w, int h);
 
 } // namespace ui

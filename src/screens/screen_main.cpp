@@ -1,3 +1,5 @@
+#include "net/alerts.hpp"
+#include "net/calendar.hpp"
 #include "net/telem.hpp"
 #include "screens/screens.hpp"
 
@@ -69,8 +71,15 @@ GtkWidget *build_main_screen() {
   put(fixed, telem, 336, 293);
   telem_start([telem] { gtk_widget_queue_draw(telem); });
 
-  // Placeholders left as null components
-  put(fixed, make_fill(720, 737, GREY), 690, 293); // calendar TODO
+  // Calendar
+  GtkWidget *calendar = make_calendar_surface(345, 354);
+  put(fixed, calendar, 1065, 293);
+  calendar_start([calendar] { gtk_widget_queue_draw(calendar); });
+
+  // Alerts
+  GtkWidget *alerts = make_alerts_surface(345, 353);
+  put(fixed, alerts, 690, 677);
+  alerts_start([alerts] { gtk_widget_queue_draw(alerts); });
 
   static LedButton strip_btn{0, "led.strip0"};
   static LedButton lamp_btn{1, "led.lamp0"};
@@ -94,6 +103,11 @@ GtkWidget *build_main_screen() {
       make_button("revshell", 236, 50, 12, 0.0, noop_press,
                   (gpointer) "revshell"),
       50, 976);
+
+  // Sketches
+
+  put(fixed, make_image_surface(345, 353), 690, 294);
+  put(fixed, make_image_surface(345, 354), 1065, 677);
 
   return fixed;
 }

@@ -1,9 +1,6 @@
 #include "config.hpp"
 #include "log.hpp"
-#include "net/alerts.hpp"
-#include "net/calendar.hpp"
 #include "net/led.hpp"
-#include "net/telem.hpp"
 #include "screens/nav.hpp"
 #include "screens/screens.hpp"
 #include "theme.hpp"
@@ -18,7 +15,7 @@ int main(int argc, char **argv) {
   ui::led_init();
 
   gtk_init(&argc, &argv);
-  ui::prewarm_fonts();  // pay glyph-caching cost at launch, not on first switch
+  ui::prewarm_fonts(); // pay glyph-caching cost at launch, not on first switch
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   // Window-manager hint for the Kindle's awesome/KUAL launcher.
@@ -39,12 +36,6 @@ int main(int argc, char **argv) {
                            nullptr);
 
   gtk_container_add(GTK_CONTAINER(window), stack);
-
-  // Background feeds without a dedicated widget yet: data lands in their models
-  // (weather is started by the main screen, which owns its surface).
-  ui::alerts_start(nullptr);
-  ui::telem_start(nullptr);
-  ui::calendar_start(nullptr);
 
   gtk_widget_show_all(window);
   gtk_main();

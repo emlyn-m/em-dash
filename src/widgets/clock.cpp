@@ -40,25 +40,27 @@ void clock_worker() {
     post_to_main([h, m] {
       snprintf(g_clock.hour, sizeof g_clock.hour, "%s", h.c_str());
       snprintf(g_clock.minute, sizeof g_clock.minute, "%s", m.c_str());
-      if (g_clock.redraw_target) gtk_widget_queue_draw(g_clock.redraw_target);
+      if (g_clock.redraw_target)
+        gtk_widget_queue_draw(g_clock.redraw_target);
     });
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 
-}  // namespace
+} // namespace
 
 void clock_start(GtkWidget *redraw_target) {
   g_clock.redraw_target = redraw_target;
-  format_now(g_clock.hour, g_clock.minute);  // correct on first paint
+  format_now(g_clock.hour, g_clock.minute); // correct on first paint
   std::thread(clock_worker).detach();
 }
 
 void clock_paint(cairo_t *cr) {
   // Hour over minute in the (30, 30) 276 x 204 frame.
-  draw_text(cr, 30, 30, 172, 117, BLACK, g_clock.hour, 90, PANGO_WEIGHT_BOLD,
+  draw_text(cr, 0, 78, 154, 117, BLACK, g_clock.hour, 90, PANGO_WEIGHT_BOLD,
             /*halign=*/1.0, /*valign=*/0.0);
-  draw_text_tl(cr, 116, 125, BLACK, g_clock.minute, 90, PANGO_WEIGHT_BOLD);
+  draw_text_tl(cr, 70, 146, BLACK, g_clock.minute, 90, PANGO_WEIGHT_BOLD);
+  cairo_fill(cr);
 }
 
-}  // namespace ui
+} // namespace ui

@@ -69,10 +69,8 @@ void post_online(Device *d, bool on) {
 }
 
 // Parse a dps JSON blob and fold what it carries into the model. Power always
-// reflects the device; HSV only when `authoritative` — i.e. this reply confirms
-// our latest colour command, not a stale echo of a move we've already
-// superseded (which would snap the slider back).
-void apply_dps(Device *d, const char *json, bool authoritative) {
+// reflects the device; HSV whenever the reply carries a colour.
+void apply_dps(Device *d, const char *json) {
   int power = -1, hue = -1, sat = -1, val = -1;
   cJSON *root = cJSON_Parse(json);
   if (cJSON *dps = cJSON_GetObjectItem(root, "dps")) {
@@ -81,7 +79,7 @@ void apply_dps(Device *d, const char *json, bool authoritative) {
       sscanf(c->valuestring, "%04x%04x%04x", &hue, &sat, &val);
   }
   cJSON_Delete(root);
-  bool set_hsv = authoritative && hue >= 0;
+  bool set_hsv = hue >= 0;
   post_to_main([d, power, hue, sat, val, set_hsv] {
     if (power >= 0) d->state.power = power;
     if (set_hsv) {
@@ -140,8 +138,6 @@ bool send_cmd(Device *d, const Cmd &c) {
 
 void comm_loop(Device *d) {
   bool connected = false;
-  uint32_t last_hsv_seq = 0;  // seqno of our most recent colour command
-  uint32_t ack_seq = 0;       // seqno of the most recent CTRL ack
 
   for (;;) {
     bool active, running;
@@ -183,14 +179,12 @@ void comm_loop(Device *d) {
       todo.swap(d->queue);
     }
     for (const Cmd &c : todo) {
-      uint32_t seq_used = d->led.seqno;  // tuya sends with this, then increments
       if (!send_cmd(d, c)) {
         tuya_disconnect(&d->led);
         connected = false;
         post_online(d, false);
         break;
       }
-      if (c.type == CmdType::Hsv) last_hsv_seq = seq_used;
     }
     if (!connected) continue;
 
@@ -206,13 +200,8 @@ void comm_loop(Device *d) {
         post_online(d, false);
         continue;
       }
-      if (msg.command == COMMAND_CTRL) ack_seq = msg.seqno;
       if (msg.payload && msg.payload_len > 0) {
-        // A QUERY reply is the device's truth. A STATUS push's colour is only
-        // current once the device has acked our latest colour command; before
-        // that it's echoing a move we've already replaced.
-        bool auth = msg.command == COMMAND_QUERY || ack_seq >= last_hsv_seq;
-        apply_dps(d, (char *)msg.payload, auth);
+        apply_dps(d, (char *)msg.payload);
       }
       tuya_msg_free(&msg);
     }

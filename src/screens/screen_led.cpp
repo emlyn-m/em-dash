@@ -36,8 +36,7 @@ struct LedControl {
 LedControl *g_led = nullptr;
 
 // Send the live colour. The comm thread coalesces a burst of these into the
-// latest and gates stale confirmations by seqno, so enqueuing on every motion
-// event is safe.
+// latest, so enqueuing on every motion event is safe.
 void push_hsv(LedControl *c) {
   led_set_hsv(c->device, c->hue, c->sat, c->val);
 }
@@ -59,7 +58,7 @@ void on_val(float v, void *d) {
 }
 
 // On release, send the final value. No explicit re-query — the comm thread
-// keeps state live and rejects stale confirmations by seqno.
+// keeps state live from device status pushes.
 void finalize(LedControl *c) {
   led_set_hsv(c->device, c->hue, c->sat, c->val);
 }
@@ -147,8 +146,7 @@ gboolean conn_press(GtkWidget *, GdkEventButton *e, gpointer d) {
 }
 
 // Sync the sliders + conn from device state. slider_sync no-ops while dragging,
-// and the comm layer only publishes colour confirmed for our latest command
-// (seqno-gated), so the knob never snaps to a stale value.
+// so the knob isn't disturbed mid-drag.
 void led_update_cb(LedControl *c) {
   gtk_widget_queue_draw(c->conn);
   const LedState &s = led_state(c->device);

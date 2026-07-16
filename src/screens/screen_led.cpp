@@ -1,8 +1,12 @@
+#include "cairo.h"
+#include "pango/pango-font.h"
 #include "screens/screens.hpp"
+#include <glib.h>
 
 #include "net/led.hpp"
 #include "screens/nav.hpp"
 #include "theme.hpp"
+#include "widgets/common.hpp"
 #include "widgets/slider.hpp"
 #include "widgets/widgets.hpp"
 
@@ -26,19 +30,15 @@ struct LedControl {
   GtkWidget *sat_slider = nullptr;
   GtkWidget *val_slider = nullptr;
   GtkWidget *conn = nullptr;
-  gint64 last_send = 0;
-  std::function<void()> sync; // refresh UI from device state (drag-safe)
 };
 
 // The single LED modal, retargeted per open (see led_screen_set_target).
 LedControl *g_led = nullptr;
 
-// Throttled live send while dragging — bounds device traffic / worker spawns.
+// Send the live colour. The comm thread coalesces a burst of these into the
+// latest and gates stale confirmations by seqno, so enqueuing on every motion
+// event is safe.
 void push_hsv(LedControl *c) {
-  gint64 now = g_get_monotonic_time();
-  if (now - c->last_send < 80000)
-    return; // ~12 updates/sec
-  c->last_send = now;
   led_set_hsv(c->device, c->hue, c->sat, c->val);
 }
 
@@ -58,11 +58,10 @@ void on_val(float v, void *d) {
   push_hsv(c);
 }
 
-// On release the drag is over, so it's safe to send the final value and pull
-// the device's confirmed state back into the sliders.
+// On release, send the final value. No explicit re-query — the comm thread
+// keeps state live and rejects stale confirmations by seqno.
 void finalize(LedControl *c) {
   led_set_hsv(c->device, c->hue, c->sat, c->val);
-  led_refresh(c->device, c->sync);
 }
 void on_hue_end(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
@@ -83,6 +82,8 @@ void on_val_end(float v, void *d) {
 gboolean draw_title(GtkWidget *w, GdkEventExpose *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
   cairo_t *cr = gdk_cairo_create(w->window);
+  paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
+                w->allocation.y);
   draw_text(cr, 0, 0, w->allocation.width, w->allocation.height, BLACK,
             c->label, 50, PANGO_WEIGHT_BOLD, 0.0, 0.0);
   cairo_destroy(cr);
@@ -92,30 +93,133 @@ gboolean draw_title(GtkWidget *w, GdkEventExpose *, gpointer d) {
 // conn box: connection indicator (grey/"on"/"off" when reachable, inverted
 // "econn" when not) that doubles as a power toggle.
 gboolean draw_conn(GtkWidget *w, GdkEventExpose *, gpointer d) {
+  cairo_t *cr = gdk_cairo_create(w->window);
+
   auto *c = static_cast<LedControl *>(d);
   const LedState &s = led_state(c->device);
-  cairo_t *cr = gdk_cairo_create(w->window);
-  set_rgb(cr, s.online ? GREY : BLACK);
-  cairo_paint(cr);
-  const char *label = !s.online ? "econn" : (s.power ? "on" : "off");
-  draw_text(cr, 0, 0, w->allocation.width, w->allocation.height,
-            s.online ? BLACK : WHITE, label, 16, PANGO_WEIGHT_MEDIUM, 0.5, 0.5);
+
+  paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
+                w->allocation.y);
+
+  uint hex;
+  if (s.online) {
+    hex = (s.power ? BLACK : MUTED);
+    draw_text(cr, 0, 0, w->allocation.width, 26, hex,
+              s.power ? "disable" : "enable", 20, PANGO_WEIGHT_BOLD, 1.0);
+  } else {
+    hex = BLACK;
+    set_rgb(cr, BLACK);
+    cairo_rectangle(cr, 101, 0, 79, 26);
+    cairo_fill(cr);
+
+    draw_text_tl(cr, 103, 0, WHITE, "!ECONN", 20, PANGO_WEIGHT_BOLD);
+  }
+
+  char ipbuf[32];
+  snprintf(ipbuf, 32, "ip TODO");
+  draw_text(cr, 0, 35, w->allocation.width, 16, hex, ipbuf, 12,
+            PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
+
+  char idbuf[32];
+  snprintf(idbuf, 32, "id TODO");
+  draw_text(cr, 0, 51, w->allocation.width, 16, hex, idbuf, 12,
+            PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
+
+  char verbuf[32];
+  snprintf(verbuf, 32, "tuya ver TODO");
+  draw_text(cr, 0, 67, w->allocation.width, 16, hex, verbuf, 12,
+            PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
+
   cairo_destroy(cr);
   return TRUE;
 }
 
-gboolean conn_press(GtkWidget *, GdkEventButton *, gpointer d) {
+gboolean conn_press(GtkWidget *, GdkEventButton *e, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
+  const LedState &s = led_state(c->device);
+
+  if ((!s.online) || (e->x < 101 || e->y > 26)) {
+    return TRUE;
+  }
+
   led_set_power(c->device, !led_state(c->device).power);
-  led_refresh(c->device, c->sync); // reflect connection + confirmed power
   return TRUE;
 }
 
-// Fires each time the modal becomes visible (notebook page mapped): pull fresh
-// device state so the sliders/conn reflect the device whenever it's opened.
+// Sync the sliders + conn from device state. slider_sync no-ops while dragging,
+// and the comm layer only publishes colour confirmed for our latest command
+// (seqno-gated), so the knob never snaps to a stale value.
+void led_update_cb(LedControl *c) {
+  gtk_widget_queue_draw(c->conn);
+  const LedState &s = led_state(c->device);
+  slider_sync(c->hue_slider, s.hue / 359.0f);
+  slider_sync(c->sat_slider, s.sat / 1000.0f);
+  slider_sync(c->val_slider, s.val / 1000.0f);
+  c->hue = (int)(slider_value(c->hue_slider) * 359);
+  c->sat = (int)(slider_value(c->sat_slider) * 1000);
+  c->val = (int)(slider_value(c->val_slider) * 1000);
+}
+
+// Modal opened: activate the device's comm thread, subscribe for updates, and
+// pull fresh state.
 void on_modal_shown(GtkWidget *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
-  led_refresh(c->device, c->sync);
+  led_on_update(c->device, [c] { led_update_cb(c); });
+  led_set_active(c->device, true);
+  led_query(c->device);
+}
+
+// Modal closed: stop the device from connecting while it isn't being viewed.
+void on_modal_hidden(GtkWidget *, gpointer d) {
+  auto *c = static_cast<LedControl *>(d);
+  led_set_active(c->device, false);
+  led_on_update(c->device, nullptr);
+}
+
+// Static art painted directly on the dotted field: dots, divider, and the
+// clock (which needs to composite over the dots rather than sit in a box).
+gboolean draw_backdrop(GtkWidget *w, GdkEventExpose *, gpointer) {
+  cairo_t *cr = gdk_cairo_create(w->window);
+  paint_dots(cr, w->allocation.width, w->allocation.height);
+
+  set_rgb(cr, BLACK);
+  cairo_rectangle(cr, 30, 259, 1380, 10);
+  cairo_fill(cr);
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+GtkWidget *make_backdrop() {
+  GtkWidget *a = gtk_drawing_area_new();
+  gtk_widget_set_size_request(a, SCREEN_W, SCREEN_H);
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_backdrop), nullptr);
+  return a;
+}
+
+gboolean draw_slider_info(GtkWidget *widget, GdkEventExpose *, gpointer d) {
+  cairo_t *cr = detail::begin_paint(widget);
+  paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
+                widget->allocation.x, widget->allocation.y);
+
+  draw_text(cr, 0, 0, 60, 16, BLACK, "hue", 12, PANGO_WEIGHT_BOLD, 0.5);
+  draw_text(cr, 80, 0, 60, 16, BLACK, "sat", 12, PANGO_WEIGHT_BOLD, 0.5);
+  draw_text(cr, 160, 0, 60, 16, BLACK, "val", 12, PANGO_WEIGHT_BOLD, 0.5);
+
+  set_rgb(cr, MUTED);
+  cairo_rectangle(cr, 0, 18, 60, 60);
+  cairo_rectangle(cr, 80, 18, 60, 60);
+  cairo_rectangle(cr, 160, 18, 60, 60);
+  cairo_fill(cr);
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+GtkWidget *make_slider_info() {
+  GtkWidget *a = detail::new_area(220, 78);
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_slider_info), NULL);
+  return a;
 }
 
 } // namespace
@@ -123,10 +227,16 @@ void on_modal_shown(GtkWidget *, gpointer d) {
 GtkWidget *build_led_screen() {
   GtkWidget *fixed = gtk_fixed_new();
 
-  put(fixed, make_dotted_background(), 0, 0);
+  put(fixed, make_backdrop(), 0, 0);
 
   LedControl *c = new LedControl();
   g_led = c;
+
+  // exit btn (top-left): back to the main screen.
+  put(fixed,
+      make_text_button("🭮🭪🭮🭪🭮🭪", 144, 31, 24, MUTED, nav_press,
+                       GINT_TO_POINTER(SCREEN_MAIN)),
+      30, 30);
 
   // Title reflects the active device's label.
   GtkWidget *title = gtk_drawing_area_new();
@@ -144,37 +254,21 @@ GtkWidget *build_led_screen() {
   c->conn = conn;
   put(fixed, conn, 1230, 162);
 
-  // exit btn (top-right): back to the main screen.
-  put(fixed,
-      make_text_button("🭮🭪🭮🭪🭮🭪", 144, 31, 24, MUTED, nav_press,
-                       GINT_TO_POINTER(SCREEN_MAIN)),
-      30, 30);
-
   // HSV sliders.
-  c->hue_slider = make_slider(127, 671, c, on_hue, on_hue_end);
-  c->sat_slider = make_slider(127, 671, c, on_sat, on_sat_end);
-  c->val_slider = make_slider(127, 671, c, on_val, on_val_end);
-  put(fixed, c->hue_slider, 150, 261);
-  put(fixed, c->sat_slider, 309, 261);
-  put(fixed, c->val_slider, 468, 261);
+  c->hue_slider = make_slider(60, 611, c, on_hue, on_hue_end);
+  c->sat_slider = make_slider(60, 611, c, on_sat, on_sat_end);
+  c->val_slider = make_slider(60, 611, c, on_val, on_val_end);
+  put(fixed, c->hue_slider, 60, 329);
+  put(fixed, c->sat_slider, 140, 329);
+  put(fixed, c->val_slider, 220, 329);
+
+  put(fixed, make_slider_info(), 60, 942);
 
   // Preview image (still a placeholder).
-  put(fixed, make_fill(522, 575, GREY), 770, 357);
-
-  // Sync the sliders + conn from device state. slider_sync is a no-op while
-  // dragging, so a confirmation arriving mid-drag never snaps the knob.
-  c->sync = [c]() {
-    const LedState &s = led_state(c->device);
-    slider_sync(c->hue_slider, s.hue / 359.0f);
-    slider_sync(c->sat_slider, s.sat / 1000.0f);
-    slider_sync(c->val_slider, s.val / 1000.0f);
-    c->hue = (int)(slider_value(c->hue_slider) * 359);
-    c->sat = (int)(slider_value(c->sat_slider) * 1000);
-    c->val = (int)(slider_value(c->val_slider) * 1000);
-    gtk_widget_queue_draw(c->conn);
-  };
+  put(fixed, make_fill(200, 200, GREY), 1180, 820);
 
   g_signal_connect(fixed, "map", G_CALLBACK(on_modal_shown), c);
+  g_signal_connect(fixed, "unmap", G_CALLBACK(on_modal_hidden), c);
 
   return fixed;
 }

@@ -78,7 +78,16 @@ void tuya_led_new(tuya_led_t *led, char *id, char *name, uint32_t ip,
 int _tuya_socket_open(tuya_led_t *led);
 void tuya_msg_free(tuya_msg_t *msg);
 
+// Open a fresh connection (socket, plus session-key handshake for v3.5). Any
+// existing socket is closed first. Returns 0 on success.
+int tuya_connect(tuya_led_t *led);
+// Close the socket and forget the session key.
+void tuya_disconnect(tuya_led_t *led);
+
 int tuya_cmd_send(tuya_led_t *led, uint32_t command, char *dps);
+// Read exactly one message. Returns 0 (msg populated), ERR_SOCK_CLOSE on peer
+// close, or ERR_SOCK_FAIL on error/timeout. Does NOT auto-reconnect — the
+// caller owns the connection lifecycle.
 int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t *msg);
 
 }  // namespace ui

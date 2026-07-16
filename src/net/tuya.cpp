@@ -10,10 +10,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
 namespace ui {
+
+// Read exactly `len` bytes into `buf`. TCP is a stream, so a single recv() may
+// return fewer bytes than requested — reading the header/ciphertext in one shot
+// is the "reading a reply too early" bug that corrupts decrypts. Returns `len`
+// on success, 0 on peer close, -1 on error/timeout.
+static int read_full(int sock, unsigned char *buf, size_t len) {
+  size_t got = 0;
+  while (got < len) {
+    ssize_t n = recv(sock, buf + got, len - got, 0);
+    if (n == 0) return 0;
+    if (n < 0) return -1;
+    got += (size_t)n;
+  }
+  return (int)len;
+}
 
 void tuya_led_new(tuya_led_t *led, char *id, char *name, uint32_t ip,
                   uint8_t version, unsigned char *key) {
@@ -60,6 +76,9 @@ int _tuya_socket_open(tuya_led_t *led) {
   serv_addr.sin_port = htons(TUYA_PORT);
   int flag = 1;
   setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+  // Bound blocking reads so a stalled/truncated reply can't hang read_full.
+  struct timeval tv = {3, 0};
+  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof tv);
 
   if ((status = connect(sock, (struct sockaddr *)&serv_addr,
                         sizeof(serv_addr))) < 0) {
@@ -433,7 +452,7 @@ static int _tuya_35_kex(tuya_led_t *led) {
     return ERR_SOCK_FAIL;
 
   unsigned char hdr_buf[18];
-  if (recv(led->sock, hdr_buf, 18, 0) != 18)
+  if (read_full(led->sock, hdr_buf, 18) != 18)
     return ERR_SOCK_FAIL;
   _tuya_header_t resp_hdr = _tuya_35_header_parse(hdr_buf);
   if (resp_hdr.command != SESS_KEY_NEG_RESP) {
@@ -445,7 +464,7 @@ static int _tuya_35_kex(tuya_led_t *led) {
   unsigned char *body = (unsigned char *)malloc(body_len);
   if (!body)
     return ERR_ENCODE_FAIL;
-  if (recv(led->sock, body, body_len, 0) != (int)body_len) {
+  if (read_full(led->sock, body, body_len) != (int)body_len) {
     free(body);
     return ERR_SOCK_FAIL;
   }
@@ -576,24 +595,10 @@ static int _tuya_35_cmd_send(tuya_led_t *led, uint32_t command, char *dps) {
 static int _tuya_35_msg_recv(tuya_led_t *led, uint32_t expected_command,
                              tuya_msg_t *msg) {
   unsigned char hdr_buf[18];
-  int hdr_len = recv(led->sock, hdr_buf, 18, 0);
-  int retries = 0;
-  while (retries <= MAX_RETRIES && hdr_len <= 0) {
-    led->has_sesskey = 0;
-    if (_tuya_35_ensure_connected(led)) {
-      led->failures++;
-      return ERR_SOCK_FAIL;
-    }
-    hdr_len = recv(led->sock, hdr_buf, 18, 0);
-    retries++;
-  }
-  if (hdr_len < 0) {
+  int hdr_len = read_full(led->sock, hdr_buf, 18);
+  if (hdr_len <= 0) {
     led->failures++;
-    return ERR_SOCK_FAIL;
-  }
-  if (hdr_len == 0) {
-    led->failures++;
-    return ERR_SOCK_CLOSE;
+    return hdr_len == 0 ? ERR_SOCK_CLOSE : ERR_SOCK_FAIL;
   }
 
   _tuya_header_t header = _tuya_35_header_parse(hdr_buf);
@@ -606,7 +611,7 @@ static int _tuya_35_msg_recv(tuya_led_t *led, uint32_t expected_command,
   unsigned char *body = (unsigned char *)malloc(body_len);
   if (!body)
     return ERR_ENCODE_FAIL;
-  ssize_t body_rx = recv(led->sock, body, body_len, 0);
+  int body_rx = read_full(led->sock, body, body_len);
   if (body_rx <= 0) {
     free(body);
     led->failures++;
@@ -808,9 +813,15 @@ _tuya_header_t _tuya_header_parse(unsigned char *header_buf,
 
 void _tuya_payload_decode(tuya_led_t *led, uint32_t expected_command,
                           unsigned char *encoded, tuya_msg_t *msg) {
+  (void)expected_command;
   const uint32_t end_len = 8;
   const uint32_t header_len = 16;
-  const uint32_t retcode_len = ((msg->command == expected_command)) ? 4 : 0;
+  // CTRL/QUERY replies carry a 4-byte return code before the ciphertext; STATUS
+  // pushes don't. Keying off the actual command (not a passed-in "expected")
+  // means a CTRL ack's return code isn't mistaken for ciphertext (which made
+  // openssl print "bad decrypt").
+  const uint32_t retcode_len =
+      (msg->command == COMMAND_CTRL || msg->command == COMMAND_QUERY) ? 4 : 0;
   const uint32_t version_header_len =
       ((msg->command == COMMAND_STATUS)) ? VERSION_HEADER_SIZE : 0;
 
@@ -849,55 +860,46 @@ int tuya_msg_recv(tuya_led_t *led, uint32_t expected_command, tuya_msg_t *msg) {
   const uint32_t BUFSIZE = 1024;
   unsigned char output_buf[BUFSIZE];
   memset(output_buf, 0, BUFSIZE);
-  const uint32_t min_len = 16 + 4;
+  const uint32_t header_len = 16;
 
-  int header_len = recv(led->sock, output_buf, min_len, 0);
-  int retries = 0;
-  while (retries <= MAX_RETRIES && header_len <= 0) {
-    if (errno) {
-      int sock_open_status;
-      if ((sock_open_status = _tuya_socket_open(led)) && retries == 0) {
-        LOG(PRI_ERR, "failed to open socket: %d\n", sock_open_status);
-      };
-    }
-    header_len = recv(led->sock, output_buf, min_len, 0);
-    retries++;
+  // Header first, in full — then the exact payload it declares.
+  int r = read_full(led->sock, output_buf, header_len);
+  if (r <= 0) {
+    led->failures++;
+    return r == 0 ? ERR_SOCK_CLOSE : ERR_SOCK_FAIL;
   }
-  if (header_len < 0) {
+
+  _tuya_header_t header = _tuya_header_parse(output_buf, header_len);
+  if (header.payload_len == 0 || header_len + header.payload_len > BUFSIZE) {
     led->failures++;
     return ERR_SOCK_FAIL;
-  } else if (header_len == 0) {
-    led->failures++;
-    return ERR_SOCK_CLOSE;
   }
 
-  _tuya_header_t header = _tuya_header_parse(output_buf, (size_t)header_len);
-  uint32_t remaining = header.total_len - header_len;
-  if (remaining <= 0) {
-    return 0;
+  r = read_full(led->sock, output_buf + header_len, header.payload_len);
+  if (r <= 0) {
+    led->failures++;
+    return r == 0 ? ERR_SOCK_CLOSE : ERR_SOCK_FAIL;
   }
+
   if (msg) {
     msg->seqno = header.seqno;
     msg->command = header.command;
-    msg->payload_len = remaining;
-  }
-
-  size_t body_rx = recv(led->sock, output_buf + header_len, remaining, 0);
-  if (body_rx < 0) {
-    LOG(PRI_WRN, "\nfailed!\n");
-    led->failures++;
-    return ERR_SOCK_FAIL;
-  } else if (body_rx == 0) {
-    LOG(PRI_WRN, "\nclosed!\n");
-    led->failures++;
-    return ERR_SOCK_CLOSE;
-  }
-
-  if (msg) {
     msg->payload_len = header.payload_len;
     _tuya_payload_decode(led, expected_command, output_buf, msg);
   }
   return led->failures = 0;
+}
+
+void tuya_disconnect(tuya_led_t *led) {
+  if (led->sock > 0) close(led->sock);
+  led->sock = 0;
+  led->has_sesskey = 0;
+}
+
+int tuya_connect(tuya_led_t *led) {
+  tuya_disconnect(led);
+  if (led->version == 35) return _tuya_35_ensure_connected(led);
+  return _tuya_socket_open(led);
 }
 
 }  // namespace ui

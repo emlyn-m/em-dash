@@ -1,6 +1,9 @@
 #include "widgets/slider.hpp"
 
+#include "gtk/gtk.h"
+#include "theme.hpp"
 #include "widgets/common.hpp"
+#include "widgets/widgets.hpp"
 
 namespace ui {
 
@@ -24,19 +27,15 @@ SliderState *state_of(GtkWidget *w) {
 gboolean draw_slider(GtkWidget *widget, GdkEventExpose *, gpointer d) {
   SliderState *s = static_cast<SliderState *>(d);
   cairo_t *cr = detail::begin_paint(widget);
+  GtkAllocation *a = &widget->allocation;
 
-  set_rgb(cr, WHITE);
-  cairo_paint(cr);
+  paint_dots_at(cr, a->width, a->height, a->x, a->y);
 
-  int fill = (int)(s->value * s->h);  // filled from the bottom
+  // min height of 20
+  int fill = 20 + (int)(s->value * (s->h - 20)); // filled from the bottom
   set_rgb(cr, BLACK);
   cairo_rectangle(cr, 0, s->h - fill, s->w, fill);
   cairo_fill(cr);
-
-  set_rgb(cr, BLACK);
-  cairo_set_line_width(cr, 1.0);
-  cairo_rectangle(cr, 0.5, 0.5, s->w - 1, s->h - 1);
-  cairo_stroke(cr);
 
   cairo_destroy(cr);
   return TRUE;
@@ -45,7 +44,8 @@ gboolean draw_slider(GtkWidget *widget, GdkEventExpose *, gpointer d) {
 void set_from_y(GtkWidget *widget, SliderState *s, double y) {
   s->value = clamp01(1.0 - y / s->h);
   gtk_widget_queue_draw(widget);
-  if (s->on_change) s->on_change(s->value, s->data);
+  if (s->on_change)
+    s->on_change(s->value, s->data);
 }
 
 gboolean slider_press(GtkWidget *widget, GdkEventButton *e, gpointer d) {
@@ -57,21 +57,24 @@ gboolean slider_press(GtkWidget *widget, GdkEventButton *e, gpointer d) {
 
 gboolean slider_motion(GtkWidget *widget, GdkEventMotion *e, gpointer d) {
   SliderState *s = static_cast<SliderState *>(d);
-  if (s->dragging) set_from_y(widget, s, e->y);
+  if (s->dragging)
+    set_from_y(widget, s, e->y);
   return TRUE;
 }
 
 gboolean slider_release(GtkWidget *widget, GdkEventButton *e, gpointer d) {
   SliderState *s = static_cast<SliderState *>(d);
-  if (!s->dragging) return TRUE;
+  if (!s->dragging)
+    return TRUE;
   s->dragging = false;
   s->value = clamp01(1.0 - e->y / s->h);
   gtk_widget_queue_draw(widget);
-  if (s->on_release) s->on_release(s->value, s->data);
+  if (s->on_release)
+    s->on_release(s->value, s->data);
   return TRUE;
 }
 
-}  // namespace
+} // namespace
 
 GtkWidget *make_slider(int w, int h, void *data, SliderFn on_change,
                        SliderFn on_release) {
@@ -89,7 +92,8 @@ GtkWidget *make_slider(int w, int h, void *data, SliderFn on_change,
 
 void slider_sync(GtkWidget *slider, float value) {
   SliderState *s = state_of(slider);
-  if (!s || s->dragging) return;  // never fight an in-progress drag
+  if (!s || s->dragging)
+    return; // never fight an in-progress drag
   s->value = clamp01(value);
   gtk_widget_queue_draw(slider);
 }
@@ -99,4 +103,4 @@ float slider_value(GtkWidget *slider) {
   return s ? s->value : 0.0f;
 }
 
-}  // namespace ui
+} // namespace ui

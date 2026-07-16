@@ -35,33 +35,22 @@ struct LedControl {
 // The single LED modal, retargeted per open (see led_screen_set_target).
 LedControl *g_led = nullptr;
 
-// Send the live colour. The comm thread coalesces a burst of these into the
-// latest, so enqueuing on every motion event is safe.
-void push_hsv(LedControl *c) {
-  led_set_hsv(c->device, c->hue, c->sat, c->val);
-}
-
 void on_hue(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
   c->hue = (int)(v * 359);
-  push_hsv(c);
 }
 void on_sat(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
   c->sat = (int)(v * 1000);
-  push_hsv(c);
 }
 void on_val(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
   c->val = (int)(v * 1000);
-  push_hsv(c);
 }
 
 // On release, send the final value. No explicit re-query — the comm thread
 // keeps state live from device status pushes.
-void finalize(LedControl *c) {
-  led_set_hsv(c->device, c->hue, c->sat, c->val);
-}
+void finalize(LedControl *c) { led_set_hsv(c->device, c->hue, c->sat, c->val); }
 void on_hue_end(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
   c->hue = (int)(v * 359);

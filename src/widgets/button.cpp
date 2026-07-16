@@ -1,4 +1,5 @@
 #include "pango/pango-font.h"
+#include "theme.hpp"
 #include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 
@@ -17,18 +18,10 @@ gboolean draw_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
   ButtonView *v = static_cast<ButtonView *>(data_v);
   cairo_t *cr = detail::begin_paint(widget);
 
-  // The offset shadow leaves two corner gaps uncovered; fill the whole widget
-  // with the aligned backdrop first so those gaps blend in instead of showing
-  // the grey window background.
   paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
                 widget->allocation.x, widget->allocation.y);
 
-  // Hard drop shadow, offset down-right.
-  // set_rgb(cr, BLACK);
-  // cairo_rectangle(cr, detail::SHADOW, detail::SHADOW, v->w, v->h);
-  // cairo_fill(cr);
-
-  // White face.
+  // Black face.
   set_rgb(cr, BLACK);
   cairo_rectangle(cr, 0, 0, v->w, v->h);
   cairo_fill(cr);
@@ -41,21 +34,23 @@ gboolean draw_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
   return TRUE;
 }
 
-struct BoxView {
+struct TextView {
   char *label;
   int w, h;
   double px;
-  unsigned bg;
+  unsigned hex;
 };
 
-gboolean draw_box_button(GtkWidget *widget, GdkEventExpose *, gpointer data_v) {
-  BoxView *v = static_cast<BoxView *>(data_v);
+gboolean draw_text_button(GtkWidget *widget, GdkEventExpose *,
+                          gpointer data_v) {
+  TextView *v = static_cast<TextView *>(data_v);
   cairo_t *cr = detail::begin_paint(widget);
-  set_rgb(cr, v->bg);
+  set_rgb(cr, WHITE);
   cairo_rectangle(cr, 0, 0, v->w, v->h);
   cairo_fill(cr);
-  draw_text(cr, 0, 0, v->w, v->h, WHITE, v->label, v->px, PANGO_WEIGHT_BOLD,
-            0.5, 0.5);
+  paint_dots(cr, widget->allocation.width, widget->allocation.height);
+  draw_text(cr, 0, 0, v->w, v->h, v->hex, v->label, v->px, PANGO_WEIGHT_BOLD, 0,
+            0.5);
   cairo_destroy(cr);
   return TRUE;
 }
@@ -72,11 +67,11 @@ GtkWidget *make_button(const char *label, int w, int h, double px,
   return a;
 }
 
-GtkWidget *make_box_button(const char *label, int w, int h, double px,
-                           unsigned bg, PressFn cb, gpointer data) {
+GtkWidget *make_text_button(const char *label, int w, int h, double px,
+                            unsigned bg, PressFn cb, gpointer data) {
   GtkWidget *a = detail::new_area(w, h);
-  BoxView *v = detail::attach(a, BoxView{g_strdup(label), w, h, px, bg});
-  g_signal_connect(a, "expose-event", G_CALLBACK(draw_box_button), v);
+  TextView *v = detail::attach(a, TextView{g_strdup(label), w, h, px, bg});
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_text_button), v);
   detail::make_clickable(a, cb, data);
   return a;
 }

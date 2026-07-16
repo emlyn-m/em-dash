@@ -27,7 +27,7 @@ struct LedControl {
   GtkWidget *val_slider = nullptr;
   GtkWidget *conn = nullptr;
   gint64 last_send = 0;
-  std::function<void()> sync;  // refresh UI from device state (drag-safe)
+  std::function<void()> sync; // refresh UI from device state (drag-safe)
 };
 
 // The single LED modal, retargeted per open (see led_screen_set_target).
@@ -36,7 +36,8 @@ LedControl *g_led = nullptr;
 // Throttled live send while dragging — bounds device traffic / worker spawns.
 void push_hsv(LedControl *c) {
   gint64 now = g_get_monotonic_time();
-  if (now - c->last_send < 80000) return;  // ~12 updates/sec
+  if (now - c->last_send < 80000)
+    return; // ~12 updates/sec
   c->last_send = now;
   led_set_hsv(c->device, c->hue, c->sat, c->val);
 }
@@ -79,14 +80,11 @@ void on_val_end(float v, void *d) {
   finalize(c);
 }
 
-// Title: the active device's label, drawn on the white card.
 gboolean draw_title(GtkWidget *w, GdkEventExpose *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
   cairo_t *cr = gdk_cairo_create(w->window);
-  set_rgb(cr, WHITE);
-  cairo_paint(cr);
   draw_text(cr, 0, 0, w->allocation.width, w->allocation.height, BLACK,
-            c->label, 48, PANGO_WEIGHT_BOLD, 0.0, 0.5);
+            c->label, 50, PANGO_WEIGHT_BOLD, 0.0, 0.0);
   cairo_destroy(cr);
   return TRUE;
 }
@@ -109,7 +107,7 @@ gboolean draw_conn(GtkWidget *w, GdkEventExpose *, gpointer d) {
 gboolean conn_press(GtkWidget *, GdkEventButton *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
   led_set_power(c->device, !led_state(c->device).power);
-  led_refresh(c->device, c->sync);  // reflect connection + confirmed power
+  led_refresh(c->device, c->sync); // reflect connection + confirmed power
   return TRUE;
 }
 
@@ -120,38 +118,37 @@ void on_modal_shown(GtkWidget *, gpointer d) {
   led_refresh(c->device, c->sync);
 }
 
-}  // namespace
+} // namespace
 
 GtkWidget *build_led_screen() {
   GtkWidget *fixed = gtk_fixed_new();
 
   put(fixed, make_dotted_background(), 0, 0);
-  put(fixed, make_card(1240, 880), 100, 100);
 
   LedControl *c = new LedControl();
   g_led = c;
 
   // Title reflects the active device's label.
   GtkWidget *title = gtk_drawing_area_new();
-  gtk_widget_set_size_request(title, 300, 65);
+  gtk_widget_set_size_request(title, 800, 65);
   g_signal_connect(title, "expose-event", G_CALLBACK(draw_title), c);
   c->title = title;
-  put(fixed, title, 248, 155);
+  put(fixed, title, 164, 164);
 
   // conn: indicator + power toggle (top-left).
   GtkWidget *conn = gtk_drawing_area_new();
-  gtk_widget_set_size_request(conn, 90, 66);
+  gtk_widget_set_size_request(conn, 180, 83);
   gtk_widget_add_events(conn, GDK_BUTTON_PRESS_MASK);
   g_signal_connect(conn, "expose-event", G_CALLBACK(draw_conn), c);
   g_signal_connect(conn, "button-press-event", G_CALLBACK(conn_press), c);
   c->conn = conn;
-  put(fixed, conn, 140, 154);
+  put(fixed, conn, 1230, 162);
 
   // exit btn (top-right): back to the main screen.
   put(fixed,
-      make_box_button("exit\nbtn", 90, 90, 16, GREY, nav_press,
-                      GINT_TO_POINTER(SCREEN_MAIN)),
-      1202, 154);
+      make_text_button("🭮🭪🭮🭪🭮🭪", 144, 31, 24, MUTED, nav_press,
+                       GINT_TO_POINTER(SCREEN_MAIN)),
+      30, 30);
 
   // HSV sliders.
   c->hue_slider = make_slider(127, 671, c, on_hue, on_hue_end);
@@ -183,7 +180,8 @@ GtkWidget *build_led_screen() {
 }
 
 void led_screen_set_target(int device, const char *label) {
-  if (!g_led) return;
+  if (!g_led)
+    return;
   g_led->device = device;
   g_led->label = label;
   // Reflect the new device immediately; the map handler pulls its live state.
@@ -191,4 +189,4 @@ void led_screen_set_target(int device, const char *label) {
   gtk_widget_queue_draw(g_led->conn);
 }
 
-}  // namespace ui
+} // namespace ui

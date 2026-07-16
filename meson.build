@@ -22,7 +22,6 @@ sources = files(
     './src/widgets/background.cpp',
     './src/widgets/button.cpp',
     './src/widgets/primitives.cpp',
-    './src/widgets/card.cpp',
     './src/widgets/weather.cpp',
     './src/widgets/telem.cpp',
     './src/widgets/calendar.cpp',

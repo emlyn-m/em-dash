@@ -26,16 +26,14 @@ GtkWidget *make_dotted_background();
 
 // --- buttons ---------------------------------------------------------------
 
-// White button with a 1px black border and a hard 4px offset drop shadow.
-// The returned widget is (w+4) x (h+4) to leave room for the shadow.
+// Black button
 // `halign`: 0 = left-padded, 0.5 = centred.
 GtkWidget *make_button(const char *label, int w, int h, double px,
                        double halign, PressFn cb, gpointer data);
 
-// Solid filled box (grey by default) with centred text — the modal's small
-// "conn"/"exit btn" controls. Clickable when cb is non-null.
-GtkWidget *make_box_button(const char *label, int w, int h, double px,
-                           unsigned bg, PressFn cb, gpointer data);
+// Text button
+GtkWidget *make_text_button(const char *label, int w, int h, double px,
+                            unsigned hex, PressFn cb, gpointer data);
 
 // --- primitives ------------------------------------------------------------
 
@@ -45,11 +43,6 @@ GtkWidget *make_fill(int w, int h, unsigned hex);
 // Static text on a solid background — modal title etc.
 GtkWidget *make_label(const char *text, int w, int h, double px,
                       PangoWeight weight, double halign, unsigned bg);
-
-// --- card ------------------------------------------------------------------
-
-// The modal's floating card: white panel, 1px black border, hard drop shadow.
-GtkWidget *make_card(int w, int h);
 
 // --- weather ---------------------------------------------------------------
 GtkWidget *make_weather_surface(int w, int h);

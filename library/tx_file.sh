@@ -5,7 +5,7 @@ FPATH_REMOTE="/dash_test"
 FPATH_REMOTE_BOOKS="/mnt/us/documents"
 BOOK_NAME="dash"
 
-TX_PORT=1338
+TX_PORT=1337
 STDOUT_IP=$(hostname -i | awk '{ print $1 }')
 STDOUT_PORT=1339
 

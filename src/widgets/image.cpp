@@ -11,8 +11,8 @@ namespace {
 
 gboolean draw_image(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = detail::begin_paint(w);
-  // paint_dots_at(cr, w->allocation.width, w->allocation.height,
-  // w->allocation.x, w->allocation.y);
+  paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
+                w->allocation.y);
 
   cairo_destroy(cr);
   return TRUE;

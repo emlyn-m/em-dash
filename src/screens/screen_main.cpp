@@ -1,12 +1,17 @@
+#include "cairo.h"
+#include "gdk/gdk.h"
 #include "net/alerts.hpp"
 #include "net/calendar.hpp"
+#include "net/findmy.hpp"
 #include "net/telem.hpp"
+#include "pango/pango-font.h"
 #include "screens/screens.hpp"
 
 #include "net/weather.hpp"
 #include "screens/nav.hpp"
 #include "theme.hpp"
 #include "widgets/clock.hpp"
+#include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 
 namespace ui {
@@ -52,6 +57,48 @@ GtkWidget *make_backdrop() {
   return a;
 }
 
+gboolean draw_findmy(GtkWidget *w, GdkEventExpose *, gpointer) {
+  FindMy_State fm = findmy_state();
+
+  cairo_t *cr = detail::begin_paint(w);
+  const int W = w->allocation.width, H = w->allocation.height;
+
+  if (fm.initialized == FINDMY_INITIALIZING || fm.loading) {
+    paint_dots_at(cr, W, H, w->allocation.x, w->allocation.y);
+    draw_text(cr, 12, 12, W - 24, H - 24, BLACK,
+              fm.initialized == FINDMY_INITIALIZING ? "initializing findmy..."
+              : fm.playing                          ? "stopping..."
+                                                    : "starting...",
+              12, PANGO_WEIGHT_BOLD, 0, 0.5);
+  } else {
+    set_rgb(cr, BLACK);
+    cairo_paint(cr);
+    draw_text(cr, 12, 12, W - 24, H - 24, WHITE,
+              fm.initialized == FINDMY_INIT_FAILED ? "findmy init failed!"
+              : fm.playing                         ? "pixel playing!"
+                                                   : "ping pixel",
+              12, PANGO_WEIGHT_BOLD, 0, 0.5);
+  }
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+int findmy_cb(GtkWidget *, GdkEventButton *, gpointer) {
+  const FindMy_State fm = findmy_state();
+  if (fm.initialized == FINDMY_INIT_SUCCESS && !fm.loading) {
+    findmy_ping();
+  }
+  return TRUE;
+}
+
+GtkWidget *make_findmy() {
+  GtkWidget *a = detail::new_area(245, 50);
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_findmy), NULL);
+  detail::make_clickable(a, findmy_cb, NULL);
+  return a;
+}
+
 } // namespace
 
 GtkWidget *build_main_screen() {
@@ -91,10 +138,11 @@ GtkWidget *build_main_screen() {
       910, 129);
   put(fixed, make_button("led.lamp0", 245, 50, 12, 0.0, open_led, &lamp_btn),
       910, 189);
-  put(fixed,
-      make_button("ping pixel", 245, 50, 12, 0.0, noop_press,
-                  (gpointer) "ping pixel"),
-      1165, 129);
+
+  GtkWidget *findmy = make_findmy();
+  put(fixed, findmy, 1165, 129);
+  findmy_start([findmy]() { gtk_widget_queue_draw(findmy); });
+
   put(fixed, make_button("sigterm", 245, 50, 12, 0.0, quit_press, nullptr),
       1165, 189);
 

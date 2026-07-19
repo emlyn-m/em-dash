@@ -11,7 +11,7 @@ gen_tx_cmd() {
 }
 
 HELP_MSG="\x1b[38;5;139m\x1b[1mHELP:\x1b[0m tx_assets.sh [data files] --docs [document files] --fonts [font files]"
-REMOTE_DATA_PATH="/assets"
+REMOTE_DATA_PATH="/"
 REMOTE_DOC_PATH="/mnt/us/documents"
 REMOTE_FONT_PATH="/usr/share/fonts"
 TX_PORT=1337

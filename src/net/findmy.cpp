@@ -201,12 +201,11 @@ int set_sound(bool play) {
     std::string req = create_sound_req(get_attr_str("FINDMY_DEVICE_ID"),
                                        get_attr_str("FINDMY_FCM_TOKEN"), play);
     const char *req_c = req.c_str();
-    printf("%d\n", req.size());
 
     char setsound_cmd[4096] = {0};
     int setsound_offset = snprintf(setsound_cmd, 11, "echo -en \"");
 
-    int req_offset = 0;
+    uint req_offset = 0;
     int step;
     while (req_offset < req.size()) {
       step = snprintf(setsound_cmd + setsound_offset, 17, "%s",
@@ -294,7 +293,7 @@ void findmy_worker(std::function<void()> on_update) {
   }
 
   for (;;) {
-    int _action = poll_wait(-1) - 1;
+    int action = poll_wait(-1);
 
     int init_state = fm_state.playing;
     post_to_main([on_update]() mutable {
@@ -303,7 +302,7 @@ void findmy_worker(std::function<void()> on_update) {
         on_update();
     });
 
-    int target_state = !init_state;
+    int target_state = action ? !init_state : init_state;
     int new_state = set_sound(target_state);
 
     post_to_main([new_state, on_update]() mutable {

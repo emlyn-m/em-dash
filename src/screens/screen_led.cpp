@@ -84,6 +84,7 @@ gboolean draw_conn(GtkWidget *w, GdkEventExpose *, gpointer d) {
   cairo_t *cr = gdk_cairo_create(w->window);
 
   auto *c = static_cast<LedControl *>(d);
+  const tuya_led_t *led = led_device(c->device);
   const LedState &s = led_state(c->device);
 
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
@@ -104,17 +105,18 @@ gboolean draw_conn(GtkWidget *w, GdkEventExpose *, gpointer d) {
   }
 
   char ipbuf[32];
-  snprintf(ipbuf, 32, "ip TODO");
+  snprintf(ipbuf, 32, "ip %d.%d.%d.%d", (led->ip >> 24) & 0xff,
+           (led->ip >> 16) & 0xff, (led->ip >> 8) & 0xff, led->ip & 0xff);
   draw_text(cr, 0, 35, w->allocation.width, 16, hex, ipbuf, 12,
             PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
 
   char idbuf[32];
-  snprintf(idbuf, 32, "id TODO");
+  snprintf(idbuf, 32, "id %s", led->id);
   draw_text(cr, 0, 51, w->allocation.width, 16, hex, idbuf, 12,
             PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
 
   char verbuf[32];
-  snprintf(verbuf, 32, "tuya ver TODO");
+  snprintf(verbuf, 32, "tuya ver %s", led->version == 33 ? "3.3" : "3.5");
   draw_text(cr, 0, 67, w->allocation.width, 16, hex, verbuf, 12,
             PANGO_WEIGHT_MEDIUM, 1.0, 0.5);
 

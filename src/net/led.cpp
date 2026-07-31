@@ -31,19 +31,19 @@ struct Cmd {
 
 struct Device {
   tuya_led_t led;
-  LedState state;                   // main thread only (via post_to_main)
-  std::function<void()> on_update;  // main thread only
+  LedState state;                  // main thread only (via post_to_main)
+  std::function<void()> on_update; // main thread only
 
   // Reflect commands in the model immediately rather than waiting for the
   // device's ack/status push. Lets the UI stay responsive with slow devices.
   bool optimistic = false;
 
-  std::mutex mtx;  // guards queue + active + running
+  std::mutex mtx; // guards queue + active + running
   std::deque<Cmd> queue;
   bool active = false;
   bool running = true;
 
-  int wake_r = -1, wake_w = -1;  // self-pipe to interrupt poll()
+  int wake_r = -1, wake_w = -1; // self-pipe to interrupt poll()
 };
 
 std::vector<std::unique_ptr<Device>> g_devices;
@@ -60,7 +60,8 @@ void wake(Device *d) {
 
 // Run the device's update callback on the main thread (callback is main-only).
 void fire(Device *d) {
-  if (d->on_update) d->on_update();
+  if (d->on_update)
+    d->on_update();
 }
 
 void post_online(Device *d, bool on) {
@@ -78,14 +79,16 @@ void apply_dps(Device *d, const char *json) {
   int power = -1, hue = -1, sat = -1, val = -1;
   cJSON *root = cJSON_Parse(json);
   if (cJSON *dps = cJSON_GetObjectItem(root, "dps")) {
-    if (cJSON *p = cJSON_GetObjectItem(dps, "20")) power = p->valueint;
+    if (cJSON *p = cJSON_GetObjectItem(dps, "20"))
+      power = p->valueint;
     if (cJSON *c = cJSON_GetObjectItem(dps, "24"))
       sscanf(c->valuestring, "%04x%04x%04x", &hue, &sat, &val);
   }
   cJSON_Delete(root);
   bool set_hsv = hue >= 0;
   post_to_main([d, power, hue, sat, val, set_hsv] {
-    if (power >= 0) d->state.power = power;
+    if (power >= 0)
+      d->state.power = power;
     if (set_hsv) {
       d->state.hue = hue;
       d->state.sat = sat;
@@ -109,14 +112,16 @@ int poll_wait(Device *d, int sock, int timeout_ms) {
     fds[1].revents = 0;
     nfds = 2;
   }
-  if (poll(fds, nfds, timeout_ms) <= 0) return 0;
+  if (poll(fds, nfds, timeout_ms) <= 0)
+    return 0;
   if (fds[0].revents & POLLIN) {
     char buf[64];
     while (read(d->wake_r, buf, sizeof buf) > 0) {
-    }  // drain (non-blocking)
+    } // drain (non-blocking)
     return 1;
   }
-  if (nfds == 2 && (fds[1].revents & (POLLIN | POLLHUP | POLLERR))) return 2;
+  if (nfds == 2 && (fds[1].revents & (POLLIN | POLLHUP | POLLERR)))
+    return 2;
   return 0;
 }
 
@@ -125,16 +130,16 @@ bool send_cmd(Device *d, const Cmd &c) {
   char dps[48];
   uint32_t cmd = COMMAND_CTRL;
   switch (c.type) {
-    case CmdType::Power:
-      snprintf(dps, sizeof dps, "{\"20\": %s}", c.power ? "true" : "false");
-      break;
-    case CmdType::Hsv:
-      snprintf(dps, sizeof dps, "{\"24\": \"%04x%04x%04x\"}", c.hue, c.sat,
-               c.val);
-      break;
-    case CmdType::Query:
-      cmd = COMMAND_QUERY;
-      break;
+  case CmdType::Power:
+    snprintf(dps, sizeof dps, "{\"20\": %s}", c.power ? "true" : "false");
+    break;
+  case CmdType::Hsv:
+    snprintf(dps, sizeof dps, "{\"24\": \"%04x%04x%04x\"}", c.hue, c.sat,
+             c.val);
+    break;
+  case CmdType::Query:
+    cmd = COMMAND_QUERY;
+    break;
   }
   return tuya_cmd_send(&d->led, cmd,
                        c.type == CmdType::Query ? nullptr : dps) == 0;
@@ -150,7 +155,8 @@ void comm_loop(Device *d) {
       active = d->active;
       running = d->running;
     }
-    if (!running) break;
+    if (!running)
+      break;
 
     if (!active) {
       if (connected) {
@@ -158,7 +164,7 @@ void comm_loop(Device *d) {
         connected = false;
         post_online(d, false);
       }
-      poll_wait(d, -1, -1);  // block until woken (activate / shutdown)
+      poll_wait(d, -1, -1); // block until woken (activate / shutdown)
       continue;
     }
 
@@ -168,10 +174,10 @@ void comm_loop(Device *d) {
         LOG(PRI_INF, "led: %s connected\n", d->led.name);
         post_online(d, true);
         std::lock_guard<std::mutex> lk(d->mtx);
-        d->queue.push_back(Cmd{CmdType::Query});  // pull initial state
+        d->queue.push_back(Cmd{CmdType::Query}); // pull initial state
       } else {
         post_online(d, false);
-        poll_wait(d, -1, 3000);  // backoff (interruptible)
+        poll_wait(d, -1, 3000); // backoff (interruptible)
         continue;
       }
     }
@@ -190,7 +196,8 @@ void comm_loop(Device *d) {
         break;
       }
     }
-    if (!connected) continue;
+    if (!connected)
+      continue;
 
     // Read any reply / status push and fold its dps into the model.
     int ev = poll_wait(d, d->led.sock, 1000);
@@ -210,7 +217,8 @@ void comm_loop(Device *d) {
       tuya_msg_free(&msg);
     }
   }
-  if (connected) tuya_disconnect(&d->led);
+  if (connected)
+    tuya_disconnect(&d->led);
 }
 
 // Build a device (config + tuya struct) from a key prefix, e.g. "LED_STRIP".
@@ -251,19 +259,20 @@ void enqueue(int idx, const Cmd &c, bool coalesce_hsv) {
     std::lock_guard<std::mutex> lk(d->mtx);
     if (coalesce_hsv && !d->queue.empty() &&
         d->queue.back().type == CmdType::Hsv)
-      d->queue.back() = c;  // collapse a burst of drags into the latest
+      d->queue.back() = c; // collapse a burst of drags into the latest
     else
       d->queue.push_back(c);
   }
   wake(d);
 }
 
-}  // namespace
+} // namespace
 
 void led_init() {
   auto add = [](const char *prefix) {
     auto dev = make_device(prefix);
-    if (!dev) return;
+    if (!dev)
+      return;
     int fds[2];
     if (pipe(fds) != 0) {
       LOG(PRI_ERR, "led: pipe failed for %s\n", prefix);
@@ -284,8 +293,8 @@ void led_init() {
 
 int led_count() { return (int)g_devices.size(); }
 
-const char *led_name(int idx) {
-  return valid(idx) ? g_devices[idx]->led.name : "";
+const tuya_led_t *led_device(int idx) {
+  return valid(idx) ? &(g_devices[idx]->led) : NULL;
 }
 
 const LedState &led_state(int idx) {
@@ -294,23 +303,27 @@ const LedState &led_state(int idx) {
 }
 
 void led_set_active(int idx, bool active) {
-  if (!valid(idx)) return;
+  if (!valid(idx))
+    return;
   Device *d = g_devices[idx].get();
   {
     std::lock_guard<std::mutex> lk(d->mtx);
     d->active = active;
-    if (!active) d->queue.clear();
+    if (!active)
+      d->queue.clear();
   }
   wake(d);
 }
 
 void led_on_update(int idx, std::function<void()> cb) {
-  if (!valid(idx)) return;
-  g_devices[idx]->on_update = std::move(cb);  // set on the main thread
+  if (!valid(idx))
+    return;
+  g_devices[idx]->on_update = std::move(cb); // set on the main thread
 }
 
 void led_set_power(int idx, bool on) {
-  if (!valid(idx)) return;
+  if (!valid(idx))
+    return;
   Device *d = g_devices[idx].get();
   if (d->optimistic) {
     d->state.power = on;
@@ -320,7 +333,8 @@ void led_set_power(int idx, bool on) {
 }
 
 void led_set_hsv(int idx, int hue, int sat, int val) {
-  if (!valid(idx)) return;
+  if (!valid(idx))
+    return;
   Device *d = g_devices[idx].get();
   if (d->optimistic) {
     d->state.hue = hue;
@@ -332,7 +346,8 @@ void led_set_hsv(int idx, int hue, int sat, int val) {
 }
 
 void led_query(int idx) {
-  if (valid(idx)) enqueue(idx, Cmd{CmdType::Query}, false);
+  if (valid(idx))
+    enqueue(idx, Cmd{CmdType::Query}, false);
 }
 
-}  // namespace ui
+} // namespace ui

@@ -34,6 +34,10 @@ struct Device {
   LedState state;                   // main thread only (via post_to_main)
   std::function<void()> on_update;  // main thread only
 
+  // Reflect commands in the model immediately rather than waiting for the
+  // device's ack/status push. Lets the UI stay responsive with slow devices.
+  bool optimistic = false;
+
   std::mutex mtx;  // guards queue + active + running
   std::deque<Cmd> queue;
   bool active = false;
@@ -224,6 +228,8 @@ std::unique_ptr<Device> make_device(const char *prefix) {
   char version_key[64];
   snprintf(version_key, sizeof version_key, "%s_VERSION", prefix);
   long version = get_attr_long(version_key);
+  char optimistic_key[64];
+  snprintf(optimistic_key, sizeof optimistic_key, "%s_OPTIMISTIC", prefix);
 
   if (!id || !name || !ip || !dkey) {
     LOG(PRI_WRN, "led: %s not configured, skipping\n", prefix);
@@ -234,6 +240,7 @@ std::unique_ptr<Device> make_device(const char *prefix) {
   // Config strings persist for the program's lifetime, so borrow them directly.
   tuya_led_new(&dev->led, (char *)id, (char *)name, inet_addr(ip),
                (uint8_t)version, (unsigned char *)dkey);
+  dev->optimistic = get_attr_bool(optimistic_key);
   return dev;
 }
 
@@ -303,11 +310,25 @@ void led_on_update(int idx, std::function<void()> cb) {
 }
 
 void led_set_power(int idx, bool on) {
-  if (valid(idx)) enqueue(idx, Cmd{CmdType::Power, on}, false);
+  if (!valid(idx)) return;
+  Device *d = g_devices[idx].get();
+  if (d->optimistic) {
+    d->state.power = on;
+    fire(d);
+  }
+  enqueue(idx, Cmd{CmdType::Power, on}, false);
 }
 
 void led_set_hsv(int idx, int hue, int sat, int val) {
-  if (valid(idx)) enqueue(idx, Cmd{CmdType::Hsv, false, hue, sat, val}, true);
+  if (!valid(idx)) return;
+  Device *d = g_devices[idx].get();
+  if (d->optimistic) {
+    d->state.hue = hue;
+    d->state.sat = sat;
+    d->state.val = val;
+    fire(d);
+  }
+  enqueue(idx, Cmd{CmdType::Hsv, false, hue, sat, val}, true);
 }
 
 void led_query(int idx) {

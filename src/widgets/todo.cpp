@@ -69,7 +69,7 @@ gboolean draw_todo(GtkWidget *w, GdkEventExpose *, gpointer) {
   const int W = w->allocation.width, H = w->allocation.height;
   paint_dots_at(cr, W, H, w->allocation.x, w->allocation.y);
 
-  draw_text(cr, MARGIN, 20, W - 2 * MARGIN, 39, BLACK, "todo", 30,
+  draw_text(cr, MARGIN, 20, W - 2 * MARGIN, 39, BLACK, "goals", 30,
             PANGO_WEIGHT_BOLD);
 
   const int text_x = MARGIN + 10 + BOX + BOX_GAP;
@@ -96,8 +96,7 @@ gboolean draw_todo(GtkWidget *w, GdkEventExpose *, gpointer) {
       set_rgb(cr, MUTED);
       cairo_set_line_width(cr, 1);
       cairo_move_to(cr, text_x, y + ROW_H / 2 + 0.5);
-      cairo_line_to(cr, text_x + MIN(tw, (double)text_w),
-                   y + ROW_H / 2 + 0.5);
+      cairo_line_to(cr, text_x + MIN(tw, (double)text_w), y + ROW_H / 2 + 0.5);
       cairo_stroke(cr);
     }
     cairo_restore(cr);

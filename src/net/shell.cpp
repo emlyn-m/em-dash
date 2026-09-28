@@ -27,7 +27,8 @@ struct Shell_Connection {
 Shell_State state;
 Shell_Connection conn;
 
-int send_logs(const char *host, int port) {
+// todo: implement timeout
+int send_logs(const char *host, int port, int timeout_sec) {
   LogRecord records[MAX_RECORDS];
   int n = fetch_n_logs(MAX_RECORDS, records);
   if (n == 0) {
@@ -43,7 +44,6 @@ int send_logs(const char *host, int port) {
     payload += "] ";
     payload += records[i].buf;
     payload += "\n";
-    free(records[i].buf);
   }
 
   struct addrinfo hints;
@@ -61,11 +61,21 @@ int send_logs(const char *host, int port) {
   }
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  if (sockfd < 0 || connect(sockfd, res->ai_addr, res->ai_addrlen)) {
+  if (sockfd < 0) {
     LOG(PRI_ERR, "shell: log connect failed to %s:%d\n", host, port);
     freeaddrinfo(res);
-    if (sockfd >= 0)
-      close(sockfd);
+    return 1;
+  }
+
+  struct timeval tv;
+  tv.tv_sec = timeout_sec;
+  tv.tv_usec = 0;
+  setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof tv);
+
+  if (connect(sockfd, res->ai_addr, res->ai_addrlen)) {
+    LOG(PRI_ERR, "shell: log connect failed to %s:%d\n", host, port);
+    freeaddrinfo(res);
+    close(sockfd);
     return 1;
   }
   freeaddrinfo(res);
@@ -146,7 +156,7 @@ void shell_worker(std::function<void()> on_update) {
           on_update();
       });
 
-      int ecode = send_logs(state.ip.c_str(), state.port);
+      int ecode = send_logs(state.ip.c_str(), state.port, state.timeout);
 
       post_to_main([ecode, on_update]() mutable {
         state.lg_ecode = ecode;

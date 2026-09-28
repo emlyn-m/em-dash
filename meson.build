@@ -21,6 +21,7 @@ sources = files(
     './src/net/tuya.cpp',
     './src/net/led.cpp',
     './src/net/findmy.cpp',
+    './src/net/backlight.cpp',
     './src/widgets/background.cpp',
     './src/widgets/button.cpp',
     './src/widgets/primitives.cpp',

@@ -13,12 +13,19 @@ struct SliderState {
   int w, h;
   float value;
   bool dragging;
+  bool horizontal;
   SliderFn on_change;
   SliderFn on_release;
   void *data;
 };
 
+constexpr int MIN_FILL = 20;
+
 float clamp01(float v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+
+float value_at(const SliderState *s, double x, double y) {
+  return clamp01(s->horizontal ? 1.0 - x / s->w : 1.0 - y / s->h);
+}
 
 SliderState *state_of(GtkWidget *w) {
   return static_cast<SliderState *>(g_object_get_data(G_OBJECT(w), "ui-state"));
@@ -31,18 +38,22 @@ gboolean draw_slider(GtkWidget *widget, GdkEventExpose *, gpointer d) {
 
   paint_dots_at(cr, a->width, a->height, a->x, a->y);
 
-  // min height of 20
-  int fill = 20 + (int)(s->value * (s->h - 20)); // filled from the bottom
   set_rgb(cr, BLACK);
-  cairo_rectangle(cr, 0, s->h - fill, s->w, fill);
+  if (s->horizontal) {
+    int fill = MIN_FILL + (int)(s->value * (s->w - MIN_FILL));
+    cairo_rectangle(cr, s->w - fill, 0, fill, s->h);
+  } else {
+    int fill = MIN_FILL + (int)(s->value * (s->h - MIN_FILL));
+    cairo_rectangle(cr, 0, s->h - fill, s->w, fill);
+  }
   cairo_fill(cr);
 
   cairo_destroy(cr);
   return TRUE;
 }
 
-void set_from_y(GtkWidget *widget, SliderState *s, double y) {
-  s->value = clamp01(1.0 - y / s->h);
+void set_from(GtkWidget *widget, SliderState *s, double x, double y) {
+  s->value = value_at(s, x, y);
   gtk_widget_queue_draw(widget);
   if (s->on_change)
     s->on_change(s->value, s->data);
@@ -51,14 +62,14 @@ void set_from_y(GtkWidget *widget, SliderState *s, double y) {
 gboolean slider_press(GtkWidget *widget, GdkEventButton *e, gpointer d) {
   SliderState *s = static_cast<SliderState *>(d);
   s->dragging = true;
-  set_from_y(widget, s, e->y);
+  set_from(widget, s, e->x, e->y);
   return TRUE;
 }
 
 gboolean slider_motion(GtkWidget *widget, GdkEventMotion *e, gpointer d) {
   SliderState *s = static_cast<SliderState *>(d);
   if (s->dragging)
-    set_from_y(widget, s, e->y);
+    set_from(widget, s, e->x, e->y);
   return TRUE;
 }
 
@@ -67,20 +78,19 @@ gboolean slider_release(GtkWidget *widget, GdkEventButton *e, gpointer d) {
   if (!s->dragging)
     return TRUE;
   s->dragging = false;
-  s->value = clamp01(1.0 - e->y / s->h);
+  s->value = value_at(s, e->x, e->y);
   gtk_widget_queue_draw(widget);
   if (s->on_release)
     s->on_release(s->value, s->data);
   return TRUE;
 }
 
-} // namespace
-
-GtkWidget *make_slider(int w, int h, void *data, SliderFn on_change,
-                       SliderFn on_release) {
+GtkWidget *new_slider(int w, int h, bool horizontal, void *data,
+                      SliderFn on_change, SliderFn on_release) {
   GtkWidget *a = detail::new_area(w, h);
   SliderState *s = detail::attach(
-      a, SliderState{w, h, 0.0f, false, on_change, on_release, data});
+      a, SliderState{w, h, 0.0f, false, horizontal, on_change, on_release,
+                     data});
   gtk_widget_add_events(a, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                                GDK_POINTER_MOTION_MASK);
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_slider), s);
@@ -88,6 +98,18 @@ GtkWidget *make_slider(int w, int h, void *data, SliderFn on_change,
   g_signal_connect(a, "motion-notify-event", G_CALLBACK(slider_motion), s);
   g_signal_connect(a, "button-release-event", G_CALLBACK(slider_release), s);
   return a;
+}
+
+} // namespace
+
+GtkWidget *make_slider(int w, int h, void *data, SliderFn on_change,
+                       SliderFn on_release) {
+  return new_slider(w, h, false, data, on_change, on_release);
+}
+
+GtkWidget *make_hslider(int w, int h, void *data, SliderFn on_change,
+                        SliderFn on_release) {
+  return new_slider(w, h, true, data, on_change, on_release);
 }
 
 void slider_sync(GtkWidget *slider, float value) {

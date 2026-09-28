@@ -25,8 +25,6 @@ int main(int argc, char **argv) {
     LOG(PRI_DBG, "disabled auto-sleep\n");
   }
 
-  // todo: autoset brightness to 0
-
   gtk_init(&argc, &argv);
   ui::prewarm_fonts(); // pay glyph-caching cost at launch, not on first switch
 

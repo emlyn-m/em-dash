@@ -3,6 +3,7 @@
 #include "glib.h"
 #include "gtk/gtk.h"
 #include "net/alerts.hpp"
+#include "net/backlight.hpp"
 #include "net/calendar.hpp"
 #include "net/findmy.hpp"
 #include "net/shell.hpp"
@@ -15,6 +16,7 @@
 #include "theme.hpp"
 #include "widgets/clock.hpp"
 #include "widgets/common.hpp"
+#include "widgets/slider.hpp"
 #include "widgets/widgets.hpp"
 
 namespace ui {
@@ -85,6 +87,31 @@ gboolean draw_findmy(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   cairo_destroy(cr);
   return TRUE;
+}
+
+gboolean draw_brightness_label(GtkWidget *w, GdkEventButton *,
+                               gpointer g_level) {
+
+  float level = *((float *)g_level); // [0,1]
+  char level_buf[16] = {0};
+  snprintf(level_buf, 16, "%.1f%% BL", 100 * level);
+
+  cairo_t *cr = gdk_cairo_create(w->window);
+  const int W = w->allocation.width, H = w->allocation.height;
+
+  // overlay with icon
+  draw_text(cr, 0, 0, W, H, BLACK, level_buf, 12, PANGO_WEIGHT_BOLD, 1.0, 0.5);
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+void make_brightness_info(GtkWidget **icon, GtkWidget **label, float *level) {
+  *icon = make_image_surface(75, 75);
+  *label = detail::new_area(75, 20);
+
+  g_signal_connect(*label, "expose-event", G_CALLBACK(draw_brightness_label),
+                   level);
 }
 
 int findmy_cb(GtkWidget *, GdkEventButton *, gpointer) {
@@ -219,6 +246,27 @@ GtkWidget *build_main_screen() {
   // Sketches
   put(fixed, make_image_surface(345, 354), 336, 677);
 
+  // Brightness
+  float *brightness_level = (float *)malloc(sizeof(float));
+  *brightness_level = 0;
+  GtkWidget *brightness = make_hslider(
+      415, 75, nullptr, nullptr, [](float v, void *) { backlight_set(v); });
+  GtkWidget *brightness_icon, *brightness_label;
+  make_brightness_info(&brightness_icon, &brightness_label, brightness_level);
+  put(fixed, brightness, 910, 44);
+  put(fixed, brightness_icon, 1335, 44);
+  put(fixed, brightness_label, 1335, 119 - 20);
+
+  backlight_start([brightness](float v) { slider_sync(brightness, v); },
+                  [brightness_label, brightness_level](float v) {
+                    *brightness_level = v;
+
+                    // gtk_widget_queue_draw(brightness_icon);  // potentially
+                    // queue draw if starts looking weird
+                    gtk_widget_queue_draw(brightness_label);
+                  });
+
+  // Buttons
   static LedButton strip_btn{0, "led.strip0"};
   static LedButton lamp_btn{1, "led.lamp0"};
   put(fixed, make_button("led.strip0", 245, 50, 12, 0.0, open_led, &strip_btn),

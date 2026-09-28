@@ -5,6 +5,7 @@
 #include "screens/screens.hpp"
 #include "theme.hpp"
 
+#include <cstdlib>
 #include <gtk-2.0/gdk/gdk.h>
 #include <gtk-2.0/gtk/gtk.h>
 
@@ -13,6 +14,18 @@ int main(int argc, char **argv) {
   ui::load_config_file(".env");
   ui::load_config_file(".env.config");
   ui::led_init();
+
+  // disable auto sleep - DS_PAYLOAD from /usr/bin/ds.sh
+  constexpr char *DS_PAYLOAD =
+      "lipc-set-prop com.lab126.powerd preventScreenSaver 1";
+  int ds_ecode = system(DS_PAYLOAD); // taken from /usr/bin/ds.sh
+  if (ds_ecode) {
+    LOG(PRI_ERR, "ds.sh returned code %d\n", ds_ecode);
+  } else {
+    LOG(PRI_DBG, "disabled auto-sleep\n");
+  }
+
+  // todo: autoset brightness to 0
 
   gtk_init(&argc, &argv);
   ui::prewarm_fonts(); // pay glyph-caching cost at launch, not on first switch

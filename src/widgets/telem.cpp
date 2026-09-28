@@ -49,10 +49,17 @@ void draw_telem_health(cairo_t *cr, Telem telem) {
   draw_text(cr, 25, 619, 274, 21, BLACK, battery_buf, 16,
             telem.current > 0 ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL, 1.0);
 
+  char current_buf[16] = {0};
+  snprintf(current_buf, 16, "%dmA", telem.current);
+  draw_text(cr, 25, 641, 274, 21, BLACK, "current", 16, PANGO_WEIGHT_NORMAL,
+            0.0);
+  draw_text(cr, 25, 641, 274, 21, BLACK, current_buf, 16, PANGO_WEIGHT_NORMAL,
+            1.0);
+
   char rssi_buf[16] = {0};
   snprintf(rssi_buf, 16, "%ddB", telem.wifi_strength);
-  draw_text(cr, 25, 648, 274, 21, BLACK, "rssi", 16, PANGO_WEIGHT_NORMAL, 0.0);
-  draw_text(cr, 25, 648, 274, 21, BLACK, rssi_buf, 16, PANGO_WEIGHT_NORMAL,
+  draw_text(cr, 25, 663, 274, 21, BLACK, "rssi", 16, PANGO_WEIGHT_NORMAL, 0.0);
+  draw_text(cr, 25, 663, 274, 21, BLACK, rssi_buf, 16, PANGO_WEIGHT_NORMAL,
             1.0);
 
   char ping_buf[16] = {0};
@@ -64,12 +71,12 @@ void draw_telem_health(cairo_t *cr, Telem telem) {
     }
   }
   snprintf(ping_buf, 16, npings ? "%dms" : "-", (int)(ping / npings));
-  draw_text(cr, 25, 677, 274, 21, BLACK, "ping", 16, PANGO_WEIGHT_NORMAL, 0.0);
-  draw_text(cr, 25, 677, 274, 21, BLACK, ping_buf, 16, PANGO_WEIGHT_NORMAL,
+  draw_text(cr, 25, 685, 274, 21, BLACK, "ping", 16, PANGO_WEIGHT_NORMAL, 0.0);
+  draw_text(cr, 25, 685, 274, 21, BLACK, ping_buf, 16, PANGO_WEIGHT_NORMAL,
             1.0);
 
-  draw_text(cr, 25, 706, 274, 21, BLACK, "ipv4", 16, PANGO_WEIGHT_NORMAL, 0.0);
-  draw_text(cr, 25, 706, 274, 21, BLACK, telem.ip.c_str(), 16,
+  draw_text(cr, 25, 707, 274, 21, BLACK, "ipv4", 16, PANGO_WEIGHT_NORMAL, 0.0);
+  draw_text(cr, 25, 707, 274, 21, BLACK, telem.ip.c_str(), 16,
             PANGO_WEIGHT_NORMAL, 1.0);
 }
 

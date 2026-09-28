@@ -94,12 +94,12 @@ gboolean draw_brightness_label(GtkWidget *w, GdkEventButton *,
 
   float level = *((float *)g_level); // [0,1]
   char level_buf[16] = {0};
-  snprintf(level_buf, 16, "%.1f%% BL", 100 * level);
+  snprintf(level_buf, 16, "%.1f%%", 100 * level);
 
   cairo_t *cr = gdk_cairo_create(w->window);
   const int W = w->allocation.width, H = w->allocation.height;
 
-  // overlay with icon
+  paint_dots_at(cr, W, H, w->allocation.x, w->allocation.y);
   draw_text(cr, 0, 0, W, H, BLACK, level_buf, 12, PANGO_WEIGHT_BOLD, 1.0, 0.5);
 
   cairo_destroy(cr);
@@ -261,8 +261,8 @@ GtkWidget *build_main_screen() {
                   [brightness_label, brightness_level](float v) {
                     *brightness_level = v;
 
-                    // gtk_widget_queue_draw(brightness_icon);  // potentially
-                    // queue draw if starts looking weird
+                    // potentially queue draw if starts looking weird
+                    // gtk_widget_queue_draw(brightness_icon);
                     gtk_widget_queue_draw(brightness_label);
                   });
 

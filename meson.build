@@ -17,6 +17,7 @@ sources = files(
     './src/net/alerts.cpp',
     './src/net/telem.cpp',
     './src/net/calendar.cpp',
+    './src/net/shell.cpp',
     './src/net/tuya.cpp',
     './src/net/led.cpp',
     './src/net/findmy.cpp',

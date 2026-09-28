@@ -1,8 +1,11 @@
 #include "cairo.h"
 #include "gdk/gdk.h"
+#include "glib.h"
+#include "gtk/gtk.h"
 #include "net/alerts.hpp"
 #include "net/calendar.hpp"
 #include "net/findmy.hpp"
+#include "net/shell.hpp"
 #include "net/telem.hpp"
 #include "pango/pango-font.h"
 #include "screens/screens.hpp"
@@ -99,6 +102,86 @@ GtkWidget *make_findmy() {
   return a;
 }
 
+gboolean draw_shell(GtkWidget *w, GdkEventExpose *, gpointer) {
+  const Shell_State shell = shell_state();
+  cairo_t *cr = detail::begin_paint(w);
+  const int W = w->allocation.width, H = w->allocation.height;
+
+  char rs_title_buf[32] = {0};
+
+  if (shell.sh_active) {
+    paint_dots_at(cr, W, H, w->allocation.x, w->allocation.height);
+    snprintf(rs_title_buf, 32, "%s:%d", shell.ip.c_str(), shell.port);
+    draw_text(cr, 12, 12, W - 24, H - 24, BLACK, rs_title_buf, 12,
+              PANGO_WEIGHT_BOLD, 0, 0.5);
+  } else {
+    set_rgb(cr, BLACK);
+    cairo_paint(cr);
+    draw_text(cr, 12, 12, W - 24, H - 24, WHITE, "shell", 12, PANGO_WEIGHT_BOLD,
+              0, 0.5);
+
+    if (shell.sh_ecode) {
+      draw_text(cr, 12, 12, W - 24, H - 24, WHITE, ":(", 12, PANGO_WEIGHT_BOLD,
+                1, 0.5);
+    }
+  }
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+int shell_cb(GtkWidget *w, GdkEventButton *, gpointer) {
+  shell_tryconn();
+  return TRUE;
+}
+
+GtkWidget *make_shell() {
+  GtkWidget *sh = detail::new_area(236, 50);
+  g_signal_connect(sh, "expose-event", G_CALLBACK(draw_shell), NULL);
+  detail::make_clickable(sh, shell_cb, NULL);
+  return sh;
+}
+
+gboolean draw_logs(GtkWidget *w, GdkEventExpose *, gpointer) {
+  const Shell_State shell = shell_state();
+  cairo_t *cr = detail::begin_paint(w);
+  const int W = w->allocation.width, H = w->allocation.height;
+
+  char rs_title_buf[32] = {0};
+
+  if (shell.lg_active) {
+    paint_dots_at(cr, W, H, w->allocation.x, w->allocation.height);
+    snprintf(rs_title_buf, 32, "%s:%d", shell.ip.c_str(), shell.port);
+    draw_text(cr, 12, 12, W - 24, H - 24, BLACK, rs_title_buf, 12,
+              PANGO_WEIGHT_BOLD, 0, 0.5);
+  } else {
+    set_rgb(cr, BLACK);
+    cairo_paint(cr);
+    draw_text(cr, 12, 12, W - 24, H - 24, WHITE, "logs", 12, PANGO_WEIGHT_BOLD,
+              0, 0.5);
+
+    if (shell.lg_ecode) {
+      draw_text(cr, 12, 12, W - 24, H - 24, WHITE, ":(", 12, PANGO_WEIGHT_BOLD,
+                1, 0.5);
+    }
+  }
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
+int logs_cb(GtkWidget *w, GdkEventButton *, gpointer) {
+  shell_dumplogs();
+  return TRUE;
+}
+
+GtkWidget *make_logs() {
+  GtkWidget *lg = detail::new_area(236, 50);
+  g_signal_connect(lg, "expose-event", G_CALLBACK(draw_logs), NULL);
+  detail::make_clickable(lg, logs_cb, NULL);
+  return lg;
+}
+
 } // namespace
 
 GtkWidget *build_main_screen() {
@@ -151,14 +234,15 @@ GtkWidget *build_main_screen() {
       1165, 189);
 
   // Shell controls
-  put(fixed,
-      make_button("dumplogs", 236, 50, 12, 0.0, noop_press,
-                  (gpointer) "dumplogs"),
-      50, 915);
-  put(fixed,
-      make_button("revshell", 236, 50, 12, 0.0, noop_press,
-                  (gpointer) "revshell"),
-      50, 976);
+  GtkWidget *logs = make_logs();
+  put(fixed, logs, 50, 915);
+
+  GtkWidget *shell = make_shell();
+  put(fixed, shell, 50, 976);
+  shell_start([shell, logs]() {
+    gtk_widget_queue_draw(shell);
+    gtk_widget_queue_draw(logs);
+  });
 
   return fixed;
 }

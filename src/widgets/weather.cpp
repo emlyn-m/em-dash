@@ -1,22 +1,85 @@
 #include "net/weather.hpp"
 #include "cairo.h"
+#include "pango/pango-font.h"
+#include "theme.hpp"
 #include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 #include <cstdio>
+#include <ctime>
 
 namespace ui {
 
 namespace {
 
-// Figma weather layout: a "weather" header, then 7 forecast rows. Each row has
-// a day label, a right-aligned temp, and a small box beneath. Positions are in
-// the widget's local coordinates (see the Figma "weather" frame).
 constexpr int ROWS = 7;
 constexpr int ROW_TOP = 69;   // first row's top
 constexpr int ROW_PITCH = 76; // vertical gap between rows
 constexpr int BOX_W = 226;
 constexpr int BOX_H = 40;
 constexpr int BOX_PAD = 5;
+
+const char *get_wmo_label(int code) {
+  switch (code) {
+  case 0:
+    return "clear skies";
+  case 1:
+    return "mainly clear";
+  case 2:
+    return "cloudy";
+  case 3:
+    return "very cloudy";
+  case 45:
+    return "foggy";
+  case 48:
+    return "icy fog";
+  case 51:
+    return "light drizzle";
+  case 53:
+    return "drizzle";
+  case 55:
+    return "heavy drizzle";
+  case 56:
+    return "light freezing drizzle";
+  case 57:
+    return "freezing drizzle";
+  case 61:
+    return "light rain";
+  case 63:
+    return "rain";
+  case 65:
+    return "heavy rain";
+  case 66:
+    return "light freezing rain";
+  case 67:
+    return "freezing rain";
+  case 71:
+    return "light snow";
+  case 73:
+    return "snow";
+  case 75:
+    return "heavy snow";
+  case 77:
+    return "snow grains";
+  case 80:
+    return "light showers";
+  case 81:
+    return "showers";
+  case 82:
+    return "heavy showers";
+  case 85:
+    return "light snow showers";
+  case 86:
+    return "snow showers";
+  case 95:
+    return "thunderstorms";
+  case 96:
+    return "thunderstorms, light hail";
+  case 99:
+    return "thunderstorms + hail";
+  default:
+    return "secret";
+  }
+}
 
 gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = detail::begin_paint(w);
@@ -94,11 +157,83 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
   return TRUE;
 }
 
+gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
+  cairo_t *cr = detail::begin_paint(w);
+  paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
+                w->allocation.y);
+
+  const int show = 3;
+
+  Weather weather = weather_state();
+  if (!weather.last_update) {
+    cairo_destroy(cr);
+    return TRUE;
+  }
+
+  int offset = 0;
+  time_t now = time(NULL);
+  while (offset + 1 < weather.events.size() &&
+         weather.events[offset + 1].time <= now) {
+    offset++;
+  }
+
+  set_rgb(cr, BLACK);
+  cairo_rectangle(cr, 0, 25, 40, 40);
+  cairo_fill(cr);
+
+  char summary[128] = {0};
+  snprintf(summary, 128, "%.0f°C and %s", weather.events[offset].temp_c,
+           get_wmo_label(weather.events[offset].wmo_code));
+  draw_text_tl(cr, 0, 65, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
+  snprintf(summary, 128,
+           weather.events[offset].uv_index >= 0 ? "uv index %d" : "uv unknown",
+           weather.events[offset].uv_index);
+  draw_text_tl(cr, 0, 80, BLACK, summary, 12, PANGO_WEIGHT_NORMAL);
+
+  struct tm *tnow = localtime(&now);
+  struct tm t;
+  uint start = offset, end;
+  for (int i = 0; i < 1 + show; i++) {
+    if (start >= weather.events.size()) {
+      break;
+    }
+
+    end = start + 1;
+    while (end < weather.events.size() &&
+           weather.events[start].wmo_code == weather.events[end].wmo_code) {
+      end++;
+    };
+
+    if (i > 0) {
+      localtime_r(&weather.events[start].time, &t);
+      int written = snprintf(summary, 128, "%s at ",
+                             get_wmo_label(weather.events[start].wmo_code));
+      strftime(summary + written, 128 - written,
+               (tnow->tm_hour > 11) == (t.tm_hour > 11) ? "%l:%M" : "%l:%M %p",
+               &t);
+      draw_text_tl(cr, 0, 110 + 14 * (i - 1), BLACK, summary, 10,
+                   PANGO_WEIGHT_LIGHT);
+    }
+
+    start = end;
+  }
+
+  cairo_destroy(cr);
+  return TRUE;
+}
+
 } // namespace
 
 GtkWidget *make_weather_surface(int w, int h) {
   GtkWidget *a = detail::new_area(w, h);
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_weather), nullptr);
+  return a;
+}
+
+GtkWidget *make_weather_summary_surface(int w, int h) {
+  GtkWidget *a = detail::new_area(w, h);
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_weather_summary),
+                   nullptr);
   return a;
 }
 

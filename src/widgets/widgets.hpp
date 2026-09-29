@@ -46,6 +46,7 @@ GtkWidget *make_label(const char *text, int w, int h, double px,
 
 // --- weather ---------------------------------------------------------------
 GtkWidget *make_weather_surface(int w, int h);
+GtkWidget *make_weather_summary_surface(int w, int h);
 
 // --- telem -----------------------------------------------------------------
 GtkWidget *make_telem_surface(int w, int h);

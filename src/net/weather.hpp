@@ -13,8 +13,9 @@ namespace ui {
 struct WeatherEvent {
   time_t time;
   double temp_c;
-  double rain_prob;  // percent, 0..100
-  int wmo_code;      // WMO weather-interpretation code
+  double rain_prob; // percent, 0..100
+  int wmo_code;     // WMO weather-interpretation code
+  int uv_index;
 };
 
 struct Weather {
@@ -29,4 +30,4 @@ void weather_start(std::function<void()> on_update);
 // Current model snapshot. Main-thread only.
 const Weather &weather_state();
 
-}  // namespace ui
+} // namespace ui

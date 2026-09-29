@@ -27,15 +27,11 @@ Cross-compile for the Kindle (armv7, `build_kindlepw2/`) uses the crosstool-NG t
 `~/x-tools/arm-kindlepw2-linux-gnueabi/`. The tree is already configured — `ninja -C build_kindlepw2`.
 Binary is `-static-libstdc++`.
 
-There is **no test suite**. Verify changes by building and running the app. 
+There is **no test suite**. Verify changes by building and running the app locally. 
 
 ## Deploying to the device (`library/`)
 
-The Kindle has no SSH; deploy is netcat-based. `tx_file.sh` serves `build_kindlepw2/dash` on port
-1337 and listens for the app's stdout/stderr on 1339; the device pulls it via a KUAL "book" shim.
-`tx_assets.sh` ships fonts/docs/data the same way (runs `fc-cache` after fonts). `set_ip.sh` writes
-the revshell/rx-file launcher books to a mounted Kindle. Edit the hardcoded IPs in these scripts for
-the current network.
+just a bunch of utility scripts, nothing hugely interesting tbqh.
 
 ## Configuration
 
@@ -86,10 +82,21 @@ Everything app-level lives in **`namespace ui`**; only vendored `net/cJSON` is g
 - New source files must be added to the `sources` list in `meson.build`.
 - Keep the net layer gtk-free and route all UI updates through `post_to_main`.
 - Write good C++17.
-- Keep comments relatively minimal, only using them if they are actually required for understanding.
-  - Docstrings and general 'then we do X' comments should be strongly avoided.
 
 - **Git conventions**
   - Conventional commits pls!
   - Just stick to a headline in general, commit bodies should be used sparingly.
   - Please do ask before pushing any commits, **including** on non-main branches.
+
+## comments
+
+okay but seriously, i really really prefer minimal / no comments. everyone reading this code knows how it works and
+having them bury other useful ones is really frustrating for me sorryyy. anyway yeah so just in general - comments about
+how stuff works, generic 'btw this is used by this but its not important', etc type comments please no im begging you T_T
+
+comments about pitfalls, unexpected connections / dependencies, **important** and **non-obvious** reasoning - good!! yes excellent
+please please keep doing those theyre so helpful + great to read!! also tho try keep them minimalistic (just a style pref :p) ^-^
+
+
+- Keep comments relatively minimal, only using them if they are actually required for understanding.
+  - Docstrings and general 'then we do X' comments should be strongly avoided.

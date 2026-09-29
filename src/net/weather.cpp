@@ -5,7 +5,9 @@
 #include "log.hpp"
 #include "net/cJSON.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -73,16 +75,33 @@ bool fetch_weather(std::vector<WeatherEvent> &out) {
     return false;
   }
 
+  cJSON *daily = cJSON_GetObjectItem(root, "daily");
+  cJSON *days = cJSON_GetObjectItem(daily, "time");
+  cJSON *uv = cJSON_GetObjectItem(daily, "uv_index_max");
+  int ndays = std::min(cJSON_GetArraySize(days), cJSON_GetArraySize(uv));
+  int day = 0;
+
   int offset = 0;
   int count = cJSON_GetArraySize(times);
 
   out.clear();
   for (int i = 0; i < WEATHER_EVENTS && offset < count; i++, offset++) {
     WeatherEvent ev;
-    ev.time = parse_time_offset(cJSON_GetArrayItem(times, offset)->valuestring);
+    const char *t = cJSON_GetArrayItem(times, offset)->valuestring;
+    ev.time = parse_time_offset(t);
     ev.temp_c = cJSON_GetArrayItem(temps, offset)->valuedouble;
     ev.rain_prob = cJSON_GetArrayItem(rain, offset)->valuedouble;
     ev.wmo_code = cJSON_GetArrayItem(codes, offset)->valueint;
+    // open-meteo only gives daily uv; match on the YYYY-MM-DD prefix
+    while (day < ndays &&
+           strncmp(t, cJSON_GetArrayItem(days, day)->valuestring, 10) > 0)
+      day++;
+    ev.uv_index =
+        day < ndays &&
+                !strncmp(t, cJSON_GetArrayItem(days, day)->valuestring, 10) &&
+                cJSON_IsNumber(cJSON_GetArrayItem(uv, day))
+            ? (int)std::lround(cJSON_GetArrayItem(uv, day)->valuedouble)
+            : -1;
     out.push_back(ev);
   }
 

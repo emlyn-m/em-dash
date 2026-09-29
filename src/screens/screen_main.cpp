@@ -220,8 +220,13 @@ GtkWidget *build_main_screen() {
 
   // Weather
   GtkWidget *weather = make_weather_surface(276, 591);
+  GtkWidget *weather_summary = make_weather_summary_surface(200, 155);
   put(fixed, weather, 30, 293);
-  weather_start([weather] { gtk_widget_queue_draw(weather); });
+  put(fixed, weather_summary, 200, 100);
+  weather_start([weather, weather_summary] {
+    gtk_widget_queue_draw(weather);
+    gtk_widget_queue_draw(weather_summary);
+  });
 
   // Telemetry
   GtkWidget *telem = make_telem_surface(324, 737);

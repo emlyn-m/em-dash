@@ -220,9 +220,9 @@ GtkWidget *build_main_screen() {
 
   // Weather
   GtkWidget *weather = make_weather_surface(276, 591);
-  GtkWidget *weather_summary = make_weather_summary_surface(200, 155);
+  GtkWidget *weather_summary = make_weather_summary_surface(200, 130);
   put(fixed, weather, 30, 293);
-  put(fixed, weather_summary, 200, 100);
+  put(fixed, weather_summary, 200, 115);
   weather_start([weather, weather_summary] {
     gtk_widget_queue_draw(weather);
     gtk_widget_queue_draw(weather_summary);

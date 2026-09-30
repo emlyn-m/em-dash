@@ -81,6 +81,60 @@ const char *get_wmo_label(int code) {
   }
 }
 
+constexpr int TIERS = 7;
+constexpr int TIER_WEIGHT[TIERS] = {1, 1, 2, 3, 4, 5, 20};
+
+int wmo_tier(int code) {
+  if (code <= 1)
+    return 0; // clear
+  if (code <= 3)
+    return 1; // cloud
+  if (code <= 48)
+    return 2; // fog
+  if (code <= 57)
+    return 3; // drizzle
+  if (code <= 67 || (code >= 80 && code <= 82))
+    return 4; // rain
+  if (code <= 86)
+    return 5; // snow
+  return 6;   // thunder
+}
+
+// max(tier count in waking hours * tier weight), then most observed code in
+// teir. -1 if no waking hours in range
+int day_wmo_code(const std::vector<WeatherEvent> &events, size_t begin,
+                 size_t end) {
+  int score[TIERS] = {};
+  int hours[100] = {};
+  for (size_t i = begin; i < end && i < events.size(); i++) {
+    struct tm t;
+    localtime_r(&events[i].time, &t);
+    int code = events[i].wmo_code;
+    if (t.tm_hour < 8 || t.tm_hour >= 21 || code < 0 || code >= 100)
+      continue;
+    score[wmo_tier(code)] += TIER_WEIGHT[wmo_tier(code)];
+    hours[code]++;
+  }
+
+  int tier = 0;
+  for (int k = 1; k < TIERS; k++)
+    if (score[k] >= score[tier])
+      tier = k;
+
+  int best = -1;
+  for (int c = 0; c < 100; c++)
+    if (hours[c] && wmo_tier(c) == tier &&
+        (best < 0 || hours[c] >= hours[best]))
+      best = c;
+  return best;
+}
+
+void draw_wmo_icon(cairo_t *cr, double x, double y, int size, int code) {
+  set_rgb(cr, BLACK);
+  cairo_rectangle(cr, x, y, size, size);
+  cairo_fill(cr);
+}
+
 gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = detail::begin_paint(w);
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
@@ -96,9 +150,11 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   // precompute ranges
   double global_tmin = 999, global_tmax = -999;
-  double tmin[ROWS] = {999, 999, 999, 999, 999, 999, 999};
-  double tmax[ROWS] = {-999, -999, -999, -999, -999, -999, -999};
+  double tmin[ROWS] = {0};
+  double tmax[ROWS] = {0};
   for (int i = 0; i < ROWS; i++) {
+    tmin[i] = global_tmin;
+    tmax[i] = global_tmax;
     for (int j = 24 * i; j < MIN(weather.events.size(), 24 * (i + 1)); j++) {
       if (weather.events[j].temp_c < tmin[i]) {
         tmin[i] = weather.events[j].temp_c;
@@ -120,12 +176,15 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
 
   for (int i = 0; i < ROWS; i++) {
     int top = ROW_TOP + i * ROW_PITCH;
+
+    draw_wmo_icon(cr, 25, top + 6, 16,
+                  day_wmo_code(weather.events, 24 * i, 24 * (i + 1)));
+
     char day_buf[32] = {0};
-    snprintf(day_buf, 32, "test");
     struct tm *t = localtime(&weather.events[24 * i].time);
     strftime(day_buf, 32, "%a %-d", t);
     *day_buf |= 0x20; // lowercase first letter
-    draw_text_tl(cr, 25, top, BLACK, day_buf,
+    draw_text_tl(cr, 50, top, BLACK, day_buf,
                  20, // GMT+12 offset
                  PANGO_WEIGHT_NORMAL);
 
@@ -177,18 +236,16 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
     offset++;
   }
 
-  set_rgb(cr, BLACK);
-  cairo_rectangle(cr, 0, 25, 40, 40);
-  cairo_fill(cr);
+  draw_wmo_icon(cr, 0, 0, 40, weather.events[offset].wmo_code);
 
   char summary[128] = {0};
   snprintf(summary, 128, "%.0f°C and %s", weather.events[offset].temp_c,
            get_wmo_label(weather.events[offset].wmo_code));
-  draw_text_tl(cr, 0, 65, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
+  draw_text_tl(cr, 0, 40, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
   snprintf(summary, 128,
            weather.events[offset].uv_index >= 0 ? "uv index %d" : "uv unknown",
            weather.events[offset].uv_index);
-  draw_text_tl(cr, 0, 80, BLACK, summary, 12, PANGO_WEIGHT_NORMAL);
+  draw_text_tl(cr, 0, 55, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
 
   struct tm *tnow = localtime(&now);
   struct tm t;
@@ -211,7 +268,7 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
       strftime(summary + written, 128 - written,
                (tnow->tm_hour > 11) == (t.tm_hour > 11) ? "%l:%M" : "%l:%M %p",
                &t);
-      draw_text_tl(cr, 0, 110 + 14 * (i - 1), BLACK, summary, 10,
+      draw_text_tl(cr, 0, 85 + 14 * (i - 1), BLACK, summary, 12,
                    PANGO_WEIGHT_LIGHT);
     }
 

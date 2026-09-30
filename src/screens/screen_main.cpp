@@ -1,4 +1,5 @@
 #include "cairo.h"
+#include "config.hpp"
 #include "gdk/gdk.h"
 #include "glib.h"
 #include "gtk/gtk.h"
@@ -79,10 +80,10 @@ gboolean draw_findmy(GtkWidget *w, GdkEventExpose *, gpointer) {
     set_rgb(cr, BLACK);
     cairo_paint(cr);
     draw_text(cr, 12, 12, W - 24, H - 24, WHITE,
-              fm.initialized == FINDMY_INIT_FAILED ? "findmy init failed!"
-              : fm.playing                         ? "pixel playing!"
-                                                   : "ping pixel",
-              12, PANGO_WEIGHT_BOLD, 0, 0.5);
+              fm.initialized == FINDMY_INIT_FAILED ? " findmy init failed!"
+              : fm.playing                         ? " pixel playing!"
+                                                   : " ping pixel",
+              14, PANGO_WEIGHT_BOLD, 0, 0.5);
   }
 
   cairo_destroy(cr);
@@ -107,7 +108,7 @@ gboolean draw_brightness_label(GtkWidget *w, GdkEventButton *,
 }
 
 void make_brightness_info(GtkWidget **icon, GtkWidget **label, float *level) {
-  *icon = make_image_surface(75, 75);
+  *icon = make_image_surface(75, 75, (char *)"");
   *label = detail::new_area(75, 20);
 
   g_signal_connect(*label, "expose-event", G_CALLBACK(draw_brightness_label),
@@ -184,11 +185,11 @@ gboolean draw_logs(GtkWidget *w, GdkEventExpose *, gpointer) {
   } else {
     set_rgb(cr, BLACK);
     cairo_paint(cr);
-    draw_text(cr, 12, 12, W - 24, H - 24, WHITE, "logs", 12, PANGO_WEIGHT_BOLD,
+    draw_text(cr, 12, 12, W - 24, H - 24, WHITE, "logs", 14, PANGO_WEIGHT_BOLD,
               0, 0.5);
 
     if (shell.lg_ecode) {
-      draw_text(cr, 12, 12, W - 24, H - 24, WHITE, ":(", 12, PANGO_WEIGHT_BOLD,
+      draw_text(cr, 12, 12, W - 24, H - 24, WHITE, ":(", 14, PANGO_WEIGHT_BOLD,
                 1, 0.5);
     }
   }
@@ -249,7 +250,10 @@ GtkWidget *build_main_screen() {
   alerts_start([alerts] { gtk_widget_queue_draw(alerts); });
 
   // Sketches
-  put(fixed, make_image_surface(345, 354), 336, 677);
+
+  char sketchbuf[64] = {0};
+  snprintf(sketchbuf, 64, "%s/%s", "ASSET_PATH", "priv-main-1.png");
+  put(fixed, make_image_surface(345, 354, sketchbuf), 336, 677);
 
   // Brightness
   float *brightness_level = (float *)malloc(sizeof(float));
@@ -272,18 +276,18 @@ GtkWidget *build_main_screen() {
                   });
 
   // Buttons
-  static LedButton strip_btn{0, "led.strip0"};
-  static LedButton lamp_btn{1, "led.lamp0"};
-  put(fixed, make_button("led.strip0", 245, 50, 12, 0.0, open_led, &strip_btn),
+  static LedButton strip_btn{0, "led strip"};
+  static LedButton lamp_btn{1, "led lamp"};
+  put(fixed, make_button(" led strip", 245, 50, 14, 0.0, open_led, &strip_btn),
       910, 129);
-  put(fixed, make_button("led.lamp0", 245, 50, 12, 0.0, open_led, &lamp_btn),
+  put(fixed, make_button(" led lamp", 245, 50, 14, 0.0, open_led, &lamp_btn),
       910, 189);
 
   GtkWidget *findmy = make_findmy();
   put(fixed, findmy, 1165, 129);
   findmy_start([findmy]() { gtk_widget_queue_draw(findmy); });
 
-  put(fixed, make_button("sigterm", 245, 50, 12, 0.0, quit_press, nullptr),
+  put(fixed, make_button(" launcher", 245, 50, 14, 0.0, quit_press, nullptr),
       1165, 189);
 
   // Shell controls

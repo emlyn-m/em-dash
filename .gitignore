@@ -2,5 +2,11 @@
 .env
 config.dat
 
+# private assets
+assets/priv-*
+
 # caches
 .cache/
+
+# node
+node_modules/

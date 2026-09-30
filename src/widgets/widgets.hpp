@@ -61,6 +61,6 @@ GtkWidget *make_calendar_surface(int w, int h);
 GtkWidget *make_todo_surface(int w, int h);
 
 // --- image -----------------------------------------------------------------
-GtkWidget *make_image_surface(int w, int h);
+GtkWidget *make_image_surface(int w, int h, char *path);
 
 } // namespace ui

@@ -207,7 +207,7 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
 
     // min/max temps
     char temp_buf[32] = {0};
-    snprintf(temp_buf, 32, "%d°c | %d°c", (int)tmin[i], (int)tmax[i]);
+    snprintf(temp_buf, 32, "%d° | %d°", (int)tmin[i], (int)tmax[i]);
     draw_text(cr, 25, top + 5, BOX_W, 21, BLACK, temp_buf, 16,
               PANGO_WEIGHT_NORMAL, /*halign=*/1.0, /*valign=*/0.0);
   }
@@ -239,7 +239,7 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
   draw_wmo_icon(cr, 0, 0, 40, weather.events[offset].wmo_code);
 
   char summary[128] = {0};
-  snprintf(summary, 128, "%.0f°C and %s", weather.events[offset].temp_c,
+  snprintf(summary, 128, "%.0f° and %s", weather.events[offset].temp_c,
            get_wmo_label(weather.events[offset].wmo_code));
   draw_text_tl(cr, 0, 40, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
   snprintf(summary, 128,
@@ -265,9 +265,7 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
       localtime_r(&weather.events[start].time, &t);
       int written = snprintf(summary, 128, "%s at ",
                              get_wmo_label(weather.events[start].wmo_code));
-      strftime(summary + written, 128 - written,
-               (tnow->tm_hour > 11) == (t.tm_hour > 11) ? "%l:%M" : "%l:%M %p",
-               &t);
+      strftime(summary + written, 128 - written, "%H:%M", &t);
       draw_text_tl(cr, 0, 85 + 14 * (i - 1), BLACK, summary, 12,
                    PANGO_WEIGHT_LIGHT);
     }

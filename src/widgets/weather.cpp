@@ -11,12 +11,11 @@ namespace ui {
 
 namespace {
 
-constexpr int ROWS = 7;
-constexpr int ROW_TOP = 69;   // first row's top
-constexpr int ROW_PITCH = 76; // vertical gap between rows
-constexpr int BOX_W = 226;
-constexpr int BOX_H = 40;
-constexpr int BOX_PAD = 5;
+constexpr int ROWS = 6;
+constexpr int ROW_TOP = 0;    // first row's top
+constexpr int ROW_PITCH = 74; // vertical gap between rows
+constexpr int BOX_W = 221;
+constexpr int BOX_H = 32;
 
 const char *get_wmo_label(int code) {
   switch (code) {
@@ -140,8 +139,6 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
                 w->allocation.y);
 
-  draw_text_tl(cr, 20, 20, BLACK, "weather", 30, PANGO_WEIGHT_BOLD);
-
   Weather weather = weather_state();
   if (!weather.last_update) {
     cairo_destroy(cr);
@@ -171,7 +168,7 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
     }
   }
 
-  int HOUR_WIDTH = (BOX_W - 2 * BOX_PAD) / 24;
+  double HOUR_WIDTH = BOX_W / 23.0; // 24 samples span 23 gaps
   double T_RANGE = global_tmax - global_tmin;
 
   for (int i = 0; i < ROWS; i++) {
@@ -191,17 +188,14 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
     set_rgb(cr, BLACK);
     cairo_set_line_width(cr, 2);
     cairo_move_to(
-        cr, 25 + BOX_PAD,
-        top + BOX_PAD + 26 +
-            (BOX_H - 2 * BOX_PAD) *
-                (1.0 -
-                 ((weather.events[24 * i].temp_c - global_tmin) / T_RANGE)));
+        cr, 25,
+        top + 26 +
+            (BOX_H) * (1.0 - ((weather.events[24 * i].temp_c - global_tmin) /
+                              T_RANGE)));
     for (int j = 1; j < 24; j++) {
       double t = weather.events[24 * i + j].temp_c;
-      cairo_line_to(cr, 25 + BOX_PAD + j * HOUR_WIDTH,
-                    top + BOX_PAD + 26 +
-                        (BOX_H - 2 * BOX_PAD) *
-                            (1.0 - ((t - global_tmin) / T_RANGE)));
+      cairo_line_to(cr, 25 + j * HOUR_WIDTH,
+                    top + 26 + (BOX_H) * (1.0 - ((t - global_tmin) / T_RANGE)));
     }
     cairo_stroke(cr);
 
@@ -221,7 +215,7 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
                 w->allocation.y);
 
-  const int show = 3;
+  const int show = 2;
 
   Weather weather = weather_state();
   if (!weather.last_update) {
@@ -236,18 +230,19 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
     offset++;
   }
 
-  draw_wmo_icon(cr, 0, 0, 40, weather.events[offset].wmo_code);
+  draw_wmo_icon(cr, w->allocation.width - 40, 11, 40, // 11: cap top of temp
+                weather.events[offset].wmo_code);
 
   char summary[128] = {0};
-  snprintf(summary, 128, "%.0f° and %s", weather.events[offset].temp_c,
-           get_wmo_label(weather.events[offset].wmo_code));
-  draw_text_tl(cr, 0, 40, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
+  snprintf(summary, 128, "%.0f°", weather.events[offset].temp_c);
+  draw_text_tl(cr, 0, 0, BLACK, summary, 32, PANGO_WEIGHT_NORMAL);
+  snprintf(summary, 128, "%s", get_wmo_label(weather.events[offset].wmo_code));
+  draw_text_tl(cr, 0, 40, BLACK, summary, 16, PANGO_WEIGHT_NORMAL);
   snprintf(summary, 128,
-           weather.events[offset].uv_index >= 0 ? "uv index %d" : "uv unknown",
+           weather.events[offset].uv_index >= 0 ? "uv %d" : "uv unknown",
            weather.events[offset].uv_index);
-  draw_text_tl(cr, 0, 55, BLACK, summary, 14, PANGO_WEIGHT_NORMAL);
+  draw_text_tl(cr, 0, 60, BLACK, summary, 16, PANGO_WEIGHT_NORMAL);
 
-  struct tm *tnow = localtime(&now);
   struct tm t;
   uint start = offset, end;
   for (int i = 0; i < 1 + show; i++) {
@@ -266,12 +261,18 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
       int written = snprintf(summary, 128, "%s at ",
                              get_wmo_label(weather.events[start].wmo_code));
       strftime(summary + written, 128 - written, "%H:%M", &t);
-      draw_text_tl(cr, 0, 85 + 14 * (i - 1), BLACK, summary, 12,
+      draw_text_tl(cr, 0, 85 + 16 * (i - 1), BLACK, summary, 14,
                    PANGO_WEIGHT_LIGHT);
     }
 
     start = end;
   }
+
+  // cairo_save(cr);
+  // set_rgb(cr, BLACK);
+  // cairo_rectangle(cr, 0, w->allocation.height - 30, w->allocation.width, 2);
+  // cairo_fill(cr);
+  // cairo_restore(cr);
 
   cairo_destroy(cr);
   return TRUE;

@@ -220,10 +220,10 @@ GtkWidget *build_main_screen() {
   clock_start(backdrop);
 
   // Weather
-  GtkWidget *weather = make_weather_surface(276, 591);
-  GtkWidget *weather_summary = make_weather_summary_surface(200, 130);
-  put(fixed, weather, 30, 293);
-  put(fixed, weather_summary, 200, 115);
+  GtkWidget *weather_summary = make_weather_summary_surface(221, 145);
+  GtkWidget *weather = make_weather_surface(276, 443);
+  put(fixed, weather_summary, 55, 312);
+  put(fixed, weather, 30, 457);
   weather_start([weather, weather_summary] {
     gtk_widget_queue_draw(weather);
     gtk_widget_queue_draw(weather_summary);
@@ -250,7 +250,6 @@ GtkWidget *build_main_screen() {
   alerts_start([alerts] { gtk_widget_queue_draw(alerts); });
 
   // Sketches
-
   char sketchbuf[64] = {0};
   snprintf(sketchbuf, 64, "%s/%s", get_attr_str("ASSET_PATH"),
            "priv-main-1.png");

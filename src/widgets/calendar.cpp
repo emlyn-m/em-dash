@@ -14,7 +14,7 @@ namespace {
 
 // Agenda layout (panel-local px).
 constexpr int MARGIN = 20;
-constexpr int AGENDA_TOP = 74;
+constexpr int AGENDA_TOP = 30;
 constexpr int DAYBAR_H = 26;
 constexpr int DAYBAR_GAP = 0;
 constexpr int ROW_H = 34;
@@ -49,9 +49,6 @@ gboolean draw_calendar(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = detail::begin_paint(w);
   const int W = w->allocation.width, H = w->allocation.height;
   paint_dots_at(cr, W, H, w->allocation.x, w->allocation.y);
-
-  draw_text(cr, MARGIN, 20, W - 2 * MARGIN, 39, BLACK, "calendar", 30,
-            PANGO_WEIGHT_BOLD);
 
   Calendar calendar = calendar_state();
   if (!calendar.last_update) {

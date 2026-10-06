@@ -19,7 +19,6 @@ gboolean draw_image(GtkWidget *w, GdkEventExpose *, gpointer gimg) {
     return TRUE;
   }
 
-  set_rgb(cr, DEBUG_RED);
   cairo_set_source_surface(cr, img, 0, 0);
   cairo_paint(cr);
 

@@ -234,10 +234,11 @@ GtkWidget *build_main_screen() {
   put(fixed, telem, 1065, 293);
   telem_start([telem] { gtk_widget_queue_draw(telem); });
 
-  GtkWidget *calendar = make_calendar_surface(345, 354);
-  GtkWidget *todo = make_todo_surface(345, 353);
-  put(fixed, calendar, 336, 293);
-  put(fixed, todo, 690, 294);
+  // Calendar
+  GtkWidget *todo = make_todo_surface(345, 354);
+  put(fixed, todo, 336, 293);
+  GtkWidget *calendar = make_calendar_surface(345, 353);
+  put(fixed, calendar, 690, 294);
 
   calendar_start([calendar, todo] {
     gtk_widget_queue_draw(calendar);
@@ -251,8 +252,7 @@ GtkWidget *build_main_screen() {
 
   // Sketches
   char sketchbuf[64] = {0};
-  snprintf(sketchbuf, 64, "%s/%s", get_attr_str("ASSET_PATH"),
-           "priv-main-1.png");
+  snprintf(sketchbuf, 64, "%s/priv-main-1.png", get_attr_str("ASSET_PATH"));
   put(fixed, make_image_surface(345, 354, sketchbuf), 336, 677);
 
   // Brightness

@@ -3,10 +3,12 @@
 config.dat
 
 # private assets
-assets/priv-*
+assets/**/priv-*
 
 # caches
 .cache/
+library/weather/src/weather/__pycache__/
 
-# node
+# deps
 node_modules/
+library/weather/src/weather/.venv/

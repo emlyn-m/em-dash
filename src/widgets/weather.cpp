@@ -1,11 +1,15 @@
 #include "net/weather.hpp"
 #include "cairo.h"
+#include "config.hpp"
+#include "log.hpp"
 #include "pango/pango-font.h"
 #include "theme.hpp"
 #include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 #include <cstdio>
 #include <ctime>
+#include <map>
+#include <string>
 
 namespace ui {
 
@@ -32,15 +36,15 @@ const char *get_wmo_label(int code) {
   case 48:
     return "icy fog";
   case 51:
-    return "light drizzle";
+    return "light drizzles";
   case 53:
-    return "drizzle";
+    return "drizzles";
   case 55:
-    return "heavy drizzle";
+    return "heavy drizzles";
   case 56:
-    return "light freezing drizzle";
+    return "light freezing drizzles";
   case 57:
-    return "freezing drizzle";
+    return "freezing drizzles";
   case 61:
     return "light rain";
   case 63:
@@ -72,11 +76,11 @@ const char *get_wmo_label(int code) {
   case 95:
     return "thunderstorms";
   case 96:
-    return "thunderstorms, light hail";
+    return "thunderstorms + light hail";
   case 99:
     return "thunderstorms + hail";
   default:
-    return "secret";
+    return "wouldn't you like to know";
   }
 }
 
@@ -128,10 +132,95 @@ int day_wmo_code(const std::vector<WeatherEvent> &events, size_t begin,
   return best;
 }
 
+constexpr int WMO_CODES = 100;
+
+struct WmoIcon {
+  int code;
+  const char *file;
+};
+
+constexpr WmoIcon ICON_FILES[] = {
+    {0, "clearsky_night.png"},
+    {1, "fair_night.png"},
+    {2, "cloudy.png"},
+    {3, "cloudy.png"},
+    {45, "fog.png"},
+    {48, "icy_fog.png"},
+    {51, "lightrain.png"},
+    {53, "rain.png"},
+    {55, "heavyrain.png"},
+    {56, "freezing_drizzle.png"},
+    {57, "freezing_drizzle.png"},
+    {61, "lightrain.png"},
+    {63, "lightrain.png"},
+    {65, "rain.png"},
+    {66, "freezing_rain.png"},
+    {67, "freezing_rain.png"},
+    {71, "lightsnow.png"},
+    {73, "snow.png"},
+    {75, "heavysnow.png"},
+    {77, "snow.png"},
+    {80, "lightrain.png"},
+    {81, "rain.png"},
+    {82, "heavyrain.png"},
+    {85, "lightsnow.png"},
+    {86, "heavysnow.png"},
+    {95, "rainandthunder.png"},
+    {96, "sleetandthunder.png"},
+    {99, "heavysleetandthunder.png"},
+};
+cairo_surface_t *icons[WMO_CODES] = {};
+
+void load_wmo_icons() {
+  static bool loaded = false;
+  if (loaded)
+    return;
+  loaded = true;
+
+  const char *root = get_attr_str("ASSET_PATH");
+  std::map<std::string, cairo_surface_t *> by_file;
+  for (const WmoIcon &e : ICON_FILES) {
+    auto it = by_file.find(e.file);
+    if (it == by_file.end()) {
+      char path[256];
+      snprintf(path, sizeof path, "%s/weather/%s", root ? root : "assets",
+               e.file);
+      cairo_surface_t *s = cairo_image_surface_create_from_png(path);
+      if (cairo_status_t status = cairo_surface_status(s)) {
+        LOG(PRI_ERR, "weather icon %s failed to load: %s\n", path,
+            cairo_status_to_string(status));
+        cairo_surface_destroy(s);
+        s = nullptr;
+      }
+      it = by_file.emplace(e.file, s).first;
+    }
+    icons[e.code] = it->second;
+  }
+}
+
+cairo_surface_t *wmo_icon(int code) {
+  return code < 0 || code >= WMO_CODES ? nullptr : icons[code];
+}
+
 void draw_wmo_icon(cairo_t *cr, double x, double y, int size, int code) {
-  set_rgb(cr, BLACK);
-  cairo_rectangle(cr, x, y, size, size);
-  cairo_fill(cr);
+  cairo_surface_t *icon = wmo_icon(code);
+  cairo_save(cr);
+
+  if (!icon) {
+    set_rgb(cr, BLACK);
+    cairo_set_line_width(cr, 1);
+    cairo_rectangle(cr, x, y, size, size);
+    cairo_line_to(cr, x + size, y + size);
+    cairo_stroke(cr);
+  } else {
+    cairo_translate(cr, x, y);
+    cairo_scale(cr, (double)size / cairo_image_surface_get_width(icon),
+                (double)size / cairo_image_surface_get_height(icon));
+    cairo_set_source_surface(cr, icon, 0, 0);
+    cairo_paint(cr);
+  }
+
+  cairo_restore(cr);
 }
 
 gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
@@ -174,15 +263,15 @@ gboolean draw_weather(GtkWidget *w, GdkEventExpose *, gpointer) {
   for (int i = 0; i < ROWS; i++) {
     int top = ROW_TOP + i * ROW_PITCH;
 
-    draw_wmo_icon(cr, 25, top + 6, 16,
+    draw_wmo_icon(cr, 25, top + 2, 24,
                   day_wmo_code(weather.events, 24 * i, 24 * (i + 1)));
 
     char day_buf[32] = {0};
     struct tm *t = localtime(&weather.events[24 * i].time);
     strftime(day_buf, 32, "%a %-d", t);
     *day_buf |= 0x20; // lowercase first letter
-    draw_text_tl(cr, 50, top, BLACK, day_buf,
-                 20, // GMT+12 offset
+    draw_text_tl(cr, 54, top + 1, BLACK, day_buf,
+                 18, // GMT+12 offset
                  PANGO_WEIGHT_NORMAL);
 
     set_rgb(cr, BLACK);
@@ -281,12 +370,14 @@ gboolean draw_weather_summary(GtkWidget *w, GdkEventExpose *, gpointer) {
 } // namespace
 
 GtkWidget *make_weather_surface(int w, int h) {
+  load_wmo_icons();
   GtkWidget *a = detail::new_area(w, h);
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_weather), nullptr);
   return a;
 }
 
 GtkWidget *make_weather_summary_surface(int w, int h) {
+  load_wmo_icons();
   GtkWidget *a = detail::new_area(w, h);
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_weather_summary),
                    nullptr);

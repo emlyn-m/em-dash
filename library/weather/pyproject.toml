@@ -1,0 +1,17 @@
+[project]
+name = "weather"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.3",
+    "opencv-python>=5.0.0.93",
+    "pillow>=12.3.0",
+    "scipy>=1.18.1",
+]
+
+[project.scripts]
+weather = "weather:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"

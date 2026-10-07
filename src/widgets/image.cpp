@@ -19,8 +19,13 @@ gboolean draw_image(GtkWidget *w, GdkEventExpose *, gpointer gimg) {
     return TRUE;
   }
 
+  cairo_save(cr);
+  cairo_scale(
+      cr, (float)w->allocation.width / cairo_image_surface_get_width(img),
+      (float)w->allocation.height / cairo_image_surface_get_height(img));
   cairo_set_source_surface(cr, img, 0, 0);
   cairo_paint(cr);
+  cairo_restore(cr);
 
   cairo_destroy(cr);
   return TRUE;

@@ -269,8 +269,8 @@ GtkWidget *build_main_screen() {
 
   // Sketches
   char sketchbuf[128] = {0};
-  snprintf(sketchbuf, 128, "%s/%s", get_attr_str("ASSET_PATH"),
-           "designs/priv-main-1.png");
+  snprintf(sketchbuf, 128, "%s/designs/priv-main-1.png",
+           get_attr_str("ASSET_PATH"));
   put(fixed, make_image_surface(345, 354, sketchbuf), 336, 677);
 
   // Brightness

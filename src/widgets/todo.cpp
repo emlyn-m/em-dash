@@ -132,7 +132,8 @@ gboolean todo_press(GtkWidget *w, GdkEventButton *ev, gpointer) {
 
 GtkWidget *make_todo_surface(int w, int h) {
   char img[128] = {0};
-  snprintf(img, 128, "%s/priv-todo-variant.png", get_attr_str("ASSET_PATH"));
+  snprintf(img, 128, "%s/designs/priv-todo-variant.png",
+           get_attr_str("ASSET_PATH"));
   img_surf = cairo_image_surface_create_from_png(img);
   GtkWidget *a = detail::new_area(w, h);
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_todo), nullptr);

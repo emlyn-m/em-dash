@@ -31,7 +31,7 @@ gboolean draw_alerts(GtkWidget *w, GdkEventExpose *, gpointer) {
       LOG(PRI_ERR, "alert img failed to load: %s\n",
           cairo_status_to_string(status));
     } else {
-      cairo_set_source_surface(cr, img_surf, 0, 0);
+      cairo_set_source_surface(cr, img_surf, 80, 80);
       cairo_paint(cr);
     }
   } else {
@@ -74,7 +74,8 @@ gboolean draw_alerts(GtkWidget *w, GdkEventExpose *, gpointer) {
 
 GtkWidget *make_alerts_surface(int w, int h) {
   char img[128] = {0};
-  snprintf(img, 128, "%s/priv-alert-variant.png", get_attr_str("ASSET_PATH"));
+  snprintf(img, 128, "%s/designs/priv-alert-variant.png",
+           get_attr_str("ASSET_PATH"));
   img_surf = cairo_image_surface_create_from_png(img);
 
   GtkWidget *a = detail::new_area(w, h);

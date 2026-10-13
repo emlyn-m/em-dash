@@ -121,7 +121,7 @@ gboolean draw_brightness_info(GtkWidget *w, GdkEventExpose *, gpointer d) {
 
 GtkWidget *make_brightness_info(float *level) {
   char path[128] = {0};
-  snprintf(path, 128, "%s/brightness.png", get_attr_str("ASSET_PATH"));
+  snprintf(path, 128, "%s/designs/priv-brightness.png", get_attr_str("ASSET_PATH"));
   GtkWidget *a = detail::new_area(75, 75);
   auto *info = detail::attach(
       a, BrightnessInfo{cairo_image_surface_create_from_png(path), level});

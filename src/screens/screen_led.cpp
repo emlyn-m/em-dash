@@ -1,4 +1,6 @@
 #include "cairo.h"
+#include "config.hpp"
+#include "log.hpp"
 #include "pango/pango-font.h"
 #include "screens/screens.hpp"
 #include <glib.h>
@@ -20,7 +22,6 @@ void put(GtkWidget *fixed, GtkWidget *child, int x, int y) {
   gtk_fixed_put(GTK_FIXED(fixed), child, x, y);
 }
 
-// Per-screen control state. Lives for the program (built once).
 struct LedControl {
   int device = 0;
   const char *label = "led.strip0";
@@ -32,8 +33,10 @@ struct LedControl {
   GtkWidget *conn = nullptr;
 };
 
-// The single LED modal, retargeted per open (see led_screen_set_target).
 LedControl *g_led = nullptr;
+
+const char *SLIDER_PATHS[3] = {"hue.png", "sat.png", "val.png"};
+cairo_surface_t *slider_icons[3] = {0};
 
 void on_hue(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
@@ -48,8 +51,6 @@ void on_val(float v, void *d) {
   c->val = (int)(v * 1000);
 }
 
-// On release, send the final value. No explicit re-query — the comm thread
-// keeps state live from device status pushes.
 void finalize(LedControl *c) { led_set_hsv(c->device, c->hue, c->sat, c->val); }
 void on_hue_end(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
@@ -78,8 +79,6 @@ gboolean draw_title(GtkWidget *w, GdkEventExpose *, gpointer d) {
   return TRUE;
 }
 
-// conn box: connection indicator (grey/"on"/"off" when reachable, inverted
-// "econn" when not) that doubles as a power toggle.
 gboolean draw_conn(GtkWidget *w, GdkEventExpose *, gpointer d) {
   cairo_t *cr = gdk_cairo_create(w->window);
 
@@ -136,8 +135,6 @@ gboolean conn_press(GtkWidget *, GdkEventButton *e, gpointer d) {
   return TRUE;
 }
 
-// Sync the sliders + conn from device state. slider_sync no-ops while dragging,
-// so the knob isn't disturbed mid-drag.
 void led_update_cb(LedControl *c) {
   gtk_widget_queue_draw(c->conn);
   const LedState &s = led_state(c->device);
@@ -149,8 +146,6 @@ void led_update_cb(LedControl *c) {
   c->val = (int)(slider_value(c->val_slider) * 1000);
 }
 
-// Modal opened: activate the device's comm thread, subscribe for updates, and
-// pull fresh state.
 void on_modal_shown(GtkWidget *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
   led_on_update(c->device, [c] { led_update_cb(c); });
@@ -158,15 +153,12 @@ void on_modal_shown(GtkWidget *, gpointer d) {
   led_query(c->device);
 }
 
-// Modal closed: stop the device from connecting while it isn't being viewed.
 void on_modal_hidden(GtkWidget *, gpointer d) {
   auto *c = static_cast<LedControl *>(d);
   led_set_active(c->device, false);
   led_on_update(c->device, nullptr);
 }
 
-// Static art painted directly on the dotted field: dots, divider, and the
-// clock (which needs to composite over the dots rather than sit in a box).
 gboolean draw_backdrop(GtkWidget *w, GdkEventExpose *, gpointer) {
   cairo_t *cr = gdk_cairo_create(w->window);
   paint_dots(cr, w->allocation.width, w->allocation.height);
@@ -191,15 +183,27 @@ gboolean draw_slider_info(GtkWidget *widget, GdkEventExpose *, gpointer d) {
   paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
                 widget->allocation.x, widget->allocation.y);
 
-  draw_text(cr, 0, 0, 60, 16, BLACK, "hue", 12, PANGO_WEIGHT_BOLD, 0.5);
-  draw_text(cr, 80, 0, 60, 16, BLACK, "sat", 12, PANGO_WEIGHT_BOLD, 0.5);
-  draw_text(cr, 160, 0, 60, 16, BLACK, "val", 12, PANGO_WEIGHT_BOLD, 0.5);
-
   set_rgb(cr, MUTED);
-  cairo_rectangle(cr, 0, 18, 60, 60);
-  cairo_rectangle(cr, 80, 18, 60, 60);
-  cairo_rectangle(cr, 160, 18, 60, 60);
-  cairo_fill(cr);
+  cairo_surface_t *ico;
+  for (int i = 0; i < 3; i++) {
+    cairo_save(cr);
+    if ((ico = slider_icons[i]) != NULL) {
+      float sx = 40. / cairo_image_surface_get_width(ico);
+      float sy = 40. / cairo_image_surface_get_height(ico);
+      cairo_scale(cr, sx, sy);
+      cairo_set_source_surface(cr, ico, (10 + (80 * i)) / sx, 10 / sy);
+      cairo_paint(cr);
+    } else {
+      cairo_rectangle(cr, 10 + 80 * i, 10, 40, 40);
+      cairo_fill(cr);
+    }
+    cairo_restore(cr);
+  }
+
+  set_rgb(cr, BLACK);
+  draw_text(cr, 0, 50, 60, 16, BLACK, "hue", 12, PANGO_WEIGHT_BOLD, 0.5);
+  draw_text(cr, 80, 50, 60, 16, BLACK, "sat", 12, PANGO_WEIGHT_BOLD, 0.5);
+  draw_text(cr, 160, 50, 60, 16, BLACK, "val", 12, PANGO_WEIGHT_BOLD, 0.5);
 
   cairo_destroy(cr);
   return TRUE;
@@ -207,6 +211,20 @@ gboolean draw_slider_info(GtkWidget *widget, GdkEventExpose *, gpointer d) {
 
 GtkWidget *make_slider_info() {
   GtkWidget *a = detail::new_area(220, 78);
+
+  cairo_status_t ico_status;
+  char ico_path[128] = {0};
+  for (int i = 0; i < 3; i++) {
+    snprintf(ico_path, 128, "%s/led/%s", get_attr_str("ASSET_PATH"),
+             SLIDER_PATHS[i]);
+    slider_icons[i] = cairo_image_surface_create_from_png(ico_path);
+    if ((ico_status = cairo_surface_status(slider_icons[i]))) {
+      LOG(PRI_ERR, "hsv slider %d failed to load: %s\n", i,
+          cairo_status_to_string(ico_status));
+      slider_icons[i] = NULL;
+    }
+  }
+
   g_signal_connect(a, "expose-event", G_CALLBACK(draw_slider_info), NULL);
   return a;
 }
@@ -221,20 +239,17 @@ GtkWidget *build_led_screen() {
   LedControl *c = new LedControl();
   g_led = c;
 
-  // exit btn (top-left): back to the main screen.
   put(fixed,
       make_text_button("🭮🭪🭮🭪🭮🭪", 144, 31, 24, MUTED, nav_press,
                        GINT_TO_POINTER(SCREEN_MAIN)),
       30, 30);
 
-  // Title reflects the active device's label.
   GtkWidget *title = gtk_drawing_area_new();
   gtk_widget_set_size_request(title, 800, 65);
   g_signal_connect(title, "expose-event", G_CALLBACK(draw_title), c);
   c->title = title;
   put(fixed, title, 164, 164);
 
-  // conn: indicator + power toggle (top-left).
   GtkWidget *conn = gtk_drawing_area_new();
   gtk_widget_set_size_request(conn, 180, 83);
   gtk_widget_add_events(conn, GDK_BUTTON_PRESS_MASK);
@@ -243,7 +258,6 @@ GtkWidget *build_led_screen() {
   c->conn = conn;
   put(fixed, conn, 1230, 162);
 
-  // HSV sliders.
   c->hue_slider = make_slider(60, 611, c, on_hue, on_hue_end);
   c->sat_slider = make_slider(60, 611, c, on_sat, on_sat_end);
   c->val_slider = make_slider(60, 611, c, on_val, on_val_end);
@@ -253,7 +267,6 @@ GtkWidget *build_led_screen() {
 
   put(fixed, make_slider_info(), 60, 942);
 
-  // Preview image (still a placeholder).
   put(fixed, make_fill(200, 200, GREY), 1180, 820);
 
   g_signal_connect(fixed, "map", G_CALLBACK(on_modal_shown), c);
@@ -267,7 +280,7 @@ void led_screen_set_target(int device, const char *label) {
     return;
   g_led->device = device;
   g_led->label = label;
-  // Reflect the new device immediately; the map handler pulls its live state.
+
   gtk_widget_queue_draw(g_led->title);
   gtk_widget_queue_draw(g_led->conn);
 }

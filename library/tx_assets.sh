@@ -27,7 +27,7 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
-full_tx_cmd="mount -o rw,remount / &&"
+full_tx_cmd="mount -o rw,remount / && rm -rf REMOTE_ASSET_PATH/* &&"
 active_mode_path=$REMOTE_DATA_PATH
 active_mode_name=""
 while [[ "$#" -gt 0 ]]; do

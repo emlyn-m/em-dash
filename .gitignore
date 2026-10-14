@@ -7,8 +7,9 @@ assets/**/priv-*
 
 # caches
 .cache/
-library/weather/src/weather/__pycache__/
+__pycache__/
 
 # deps
 node_modules/
 library/weather/src/weather/.venv/
+apis/.venv/

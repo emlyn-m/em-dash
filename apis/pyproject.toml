@@ -1,0 +1,10 @@
+[project]
+name = "apis"
+version = "0.1.0"
+description = "APIs for Kindle Dash"
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "fastapi[standard]>=0.135.1",
+    "slixmpp>=1.13.2",
+]

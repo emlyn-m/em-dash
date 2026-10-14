@@ -66,7 +66,10 @@ const char *jstr(cJSON *obj, const char *key) {
 
 bool fetch_devices(std::vector<Device> &out) {
   std::string body;
-  if (!run_curl(get_attr_str("TELEM_DEVICE_ENDPOINT"), body)) {
+  char telem_endpoint[128] = {0};
+  snprintf(telem_endpoint, 128, "%s/tailscale/devices",
+           get_attr_str("API_URL"));
+  if (!run_curl(telem_endpoint, body)) {
     LOG(PRI_ERR, "telem: device fetch failed\n");
     return false;
   }
@@ -86,7 +89,10 @@ bool fetch_devices(std::vector<Device> &out) {
 
 bool fetch_services(std::vector<Service> &out) {
   std::string body;
-  if (!run_curl(get_attr_str("TELEM_SERVICE_ENDPOINT"), body)) {
+  char telem_endpoint[128] = {0};
+  snprintf(telem_endpoint, 128, "%s/tailscale/services",
+           get_attr_str("API_URL"));
+  if (!run_curl(telem_endpoint, body)) {
     LOG(PRI_ERR, "telem: service fetch failed\n");
     return false;
   }

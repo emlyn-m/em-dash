@@ -1,0 +1,14 @@
+[Unit]
+Description=em-dash apis
+After=network.target
+
+[Service]
+Type=simple
+User=emlyn
+WorkingDirectory=/home/emlyn/em-dash/apis
+ExecStart=/usr/bin/uv run --env-file .env fastapi run main.py --port 6001
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

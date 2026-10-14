@@ -41,7 +41,11 @@ bool run_curl(const char *url, std::string &out) {
 
 bool fetch_alerts(std::vector<Alert> &out) {
   std::string body;
-  if (!run_curl(get_attr_str("ALERT_ENDPOINT"), body)) return false;
+  char alert_endpoint[128] = {0};
+  snprintf(alert_endpoint, 128, "%s/xmpp?max_events=3",
+           get_attr_str("API_URL"));
+  if (!run_curl(alert_endpoint, body))
+    return false;
 
   cJSON *arr = cJSON_Parse(body.c_str());
   if (!arr) {
@@ -61,8 +65,8 @@ bool fetch_alerts(std::vector<Alert> &out) {
       LOG(PRI_WRN, "alerts: entry missing fields, skipping\n");
       continue;
     }
-    out.push_back(Alert{(time_t)ts->valueint, sev->valueint,
-                        cat->valuestring, msg->valuestring});
+    out.push_back(Alert{(time_t)ts->valueint, sev->valueint, cat->valuestring,
+                        msg->valuestring});
   }
 
   cJSON_Delete(arr);
@@ -72,7 +76,8 @@ bool fetch_alerts(std::vector<Alert> &out) {
 
 void alerts_worker(std::function<void()> on_update) {
   long freq = get_attr_long("ALERT_UPDATE_FREQUENCY");
-  if (freq <= 0) freq = 120;
+  if (freq <= 0)
+    freq = 120;
 
   for (;;) {
     std::vector<Alert> parsed;
@@ -80,14 +85,15 @@ void alerts_worker(std::function<void()> on_update) {
       post_to_main([parsed = std::move(parsed), on_update]() mutable {
         g_alerts.alerts = std::move(parsed);
         g_alerts.last_update = time(nullptr);
-        if (on_update) on_update();
+        if (on_update)
+          on_update();
       });
     }
     std::this_thread::sleep_for(std::chrono::seconds(freq));
   }
 }
 
-}  // namespace
+} // namespace
 
 void alerts_start(std::function<void()> on_update) {
   std::thread(alerts_worker, std::move(on_update)).detach();
@@ -95,4 +101,4 @@ void alerts_start(std::function<void()> on_update) {
 
 const Alerts &alerts_state() { return g_alerts; }
 
-}  // namespace ui
+} // namespace ui

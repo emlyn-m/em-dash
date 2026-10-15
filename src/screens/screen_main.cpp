@@ -121,7 +121,8 @@ gboolean draw_brightness_info(GtkWidget *w, GdkEventExpose *, gpointer d) {
 
 GtkWidget *make_brightness_info(float *level) {
   char path[128] = {0};
-  snprintf(path, 128, "%s/designs/priv-brightness.png", get_attr_str("ASSET_PATH"));
+  snprintf(path, 128, "%s/designs/priv-brightness.png",
+           get_attr_str("ASSET_PATH"));
   GtkWidget *a = detail::new_area(75, 75);
   auto *info = detail::attach(
       a, BrightnessInfo{cairo_image_surface_create_from_png(path), level});
@@ -257,10 +258,8 @@ GtkWidget *build_main_screen() {
   GtkWidget *calendar = make_calendar_surface(345, 353);
   put(fixed, calendar, 690, 294);
 
-  calendar_start([calendar, todo] {
-    gtk_widget_queue_draw(calendar);
-    gtk_widget_queue_draw(todo);
-  });
+  calendar_start([calendar] { gtk_widget_queue_draw(calendar); },
+                 [todo] { gtk_widget_queue_draw(todo); });
 
   // Alerts
   GtkWidget *alerts = make_alerts_surface(345, 353);

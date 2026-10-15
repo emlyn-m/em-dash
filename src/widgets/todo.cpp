@@ -6,9 +6,7 @@
 #include "widgets/common.hpp"
 #include "widgets/widgets.hpp"
 
-#include <set>
 #include <string>
-#include <vector>
 
 namespace ui {
 
@@ -20,23 +18,25 @@ constexpr int ROW_H = 34;
 constexpr int BOX = 18;
 constexpr int BOX_GAP = 14;
 
-std::set<std::string> g_done;
 cairo_surface_t *img_surf;
 
-bool is_done(const CalEvent &ev) {
-  return !ev.id.empty() && g_done.count(ev.id) > 0;
+bool is_done(const Todos &todos, int i) {
+  return todos.complete[i] >= 0 ? todos.complete[i]
+                                : todos.tasks[i].net_complete;
 }
 
-std::vector<const CalEvent *> build_rows() {
-  const std::vector<CalEvent> &todos = calendar_state().todos;
-  std::vector<const CalEvent *> rows;
-  rows.reserve(todos.size());
-  for (const CalEvent &ev : todos)
-    if (!is_done(ev))
-      rows.push_back(&ev);
-  for (const CalEvent &ev : todos)
-    if (is_done(ev))
-      rows.push_back(&ev);
+std::vector<int> build_rows() {
+  const Todos &todo = todo_state();
+  const std::vector<TodoTask> &tasks = todo.tasks;
+  std::vector<int> rows;
+  rows.reserve(tasks.size());
+  for (int i = 0; i < (int)tasks.size(); i++)
+    if (!is_done(todo, i))
+      rows.push_back(i);
+  for (int i = 0; i < (int)tasks.size(); i++)
+    if (is_done(todo, i))
+      rows.push_back(i);
+
   return rows;
 }
 
@@ -68,7 +68,8 @@ gboolean draw_todo(GtkWidget *w, GdkEventExpose *, gpointer) {
   const int text_x = MARGIN + 10 + BOX + BOX_GAP;
   const int text_w = W - MARGIN - text_x;
 
-  std::vector<const CalEvent *> rows = build_rows();
+  const Todos &todo = todo_state();
+  std::vector<int> rows = build_rows();
   const size_t limit = MIN(rows.size(), (size_t)visible_rows(H));
 
   if (limit == 0) {
@@ -82,9 +83,9 @@ gboolean draw_todo(GtkWidget *w, GdkEventExpose *, gpointer) {
     }
   } else {
     for (size_t i = 0; i < limit; i++) {
-      const CalEvent *ev = rows[i];
+      const TodoTask *ev = &todo.tasks[rows[i]];
       const int y = LIST_TOP + (int)i * ROW_H;
-      const bool done = is_done(*ev);
+      const bool done = is_done(todo, rows[i]);
 
       draw_checkbox(cr, MARGIN + 10, y + (float)(ROW_H - BOX) / 2, done);
 
@@ -115,15 +116,14 @@ gboolean todo_press(GtkWidget *w, GdkEventButton *ev, gpointer) {
   if (ev->y < LIST_TOP)
     return TRUE;
 
+  const Todos &todo = todo_state();
   const size_t row = (size_t)((ev->y - LIST_TOP) / ROW_H);
-  std::vector<const CalEvent *> rows = build_rows();
+  std::vector<int> rows = build_rows();
   if (row >= MIN(rows.size(), (size_t)visible_rows(w->allocation.height)) ||
-      rows[row]->id.empty())
+      todo.tasks[rows[row]].id.empty())
     return TRUE;
 
-  const std::string &id = rows[row]->id;
-  if (!g_done.erase(id))
-    g_done.insert(id);
+  todo_mark(rows[row]);
   gtk_widget_queue_draw(w);
   return TRUE;
 }

@@ -37,6 +37,8 @@ LedControl *g_led = nullptr;
 
 const char *SLIDER_PATHS[3] = {"hue.png", "sat.png", "val.png"};
 cairo_surface_t *slider_icons[3] = {0};
+const char *DECAL_PATHS[2] = {"priv-soju.png", "priv-strawberry.png"};
+cairo_surface_t *decals[2] = {0};
 
 void on_hue(float v, void *d) {
   auto *c = static_cast<LedControl *>(d);
@@ -74,7 +76,7 @@ gboolean draw_title(GtkWidget *w, GdkEventExpose *, gpointer d) {
   paint_dots_at(cr, w->allocation.width, w->allocation.height, w->allocation.x,
                 w->allocation.y);
   draw_text(cr, 0, 0, w->allocation.width, w->allocation.height, BLACK,
-            c->label, 50, PANGO_WEIGHT_BOLD, 0.0, 0.0);
+            c->label, 40, PANGO_WEIGHT_BOLD, 0.0, 0.0);
   cairo_destroy(cr);
   return TRUE;
 }
@@ -183,7 +185,6 @@ gboolean draw_slider_info(GtkWidget *widget, GdkEventExpose *, gpointer d) {
   paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
                 widget->allocation.x, widget->allocation.y);
 
-  set_rgb(cr, MUTED);
   cairo_surface_t *ico;
   for (int i = 0; i < 3; i++) {
     cairo_save(cr);
@@ -191,26 +192,22 @@ gboolean draw_slider_info(GtkWidget *widget, GdkEventExpose *, gpointer d) {
       float sx = 40. / cairo_image_surface_get_width(ico);
       float sy = 40. / cairo_image_surface_get_height(ico);
       cairo_scale(cr, sx, sy);
-      cairo_set_source_surface(cr, ico, (10 + (80 * i)) / sx, 10 / sy);
+      cairo_set_source_surface(cr, ico, (20 + (100 * i)) / sx, 20 / sy);
       cairo_paint(cr);
     } else {
-      cairo_rectangle(cr, 10 + 80 * i, 10, 40, 40);
+      set_rgb(cr, MUTED);
+      cairo_rectangle(cr, 20 + 100 * i, 20, 60, 60);
       cairo_fill(cr);
     }
     cairo_restore(cr);
   }
-
-  set_rgb(cr, BLACK);
-  draw_text(cr, 0, 50, 60, 16, BLACK, "hue", 12, PANGO_WEIGHT_BOLD, 0.5);
-  draw_text(cr, 80, 50, 60, 16, BLACK, "sat", 12, PANGO_WEIGHT_BOLD, 0.5);
-  draw_text(cr, 160, 50, 60, 16, BLACK, "val", 12, PANGO_WEIGHT_BOLD, 0.5);
 
   cairo_destroy(cr);
   return TRUE;
 }
 
 GtkWidget *make_slider_info() {
-  GtkWidget *a = detail::new_area(220, 78);
+  GtkWidget *a = detail::new_area(280, 78);
 
   cairo_status_t ico_status;
   char ico_path[128] = {0};
@@ -229,6 +226,49 @@ GtkWidget *make_slider_info() {
   return a;
 }
 
+gboolean draw_decal(GtkWidget *widget, GdkEventExpose *, gpointer) {
+  cairo_t *cr = detail::begin_paint(widget);
+  paint_dots_at(cr, widget->allocation.width, widget->allocation.height,
+                widget->allocation.x, widget->allocation.y);
+
+  cairo_save(cr);
+  cairo_surface_t *ico;
+  if ((ico = decals[g_led->device]) != NULL) {
+    float sx = 400. / cairo_image_surface_get_width(ico);
+    float sy = 400. / cairo_image_surface_get_height(ico);
+    cairo_scale(cr, sx, sy);
+    cairo_set_source_surface(cr, ico, 0, 0);
+    cairo_paint(cr);
+  } else {
+    set_rgb(cr, MUTED);
+    cairo_rectangle(cr, 0, 0, 400, 400);
+    cairo_fill(cr);
+  }
+  cairo_restore(cr);
+
+  return TRUE;
+}
+
+GtkWidget *make_decal() {
+  GtkWidget *a = detail::new_area(400, 400);
+
+  cairo_status_t decal_status;
+  char path[128] = {0};
+  for (int i = 0; i < 2; i++) {
+    snprintf(path, 128, "%s/designs/%s", get_attr_str("ASSET_PATH"),
+             DECAL_PATHS[i]);
+    decals[i] = cairo_image_surface_create_from_png(path);
+    if ((decal_status = cairo_surface_status(decals[i]))) {
+      LOG(PRI_ERR, "led decal %d failed to load: %s\n", i,
+          cairo_status_to_string(decal_status));
+      decals[i] = NULL;
+    }
+  }
+
+  g_signal_connect(a, "expose-event", G_CALLBACK(draw_decal), NULL);
+  return a;
+}
+
 } // namespace
 
 GtkWidget *build_led_screen() {
@@ -240,15 +280,15 @@ GtkWidget *build_led_screen() {
   g_led = c;
 
   put(fixed,
-      make_text_button("🭮🭪🭮🭪🭮🭪", 144, 31, 24, MUTED, nav_press,
+      make_text_button("<--", 144, 31, 24, BLACK, nav_press,
                        GINT_TO_POINTER(SCREEN_MAIN)),
       30, 30);
 
   GtkWidget *title = gtk_drawing_area_new();
-  gtk_widget_set_size_request(title, 800, 65);
+  gtk_widget_set_size_request(title, 800, 55);
   g_signal_connect(title, "expose-event", G_CALLBACK(draw_title), c);
   c->title = title;
-  put(fixed, title, 164, 164);
+  put(fixed, title, 60, 200);
 
   GtkWidget *conn = gtk_drawing_area_new();
   gtk_widget_set_size_request(conn, 180, 83);
@@ -258,16 +298,21 @@ GtkWidget *build_led_screen() {
   c->conn = conn;
   put(fixed, conn, 1230, 162);
 
-  c->hue_slider = make_slider(60, 611, c, on_hue, on_hue_end);
-  c->sat_slider = make_slider(60, 611, c, on_sat, on_sat_end);
-  c->val_slider = make_slider(60, 611, c, on_val, on_val_end);
+  c->hue_slider = make_slider(80, 611, c, on_hue, on_hue_end);
+  c->sat_slider = make_slider(80, 611, c, on_sat, on_sat_end);
+  c->val_slider = make_slider(80, 611, c, on_val, on_val_end);
   put(fixed, c->hue_slider, 60, 329);
-  put(fixed, c->sat_slider, 140, 329);
-  put(fixed, c->val_slider, 220, 329);
+  put(fixed, c->sat_slider, 160, 329);
+  put(fixed, c->val_slider, 260, 329);
 
   put(fixed, make_slider_info(), 60, 942);
 
-  put(fixed, make_fill(200, 200, GREY), 1180, 820);
+  char imgpath[128] = {0};
+  snprintf(imgpath, 128, "%s/designs/priv-abstract.png",
+           get_attr_str("ASSET_PATH"));
+  put(fixed, make_image_surface(1380, 120, imgpath), 30, 269);
+
+  put(fixed, make_decal(), 980, 620);
 
   g_signal_connect(fixed, "map", G_CALLBACK(on_modal_shown), c);
   g_signal_connect(fixed, "unmap", G_CALLBACK(on_modal_hidden), c);
@@ -280,9 +325,6 @@ void led_screen_set_target(int device, const char *label) {
     return;
   g_led->device = device;
   g_led->label = label;
-
-  gtk_widget_queue_draw(g_led->title);
-  gtk_widget_queue_draw(g_led->conn);
 }
 
 } // namespace ui
